@@ -2,6 +2,7 @@ import { Search, LogOut, X } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { createClient, User, Session, AuthError } from '@supabase/supabase-js';
 import { useSearch } from '@/context/searchContext';
+import Link from 'next/link';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -104,9 +105,9 @@ const Navbar = () => {
     <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <Link href={'/home'} className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             The VantEdge
-          </h1>
+          </Link>
 
           <div className="relative">
             {loading ? (
