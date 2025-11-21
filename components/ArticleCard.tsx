@@ -1,5 +1,6 @@
 import { Doc, Id } from '@/convex/_generated/dataModel'
 import { Calendar, ExternalLink, Eye, Heart, Share2 } from 'lucide-react'
+import Link from 'next/link'
 import React from 'react'
 
 
@@ -48,9 +49,9 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                 {post.views ?? 0}
                             </span> */}
 
-                            {post.author && <a href={`/author/${encodeURIComponent(post.author)}`}>
+                            {post.author && <Link href={`/author/${encodeURIComponent(post.author)}`}>
                                 {post.author}
-                            </a>}
+                            </Link>}
                             <span className="text-xs text-slate-500 flex items-center gap-1">
                                 <Calendar className="w-3 h-3" />
                                 {new Date(post.pubDate).toLocaleDateString("en-US", {
@@ -70,11 +71,16 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                     }`}
                             >
                                 <Heart className={`w-4 h-4 ${likedPosts.has(post._id) ? "fill-current" : ""}`} />
-                                {post.likes! + (likedPosts.has(post._id) ? 1 : 0)}
+                                {/* {post.likes! + (likedPosts.has(post._id) ? 1 : 0)} */}
                             </button>
-                            {post.companyName && (<a href={`/company/${encodeURIComponent(post.companyName)}`}>
-                                {post.companyName}
-                            </a>)}
+                            {post.companyName && post.companyName !== 'null' && (
+                                <Link
+                                    href={`/company/${encodeURIComponent(post.companyName)}`}
+                                    className="hover:text-blue-600 transition-colors font-medium text-slate-700"
+                                >
+                                    {post.companyName}
+                                </Link>
+                            )}
                             <a
                                 href={post.link}
                                 target="_blank"
