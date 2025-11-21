@@ -49,7 +49,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                 {post.views ?? 0}
                             </span> */}
 
-                            {post.author && <Link href={`/author/${encodeURIComponent(post.author)}`}>
+                            {post.author && <Link href={`/author/${encodeURIComponent(post.author)}`} className="hover:text-blue-600 transition-colors font-medium text-slate-700">
                                 {post.author}
                             </Link>}
                             <span className="text-xs text-slate-500 flex items-center gap-1">
