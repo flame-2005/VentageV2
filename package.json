@@ -1,0 +1,39 @@
+{
+  "name": "blogs-pedia",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "seed:blogs": "tsx scripts/seedBlogs.ts",
+    "fetch:substack": "tsx scripts/fetchSubstack.ts",
+    "label:substack": "tsx scripts/labelCompanyNames.ts",
+    "fetch:wordpress": "tsx scripts/fetchWordPress.ts",
+    "fetch:medium": "tsx scripts/fetchMedium.ts",
+    "fetch:blogspot": "tsx scripts/fetchBlogspot.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.81.1",
+    "convex": "^1.28.2",
+    "lucide-react": "^0.553.0",
+    "next": "16.0.1",
+    "openai": "^6.8.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "rss-parser": "^3.13.0",
+    "supabase": "^2.58.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.1",
+    "tailwindcss": "^4",
+    "tsx": "^4.20.6",
+    "typescript": "^5"
+  }
+}
