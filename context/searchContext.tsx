@@ -7,7 +7,7 @@ interface SearchContextType {
   inputValue: string;
   setInputValue: (term: string) => void;
   setSearchTerm: (term: string) => void;
-  applySearch: () => void;
+  applySearch: (term?: string) => void;
   clearSearch: () => void;
 }
 
