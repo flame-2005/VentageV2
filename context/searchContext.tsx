@@ -21,9 +21,10 @@ export function SearchProvider({ children }: SearchProviderProps) {
   const [searchTerm, setSearchTerm] = useState(""); // Applied search term
   const [inputValue, setInputValue] = useState(""); // Input field value
 
-  const applySearch = () => {
-    setSearchTerm(inputValue);
-  };
+  const applySearch = (value?: string) => {
+  const term = value ?? inputValue;
+  setSearchTerm(term);
+};
 
   const clearSearch = () => {
     setSearchTerm("");

@@ -134,10 +134,42 @@ export const getPaginatedPosts = query({
     }),
   },
   handler: async (ctx, { paginationOpts }) => {
-    return await ctx.db
+    // Get all posts and filter for valid company names
+    const allPosts = await ctx.db
       .query("posts")
       .order("desc")
-      .paginate(paginationOpts);
+      .collect();
+
+    // Filter posts with valid company names
+    const filteredPosts = allPosts.filter((post) => {
+      return (
+        post.companyName &&
+        post.companyName !== 'null' &&
+        post.companyName.trim() !== ''
+      );
+    });
+
+    // Manual pagination
+    const cursor = paginationOpts.cursor;
+    const numItems = paginationOpts.numItems;
+    
+    let startIndex = 0;
+    if (cursor) {
+      const cursorIndex = filteredPosts.findIndex(
+        (post) => post._id.toString() === cursor
+      );
+      startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
+    }
+
+    const endIndex = startIndex + numItems;
+    const page = filteredPosts.slice(startIndex, endIndex);
+    const isDone = endIndex >= filteredPosts.length;
+    
+    return {
+      page,
+      continueCursor: isDone ? (cursor || "") : page[page.length - 1]._id.toString(),
+      isDone,
+    };
   },
 });
 
@@ -230,3 +262,64 @@ export const searchPosts = query({
     };
   },
 });
+
+export const getCompanySuggestions = query({
+  args: {
+    searchTerm: v.string(),
+  },
+  handler: async (ctx, { searchTerm }) => {
+    if (!searchTerm || searchTerm.trim().length < 1) {
+      return [];
+    }
+
+    const lowerSearchTerm = searchTerm.toLowerCase().trim();
+
+    // Get all posts
+    const allPosts = await ctx.db
+      .query("posts")
+      .collect();
+
+    // Extract unique company names and NSE codes that match
+    const suggestions = new Map<string, { companyName: string; nseCode: string }>();
+
+    allPosts.forEach((post) => {
+      const companyName = post.companyName || "";
+      const nseCode = post.nseCode || "";
+      
+      // Skip if company name is invalid
+      if (!companyName || companyName === 'null' || companyName.trim() === '') {
+        return;
+      }
+
+      // Check if company name or NSE code matches
+      const companyLower = companyName.toLowerCase();
+      const nseLower = nseCode.toLowerCase();
+
+      if (
+        companyLower.includes(lowerSearchTerm) ||
+        nseLower.includes(lowerSearchTerm)
+      ) {
+        // Use companyName as key to avoid duplicates
+        if (!suggestions.has(companyName)) {
+          suggestions.set(companyName, { companyName, nseCode });
+        }
+      }
+    });
+
+    // Convert to array and sort by relevance (starts with search term first)
+    const suggestionArray = Array.from(suggestions.values())
+      .sort((a, b) => {
+        const aStartsWith = a.companyName.toLowerCase().startsWith(lowerSearchTerm);
+        const bStartsWith = b.companyName.toLowerCase().startsWith(lowerSearchTerm);
+        
+        if (aStartsWith && !bStartsWith) return -1;
+        if (!aStartsWith && bStartsWith) return 1;
+        
+        // Alphabetical order
+        return a.companyName.localeCompare(b.companyName);
+      })
+      .slice(0, 10); // Limit to 10 suggestions
+
+    return suggestionArray;
+  },
+})
