@@ -25,22 +25,36 @@ export const add = mutation({
 export const getPostsByCompany = query({
   args: { companyName: v.string() },
   handler: async (ctx, { companyName }) => {
-    return await ctx.db
+    const posts = await ctx.db
       .query("posts")
       .withIndex("by_companyName", (q) => q.eq("companyName", companyName))
       .order("desc")
       .collect();
+    
+    // Filter to only include posts where author is defined and not 'null'
+    return posts.filter(post => 
+      post.author && 
+      post.author !== 'null' && 
+      post.author.trim() !== ''
+    );
   },
 });
 
 export const getPostsByAuthor = query({
   args: { author: v.string() },
   handler: async (ctx, { author }) => {
-    return await ctx.db
+    const posts = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", author))
       .order("desc")
       .collect();
+    
+    // Filter to only include posts where companyName is defined and not 'null'
+    return posts.filter(post => 
+      post.companyName && 
+      post.companyName !== 'null' && 
+      post.companyName.trim() !== ''
+    );
   },
 });
 
