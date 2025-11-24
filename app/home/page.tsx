@@ -80,6 +80,9 @@ export default function InvestmentDashboard() {
                     <CircularLoader />
                 ) : (
                     <>
+                    <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6">
+                        Latest Articles
+                    </h1>
                         {/* Articles */}
                         <div className="space-y-6">
                             {posts && posts.length > 0 ? (

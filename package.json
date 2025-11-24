@@ -12,7 +12,8 @@
     "label:substack": "tsx scripts/labelCompanyNames.ts",
     "fetch:wordpress": "tsx scripts/fetchWordPress.ts",
     "fetch:medium": "tsx scripts/fetchMedium.ts",
-    "fetch:blogspot": "tsx scripts/fetchBlogspot.ts"
+    "fetch:blogspot": "tsx scripts/fetchBlogspot.ts",
+    "fetch:masterCompany": "tsx scripts/masterCompany.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",

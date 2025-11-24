@@ -13,6 +13,8 @@ import type * as cronEntry_fetchFeed from "../cronEntry/fetchFeed.js";
 import type * as crons from "../crons.js";
 import type * as functions_cleanUp from "../functions/cleanUp.js";
 import type * as functions_labeling from "../functions/labeling.js";
+import type * as functions_masterCompanies from "../functions/masterCompanies.js";
+import type * as functions_masterCompany from "../functions/masterCompany.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
 import type * as posts from "../posts.js";
 
@@ -36,6 +38,8 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   "functions/cleanUp": typeof functions_cleanUp;
   "functions/labeling": typeof functions_labeling;
+  "functions/masterCompanies": typeof functions_masterCompanies;
+  "functions/masterCompany": typeof functions_masterCompany;
   "functions/substackBlogs": typeof functions_substackBlogs;
   posts: typeof posts;
 }>;

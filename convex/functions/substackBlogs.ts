@@ -274,52 +274,51 @@ export const getCompanySuggestions = query({
 
     const lowerSearchTerm = searchTerm.toLowerCase().trim();
 
-    // Get all posts
-    const allPosts = await ctx.db
-      .query("posts")
+    // Get all companies from master list
+    const allCompanies = await ctx.db
+      .query("master_company_list")
       .collect();
 
-    // Extract unique company names and NSE codes that match
-    const suggestions = new Map<string, { companyName: string; nseCode: string }>();
+    // Filter and map companies that match the search term
+    const matchingCompanies = allCompanies
+      .filter((company) => {
+        const companyName = company.name.toLowerCase();
+        const nseCode = company.nse_code.toLowerCase();
+        
+        return (
+          companyName.includes(lowerSearchTerm) ||
+          nseCode.includes(lowerSearchTerm)
+        );
+      })
+      .map((company) => ({
+        companyName: company.name,
+        nseCode: company.nse_code,
+        bseCode: company.bse_code,
+        isin: company.isin,
+        instrumentToken: company.instrument_token,
+      }));
 
-    allPosts.forEach((post) => {
-      const companyName = post.companyName || "";
-      const nseCode = post.nseCode || "";
-      
-      // Skip if company name is invalid
-      if (!companyName || companyName === 'null' || companyName.trim() === '') {
-        return;
-      }
-
-      // Check if company name or NSE code matches
-      const companyLower = companyName.toLowerCase();
-      const nseLower = nseCode.toLowerCase();
-
-      if (
-        companyLower.includes(lowerSearchTerm) ||
-        nseLower.includes(lowerSearchTerm)
-      ) {
-        // Use companyName as key to avoid duplicates
-        if (!suggestions.has(companyName)) {
-          suggestions.set(companyName, { companyName, nseCode });
-        }
-      }
-    });
-
-    // Convert to array and sort by relevance (starts with search term first)
-    const suggestionArray = Array.from(suggestions.values())
+    // Sort by relevance (starts with search term first, then alphabetically)
+    const suggestions = matchingCompanies
       .sort((a, b) => {
-        const aStartsWith = a.companyName.toLowerCase().startsWith(lowerSearchTerm);
-        const bStartsWith = b.companyName.toLowerCase().startsWith(lowerSearchTerm);
+        const aNameStartsWith = a.companyName.toLowerCase().startsWith(lowerSearchTerm);
+        const bNameStartsWith = b.companyName.toLowerCase().startsWith(lowerSearchTerm);
+        const aCodeStartsWith = a.nseCode.toLowerCase().startsWith(lowerSearchTerm);
+        const bCodeStartsWith = b.nseCode.toLowerCase().startsWith(lowerSearchTerm);
         
-        if (aStartsWith && !bStartsWith) return -1;
-        if (!aStartsWith && bStartsWith) return 1;
+        // Prioritize NSE code exact match
+        if (aCodeStartsWith && !bCodeStartsWith) return -1;
+        if (!aCodeStartsWith && bCodeStartsWith) return 1;
         
-        // Alphabetical order
+        // Then prioritize company name starts with
+        if (aNameStartsWith && !bNameStartsWith) return -1;
+        if (!aNameStartsWith && bNameStartsWith) return 1;
+        
+        // Finally, alphabetical order by company name
         return a.companyName.localeCompare(b.companyName);
       })
       .slice(0, 10); // Limit to 10 suggestions
 
-    return suggestionArray;
+    return suggestions;
   },
-})
+});
