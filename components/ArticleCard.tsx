@@ -13,13 +13,13 @@ type ArticleCardProps = {
 const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
     const [showAllCompanies, setShowAllCompanies] = useState(false)
 
-    const companyNames = post.companyName && post.companyName !== 'null' 
+    const companyNames = post.companyName && post.companyName !== 'null'
         ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
         : []
-    
+    const isFullCaps = (name:string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim());
     const hasMultipleCompanies = companyNames.length > 1
-    const firstCompany = companyNames[0]
-    
+    const firstCompany = companyNames.find(isFullCaps)
+
     return (
         <article
             key={post._id}
@@ -29,8 +29,8 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                 {/* Company block - Hidden on mobile, fixed height with object-fit */}
                 <div className="flex w-24 md:w-48 bg-gradient-to-br from-blue-50 to-indigo-50 items-center justify-center border-r border-slate-200">
                     <div className="text-center w-full h-32 md:h-40 flex items-center justify-center">
-                        <img 
-                            src={post.image} 
+                        <img
+                            src={post.image}
                             alt={post.companyName || 'Company logo'}
                             className="max-w-full max-h-full object-contain"
                         />
@@ -74,7 +74,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
 
                         <div className='flex flex-wrap gap-2 md:gap-4 justify-start md:justify-center items-center'>
                             {/* Company Names Section */}
-                            {companyNames.length > 0 && (
+                            {companyNames.length > 0 && firstCompany && (
                                 <div className="relative">
                                     {hasMultipleCompanies ? (
                                         <div className="relative">
@@ -94,10 +94,10 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                                 </span>
                                                 <ChevronDown className={`w-3 h-3 transition-transform ${showAllCompanies ? 'rotate-180' : ''}`} />
                                             </button>
-                                            
+
                                             {showAllCompanies && (
                                                 <div className="absolute max-h-32 overflow-auto top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[200px] py-1">
-                                                    {companyNames.map((company, idx) => (
+                                                    {companyNames.filter(isFullCaps).map((company, idx) => (
                                                         <Link
                                                             key={idx}
                                                             href={`/company/${encodeURIComponent(company)}`}
@@ -120,7 +120,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                     )}
                                 </div>
                             )}
-                            
+
                             <button
                                 onClick={() => toggleLike(post._id)}
                                 className={`flex items-center gap-1 transition-colors ${likedPosts.has(post._id) ? "text-rose-500" : "hover:text-rose-500"

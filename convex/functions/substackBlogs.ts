@@ -48,6 +48,7 @@ export const getPostsByCompany = query({
     // Filter to only include posts where author is defined and not 'null'
     return matchingPosts.filter(post => 
       post.author && 
+      (post.bseCode || post.nseCode) &&
       post.author !== 'null' && 
       post.author.trim() !== ''
     );
@@ -66,6 +67,7 @@ export const getPostsByAuthor = query({
     // Filter to only include posts where companyName is defined and not 'null'
     return posts.filter(post => 
       post.companyName && 
+      (post.bseCode || post.nseCode) &&
       post.companyName !== 'null' && 
       post.companyName.trim() !== ''
     );
@@ -181,6 +183,7 @@ export const getPaginatedPosts = query({
     const filteredPosts = allPosts.filter((post) => {
       return (
         post.companyName &&
+        (post.bseCode || post.nseCode) &&
         post.companyName !== "null" &&
         post.companyName.trim() !== ""
       );
