@@ -1,7 +1,7 @@
 import { Doc, Id } from '@/convex/_generated/dataModel'
-import { Calendar, ExternalLink, Eye, Heart, Share2 } from 'lucide-react'
+import { Calendar, ChevronDown, ExternalLink, Eye, Heart, Share2 } from 'lucide-react'
 import Link from 'next/link'
-import React from 'react'
+import React, { useState } from 'react'
 
 
 type ArticleCardProps = {
@@ -11,10 +11,19 @@ type ArticleCardProps = {
 }
 
 const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
+    const [showAllCompanies, setShowAllCompanies] = useState(false)
+
+    const companyNames = post.companyName && post.companyName !== 'null' 
+        ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
+        : []
+    
+    const hasMultipleCompanies = companyNames.length > 1
+    const firstCompany = companyNames[0]
+    
     return (
         <article
             key={post._id}
-            className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-slate-200 group"
+            className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 group"
         >
             <div className="flex flex-row">
                 {/* Company block - Hidden on mobile, fixed height with object-fit */}
@@ -64,14 +73,54 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                         </div>
 
                         <div className='flex flex-wrap gap-2 md:gap-4 justify-start md:justify-center items-center'>
-                            {post.companyName && post.companyName !== 'null' && (
-                                <Link
-                                    href={`/company/${encodeURIComponent(post.companyName)}`}
-                                    className="hover:text-blue-600 transition-colors font-medium text-blue-900 text-xs md:text-sm"
-                                >
-                                    {post.companyName}
-                                </Link>
+                            {/* Company Names Section */}
+                            {companyNames.length > 0 && (
+                                <div className="relative">
+                                    {hasMultipleCompanies ? (
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setShowAllCompanies(!showAllCompanies)}
+                                                className="flex items-center gap-1 hover:text-blue-600 transition-colors font-medium text-blue-900 text-xs md:text-sm"
+                                            >
+                                                <Link
+                                                    href={`/company/${encodeURIComponent(firstCompany)}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="hover:text-blue-600"
+                                                >
+                                                    {firstCompany}
+                                                </Link>
+                                                <span className="text-xs text-slate-500">
+                                                    +{companyNames.length - 1}
+                                                </span>
+                                                <ChevronDown className={`w-3 h-3 transition-transform ${showAllCompanies ? 'rotate-180' : ''}`} />
+                                            </button>
+                                            
+                                            {showAllCompanies && (
+                                                <div className="absolute max-h-32 overflow-auto top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[200px] py-1">
+                                                    {companyNames.map((company, idx) => (
+                                                        <Link
+                                                            key={idx}
+                                                            href={`/company/${encodeURIComponent(company)}`}
+                                                            className="block px-4 py-2 text-xs md:text-sm text-blue-900 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                                            onClick={() => setShowAllCompanies(false)}
+                                                        >
+                                                            {company}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <Link
+                                            href={`/company/${encodeURIComponent(firstCompany)}`}
+                                            className="hover:text-blue-600 transition-colors font-medium text-blue-900 text-xs md:text-sm"
+                                        >
+                                            {firstCompany}
+                                        </Link>
+                                    )}
+                                </div>
                             )}
+                            
                             <button
                                 onClick={() => toggleLike(post._id)}
                                 className={`flex items-center gap-1 transition-colors ${likedPosts.has(post._id) ? "text-rose-500" : "hover:text-rose-500"

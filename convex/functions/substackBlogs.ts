@@ -25,14 +25,28 @@ export const add = mutation({
 export const getPostsByCompany = query({
   args: { companyName: v.string() },
   handler: async (ctx, { companyName }) => {
-    const posts = await ctx.db
+    // Get all posts
+    const allPosts = await ctx.db
       .query("posts")
-      .withIndex("by_companyName", (q) => q.eq("companyName", companyName))
       .order("desc")
       .collect();
     
+    // Filter posts where the company name appears in the comma-separated list
+    const matchingPosts = allPosts.filter(post => {
+      if (!post.companyName || post.companyName === 'null') {
+        return false;
+      }
+      
+      // Split comma-separated company names and check if any match
+      const companyNames = post.companyName
+        .split(',')
+        .map(name => name.trim().toLowerCase());
+      
+      return companyNames.includes(companyName.toLowerCase());
+    });
+    
     // Filter to only include posts where author is defined and not 'null'
-    return posts.filter(post => 
+    return matchingPosts.filter(post => 
       post.author && 
       post.author !== 'null' && 
       post.author.trim() !== ''
@@ -134,7 +148,10 @@ export const getByLink = query({
 export const getAllPosts = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("posts").collect();
+    return await ctx.db
+      .query("posts")
+      .order("desc")
+      .collect();
   },
 });
 
@@ -148,25 +165,31 @@ export const getPaginatedPosts = query({
     }),
   },
   handler: async (ctx, { paginationOpts }) => {
-    // Get all posts and filter for valid company names
-    const allPosts = await ctx.db
+    // Get all posts
+    let allPosts = await ctx.db
       .query("posts")
-      .order("desc")
       .collect();
 
-    // Filter posts with valid company names
+    // Sort by pubDate DESC (newest first)
+    allPosts = allPosts.sort((a, b) => {
+      const dateA = new Date(a.pubDate);
+      const dateB = new Date(b.pubDate);
+      return dateB.getTime() - dateA.getTime(); // descending
+    });
+
+    // Filter valid company names
     const filteredPosts = allPosts.filter((post) => {
       return (
         post.companyName &&
-        post.companyName !== 'null' &&
-        post.companyName.trim() !== ''
+        post.companyName !== "null" &&
+        post.companyName.trim() !== ""
       );
     });
 
     // Manual pagination
     const cursor = paginationOpts.cursor;
     const numItems = paginationOpts.numItems;
-    
+
     let startIndex = 0;
     if (cursor) {
       const cursorIndex = filteredPosts.findIndex(
@@ -178,14 +201,17 @@ export const getPaginatedPosts = query({
     const endIndex = startIndex + numItems;
     const page = filteredPosts.slice(startIndex, endIndex);
     const isDone = endIndex >= filteredPosts.length;
-    
+
     return {
       page,
-      continueCursor: isDone ? (cursor || "") : page[page.length - 1]._id.toString(),
+      continueCursor: isDone
+        ? cursor || ""
+        : page[page.length - 1]._id.toString(),
       isDone,
     };
   },
 });
+
 
 export const updateCompanyName = mutation({
   args: {
