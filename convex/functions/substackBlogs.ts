@@ -26,11 +26,16 @@ export const add = mutation({
 export const getPostsByCompany = query({
   args: { companyName: v.string() },
   handler: async (ctx, { companyName }) => {
-    // Get all posts
-    const allPosts = await ctx.db.query("posts").order("desc").collect();
+    // Use by_company index with range query
+    const posts = await ctx.db
+      .query("posts")
+      .withIndex("by_company", (q) => 
+        q.gte("companyName", companyName).lt("companyName", companyName + "\uffff")
+      )
+      .collect();
 
-    // Filter posts where the company name appears in the comma-separated list
-    const matchingPosts = allPosts.filter((post) => {
+    // Lightweight client-side filtering
+    const matchingPosts = posts.filter((post) => {
       if (!post.companyName || post.companyName === "null") {
         return false;
       }
@@ -44,13 +49,18 @@ export const getPostsByCompany = query({
     });
 
     // Filter to only include posts where author is defined and not 'null'
-    return matchingPosts.filter(
-      (post) =>
-        post.author &&
-        (post.bseCode || post.nseCode) &&
-        post.author !== "null" &&
-        post.author.trim() !== ""
-    );
+    // Also sort by pubDate descending
+    return matchingPosts
+      .filter(
+        (post) =>
+          post.author &&
+          (post.bseCode || post.nseCode) &&
+          post.author !== "null" &&
+          post.author.trim() !== ""
+      )
+      .sort((a, b) => {
+        return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+      });
   },
 });
 

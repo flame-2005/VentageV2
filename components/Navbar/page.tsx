@@ -162,7 +162,7 @@ const Navbar = () => {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search by company, Author, or content... (Press Enter)"
+            placeholder="Search by Company Name"
             value={inputValue}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
