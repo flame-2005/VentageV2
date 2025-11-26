@@ -1,6 +1,4 @@
-"use node";
-
-import { action } from "../_generated/server";
+import { action, mutation } from "../_generated/server";
 import { internal } from "../_generated/api";
 
 export const removeHeavyFields = action(async (ctx): Promise<string> => {
@@ -15,4 +13,32 @@ export const removeHeavyFields = action(async (ctx): Promise<string> => {
   }
 
   return `Cleaned ${posts.length} posts`;
+});
+
+export const fixOldPubDates = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const posts = await ctx.db.query("posts").collect();
+
+    for (const post of posts) {
+      const oldDate = post.pubDate;
+      if (!oldDate) continue;
+
+      let isoDate = null;
+
+      try {
+        isoDate = new Date(oldDate).toISOString();
+      } catch {
+        console.log("❌ Invalid pubDate:", post._id, oldDate);
+        continue;
+      }
+
+      // Update only if ISO conversion succeeded AND value is different
+      if (oldDate !== isoDate) {
+        await ctx.db.patch(post._id, { pubDate: isoDate });
+      }
+    }
+
+    return "Done: All pubDates converted to ISO format.";
+  },
 });

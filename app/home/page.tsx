@@ -18,7 +18,7 @@ export default function InvestmentDashboard() {
     // Regular paginated query (no search)
     const regularQuery = usePaginatedQuery(
         api.functions.substackBlogs.getPaginatedPosts,
-        {},
+         { paginationOpts: {} },
         { initialNumItems: 20 }
     );
 
