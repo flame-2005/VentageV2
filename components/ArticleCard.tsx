@@ -68,6 +68,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                 {new Date(post.pubDate).toLocaleDateString("en-US", {
                                     month: "short",
                                     day: "numeric",
+                                    year: "numeric",
                                 })}
                             </span>
                         </div>
