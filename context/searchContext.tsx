@@ -1,6 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { Contact } from "lucide-react";
 
 interface SearchContextType {
   searchTerm: string;
@@ -11,6 +13,8 @@ interface SearchContextType {
   clearSearch: () => void;
 }
 
+
+
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
 interface SearchProviderProps {
@@ -18,12 +22,15 @@ interface SearchProviderProps {
 }
 
 export function SearchProvider({ children }: SearchProviderProps) {
-  const [searchTerm, setSearchTerm] = useState(""); // Applied search term
-  const [inputValue, setInputValue] = useState(""); // Input field value
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [inputValue, setInputValue] = useState(""); 
 
+  const router = useRouter();
   const applySearch = (value?: string) => {
   const term = value ?? inputValue;
+  router.push(`/home`);
   setSearchTerm(term);
+  
 };
 
   const clearSearch = () => {

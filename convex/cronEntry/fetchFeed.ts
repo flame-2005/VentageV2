@@ -23,16 +23,6 @@ export const fetchAndUpdateFeeds = action(async (ctx) => {
       let newPostsCount = 0;
 
       for (const item of feed.items) {
-        // Skip if post already exists
-        const existing = await ctx.runQuery(
-          api.functions.substackBlogs.getByLink, 
-          { link: item.link! }
-        );
-        
-        if (existing) {
-          console.log(`⏭️  Skipping existing post: ${item.title} (${item.link})`);
-          continue;
-        }
 
         const link = item.link!;
         const title = item.title || "Untitled";

@@ -2,6 +2,7 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "../_generated/server";
 import { api } from "../_generated/api";
+import { paginationOptsValidator } from "convex/server";
 
 export const add = mutation({
   args: {
@@ -26,31 +27,29 @@ export const getPostsByCompany = query({
   args: { companyName: v.string() },
   handler: async (ctx, { companyName }) => {
     // Get all posts
-    const allPosts = await ctx.db
-      .query("posts")
-      .order("desc")
-      .collect();
-    
+    const allPosts = await ctx.db.query("posts").order("desc").collect();
+
     // Filter posts where the company name appears in the comma-separated list
-    const matchingPosts = allPosts.filter(post => {
-      if (!post.companyName || post.companyName === 'null') {
+    const matchingPosts = allPosts.filter((post) => {
+      if (!post.companyName || post.companyName === "null") {
         return false;
       }
-      
+
       // Split comma-separated company names and check if any match
       const companyNames = post.companyName
-        .split(',')
-        .map(name => name.trim().toLowerCase());
-      
+        .split(",")
+        .map((name) => name.trim().toLowerCase());
+
       return companyNames.includes(companyName.toLowerCase());
     });
-    
+
     // Filter to only include posts where author is defined and not 'null'
-    return matchingPosts.filter(post => 
-      post.author && 
-      (post.bseCode || post.nseCode) &&
-      post.author !== 'null' && 
-      post.author.trim() !== ''
+    return matchingPosts.filter(
+      (post) =>
+        post.author &&
+        (post.bseCode || post.nseCode) &&
+        post.author !== "null" &&
+        post.author.trim() !== ""
     );
   },
 });
@@ -63,17 +62,17 @@ export const getPostsByAuthor = query({
       .withIndex("by_author", (q) => q.eq("author", author))
       .order("desc")
       .collect();
-    
+
     // Filter to only include posts where companyName is defined and not 'null'
-    return posts.filter(post => 
-      post.companyName && 
-      (post.bseCode || post.nseCode) &&
-      post.companyName !== 'null' && 
-      post.companyName.trim() !== ''
+    return posts.filter(
+      (post) =>
+        post.companyName &&
+        (post.bseCode || post.nseCode) &&
+        post.companyName !== "null" &&
+        post.companyName.trim() !== ""
     );
   },
 });
-
 
 export const getBlogs = query({
   handler: async (ctx) => {
@@ -116,105 +115,61 @@ export const addPostIfNew = mutation({
     createdAt: v.number(),
     companyName: v.optional(v.string()),
   },
-  handler: async (ctx, post) => {
-    // Check if post already exists by link
+ handler: async (ctx, post) => {
     const existing = await ctx.db
       .query("posts")
-      .withIndex("by_link", (q) => q.eq("link", post.link))
+      .withIndex("by_link", q => q.eq("link", post.link))
       .unique();
 
-    if (existing) {
-      console.log(`Post already exists: ${post.title}`);
-      return null;
-    }
+    if (existing) return null;
 
-    const postId = await ctx.db.insert("posts", {
-      ...post,
-    });
-
-    console.log(`✅ Inserted new post with ID: ${postId}`);
-    return postId;
+    return await ctx.db.insert("posts", post);
   },
 });
 
-export const getByLink = query({
-  args: { link: v.string() },
-  handler: async (ctx, { link }) => {
-    return await ctx.db
-      .query("posts")
-      .withIndex("by_link", (q) => q.eq("link", link))
-      .unique();
-  },
-});
+// export const getByLink = query({
+//   args: { link: v.string() },
+//   handler: async (ctx, { link }) => {
+//     return await ctx.db
+//       .query("posts")
+//       .withIndex("by_link", (q) => q.eq("link", link))
+//       .unique();
+//   },
+// });
 
 export const getAllPosts = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db
-      .query("posts")
-      .order("desc")
-      .collect();
+    return await ctx.db.query("posts").order("desc").collect();
   },
 });
 
-// New paginated query for posts
 export const getPaginatedPosts = query({
   args: {
-    paginationOpts: v.object({
-      numItems: v.number(),
-      cursor: v.union(v.string(), v.null()),
-      id: v.optional(v.number()),
-    }),
+    paginationOpts: paginationOptsValidator,
   },
-  handler: async (ctx, { paginationOpts }) => {
-    // Get all posts
-    let allPosts = await ctx.db
+  handler: async (ctx, args) => {
+    return ctx.db
       .query("posts")
-      .collect();
-
-    // Sort by pubDate DESC (newest first)
-    allPosts = allPosts.sort((a, b) => {
-      const dateA = new Date(a.pubDate);
-      const dateB = new Date(b.pubDate);
-      return dateB.getTime() - dateA.getTime(); // descending
-    });
-
-    // Filter valid company names
-    const filteredPosts = allPosts.filter((post) => {
-      return (
-        post.companyName &&
-        (post.bseCode || post.nseCode) &&
-        post.companyName !== "null" &&
-        post.companyName.trim() !== ""
-      );
-    });
-
-    // Manual pagination
-    const cursor = paginationOpts.cursor;
-    const numItems = paginationOpts.numItems;
-
-    let startIndex = 0;
-    if (cursor) {
-      const cursorIndex = filteredPosts.findIndex(
-        (post) => post._id.toString() === cursor
-      );
-      startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
-    }
-
-    const endIndex = startIndex + numItems;
-    const page = filteredPosts.slice(startIndex, endIndex);
-    const isDone = endIndex >= filteredPosts.length;
-
-    return {
-      page,
-      continueCursor: isDone
-        ? cursor || ""
-        : page[page.length - 1]._id.toString(),
-      isDone,
-    };
+      .withIndex("by_pubDate")
+      .order("desc")
+      .filter((q) => 
+        q.or(
+          q.and(
+            q.neq(q.field("bseCode"), undefined),
+            q.neq(q.field("bseCode"), null),
+            q.neq(q.field("bseCode"), "")
+          ),
+          q.and(
+            q.neq(q.field("nseCode"), undefined),
+            q.neq(q.field("nseCode"), null),
+            q.neq(q.field("nseCode"), "")
+          )
+        )
+      )
+      .paginate(args.paginationOpts);
   },
 });
-
 
 export const updateCompanyName = mutation({
   args: {
@@ -246,62 +201,35 @@ export const updatePost = mutation({
   },
 });
 
+
 export const searchPosts = query({
   args: {
     searchTerm: v.string(),
     paginationOpts: v.object({
       numItems: v.number(),
       cursor: v.union(v.string(), v.null()),
-      id: v.optional(v.number()),
+      id: v.number(),
     }),
   },
   handler: async (ctx, { searchTerm, paginationOpts }) => {
-    const lowerSearchTerm = searchTerm.toLowerCase().trim();
+    const term = searchTerm.toUpperCase();
 
-    // Get all posts
-    const allPosts = await ctx.db
+    // Use by_company index with range query for efficient prefix matching
+    const result = await ctx.db
       .query("posts")
-      .order("desc")
-      .collect();
+      .withIndex("by_company", (q) => 
+        q.gte("companyName", term).lt("companyName", term + "\uffff")
+      )
+      .paginate(paginationOpts);
 
-    // Filter posts based on search term
-    const filteredPosts = allPosts.filter((post) => {
-      const title = post.title?.toLowerCase() || "";
-      const summary = post.summary?.toLowerCase() || "";
-      const author = post.author?.toLowerCase() || "";
-      const companyName = post.companyName?.toLowerCase() || "";
-      const nseCode = post.nseCode?.toLowerCase() || "";
-
-      return (
-        title.includes(lowerSearchTerm) ||
-        summary.includes(lowerSearchTerm) ||
-        author.includes(lowerSearchTerm) ||
-        companyName.includes(lowerSearchTerm) ||
-        nseCode.includes(lowerSearchTerm)
-      );
+    const sorted = result.page.sort((a, b) => {
+      return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
     });
 
-    // Manual pagination
-    const cursor = paginationOpts.cursor;
-    const numItems = paginationOpts.numItems;
-    
-    let startIndex = 0;
-    if (cursor) {
-      const cursorIndex = filteredPosts.findIndex(
-        (post) => post._id.toString() === cursor
-      );
-      startIndex = cursorIndex >= 0 ? cursorIndex + 1 : 0;
-    }
-
-    const endIndex = startIndex + numItems;
-    const page = filteredPosts.slice(startIndex, endIndex);
-    const isDone = endIndex >= filteredPosts.length;
-    
-    // Match Convex's PaginationResult type exactly
     return {
-      page,
-      continueCursor: isDone ? (cursor || "") : page[page.length - 1]._id.toString(),
-      isDone,
+      page: sorted,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
     };
   },
 });
@@ -317,17 +245,32 @@ export const getCompanySuggestions = query({
 
     const lowerSearchTerm = searchTerm.toLowerCase().trim();
 
-    // Get all companies from master list
-    const allCompanies = await ctx.db
+    // Query companies that start with the search term (using index)
+    const matchingByName = await ctx.db
       .query("master_company_list")
+      .withIndex("name", (q) => q.gte("name", searchTerm))
       .collect();
 
-    // Filter and map companies that match the search term
-    const matchingCompanies = allCompanies
+    // Also query by NSE code
+    const matchingByCode = await ctx.db
+      .query("master_company_list")
+      .withIndex("nse_code", (q) => q.gte("nse_code", searchTerm.toUpperCase()))
+      .collect();
+
+    // Combine and deduplicate
+    const combined = new Map();
+    
+    [...matchingByName, ...matchingByCode].forEach((company) => {
+      if (!combined.has(company._id)) {
+        combined.set(company._id, company);
+      }
+    });
+
+    const allMatches = Array.from(combined.values())
       .filter((company) => {
         const companyName = company.name.toLowerCase();
         const nseCode = company.nse_code.toLowerCase();
-        
+
         return (
           companyName.includes(lowerSearchTerm) ||
           nseCode.includes(lowerSearchTerm)
@@ -341,26 +284,30 @@ export const getCompanySuggestions = query({
         instrumentToken: company.instrument_token,
       }));
 
-    // Sort by relevance (starts with search term first, then alphabetically)
-    const suggestions = matchingCompanies
+    // Sort by relevance
+    const suggestions = allMatches
       .sort((a, b) => {
-        const aNameStartsWith = a.companyName.toLowerCase().startsWith(lowerSearchTerm);
-        const bNameStartsWith = b.companyName.toLowerCase().startsWith(lowerSearchTerm);
-        const aCodeStartsWith = a.nseCode.toLowerCase().startsWith(lowerSearchTerm);
-        const bCodeStartsWith = b.nseCode.toLowerCase().startsWith(lowerSearchTerm);
-        
-        // Prioritize NSE code exact match
+        const aNameStartsWith = a.companyName
+          .toLowerCase()
+          .startsWith(lowerSearchTerm);
+        const bNameStartsWith = b.companyName
+          .toLowerCase()
+          .startsWith(lowerSearchTerm);
+        const aCodeStartsWith = a.nseCode
+          .toLowerCase()
+          .startsWith(lowerSearchTerm);
+        const bCodeStartsWith = b.nseCode
+          .toLowerCase()
+          .startsWith(lowerSearchTerm);
+
         if (aCodeStartsWith && !bCodeStartsWith) return -1;
         if (!aCodeStartsWith && bCodeStartsWith) return 1;
-        
-        // Then prioritize company name starts with
         if (aNameStartsWith && !bNameStartsWith) return -1;
         if (!aNameStartsWith && bNameStartsWith) return 1;
-        
-        // Finally, alphabetical order by company name
+
         return a.companyName.localeCompare(b.companyName);
       })
-      .slice(0, 10); // Limit to 10 suggestions
+      .slice(0, 10);
 
     return suggestions;
   },

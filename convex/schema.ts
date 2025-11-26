@@ -35,8 +35,9 @@ export default defineSchema({
   })
     .index("by_blog", ["blogId"])
     .index("by_link", ["link"])
-    .index("by_companyName", ["companyName"])
-    .index("by_author", ["author"]),
+    .index("by_author", ["author"])
+    .index("by_company", ["companyName"])
+    .index("by_pubDate", ["pubDate"]),
 
   master_company_list: defineTable({
     bse_code: v.optional(v.string()),
@@ -50,5 +51,6 @@ export default defineSchema({
     updated_at: v.string(),
   })
     .index("nse_code", ["nse_code"])
-    .index("record_hash", ["record_hash"]),
+    .index("record_hash", ["record_hash"])
+    .index("name", ["name"]),
 });
