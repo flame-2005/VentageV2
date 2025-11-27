@@ -1,7 +1,7 @@
 import { Doc, Id } from '@/convex/_generated/dataModel'
 import { Calendar, ChevronDown, ExternalLink, Eye, Heart, Share2 } from 'lucide-react'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 
 type ArticleCardProps = {
@@ -16,9 +16,28 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
     const companyNames = post.companyName && post.companyName !== 'null'
         ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
         : []
-    const isFullCaps = (name:string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim());
-    const hasMultipleCompanies = companyNames.length > 1
-    const firstCompany = companyNames.find(isFullCaps)
+    const isFullCaps = (name: string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim());
+
+    const fullCapsCompanies = companyNames.filter(isFullCaps);
+    const firstCompany = fullCapsCompanies[0];
+    const hasMultipleCompanies = fullCapsCompanies.length > 1;
+
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setShowAllCompanies(false);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
 
     return (
         <article
@@ -75,8 +94,8 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
 
                         <div className='flex flex-wrap gap-2 md:gap-4 justify-start md:justify-center items-center'>
                             {/* Company Names Section */}
-                            {companyNames.length > 0 && firstCompany && (
-                                <div className="relative">
+                            {fullCapsCompanies.length > 0 && firstCompany && (
+                                <div className="relative" ref={dropdownRef}>
                                     {hasMultipleCompanies ? (
                                         <div className="relative">
                                             <button
@@ -91,14 +110,14 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                                     {firstCompany}
                                                 </Link>
                                                 <span className="text-xs text-slate-500">
-                                                    +{companyNames.length - 1}
+                                                    +{fullCapsCompanies.length - 1}
                                                 </span>
                                                 <ChevronDown className={`w-3 h-3 transition-transform ${showAllCompanies ? 'rotate-180' : ''}`} />
                                             </button>
 
                                             {showAllCompanies && (
                                                 <div className="absolute max-h-32 overflow-auto top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[200px] py-1">
-                                                    {companyNames.filter(isFullCaps).map((company, idx) => (
+                                                    {fullCapsCompanies.slice(1).map((company, idx) => (
                                                         <Link
                                                             key={idx}
                                                             href={`/company/${encodeURIComponent(company)}`}
@@ -121,6 +140,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                     )}
                                 </div>
                             )}
+
 
                             <button
                                 onClick={() => toggleLike(post._id)}
