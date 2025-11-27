@@ -5,7 +5,7 @@ import OpenAI from "openai";
 import { api, internal } from "../_generated/api";
 
 const openai = new OpenAI({
-  apiKey:process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 });
 
 // ACTION 1️⃣: Extract company info using OpenAI
@@ -16,7 +16,6 @@ export const extractCompanyAction = action({
     link: v.string(),
   },
   handler: async (ctx, { postId, title, link }) => {
-    
     // Helper function to fetch article content
     async function fetchArticleContent(url: string): Promise<string | null> {
       try {
@@ -61,90 +60,46 @@ export const extractCompanyAction = action({
         .join(" ");
     }
 
-    function matchCompaniesWithMasterList(
-      extractedCompanies: string | null,
-      masterCompanyList: Array<{ 
-        company_name: string; 
-        bse_code: string | null; 
-        nse_code: string | null 
-      }>
-    ) {
-      if (extractedCompanies === null) {
-        return {
-          company_name: null,
-          bse_code: null,
-          nse_code: null,
-        };
+    async function queryCompanyByName(companyName: string) {
+      const normalizedName = companyName.toLowerCase().trim();
+
+      const results = await ctx.runQuery(
+        api.functions.masterCompanyList.getByName,
+        {
+          name: normalizedName,
+        }
+      );
+
+      if (results && results.length > 0) {
+        return results[0];
+      }
+      return null;
+    }
+
+    function matchCompaniesWithIndex(
+      extractedCompanies: string | null
+    ): string[] {
+       if (extractedCompanies === null) {
+        return [];
       }
 
       const companyNames = extractedCompanies
         .split(",")
-        .map((name) => name.trim().toLowerCase())
+        .map((name) => name.trim())
         .filter(Boolean);
 
-      const matchedCompanies: Array<{
-        name: string;
-        bse_code: string | null;
-        nse_code: string | null;
-      }> = [];
-
-      companyNames.forEach((companyName) => {
-        const match = masterCompanyList.find((masterCompany) => {
-          const masterName = masterCompany.company_name?.toLowerCase() || "";
-
-          return (
-            masterName === companyName ||
-            masterName.includes(companyName) ||
-            companyName.includes(masterName)
-          );
-        });
-
-        if (match) {
-          matchedCompanies.push({
-            name: match.company_name,
-            bse_code: match.bse_code || null,
-            nse_code: match.nse_code || null,
-          });
-
-          console.log(`✅ Matched: "${companyName}" → ${match.company_name}`);
-        } else {
-          const fallbackName = capitalizeWords(companyName);
-          matchedCompanies.push({
-            name: fallbackName,
-            bse_code: null,
-            nse_code: null,
-          });
-
-          console.log(`⚠️ No match for: "${companyName}" → Keeping as: "${fallbackName}"`);
-        }
-      });
-
-      return {
-        company_name: matchedCompanies.map((c) => c.name).join(", "),
-        bse_code:
-          matchedCompanies
-            .map((c) => c.bse_code || "")
-            .filter(Boolean)
-            .join(", ") || null,
-        nse_code:
-          matchedCompanies
-            .map((c) => c.nse_code || "")
-            .filter(Boolean)
-            .join(", ") || null,
-      };
+      // Return matched companies for async processing
+      return companyNames;
     }
 
     console.log(`🔍 Fetching content from: ${link}`);
-
-    // Fetch master company list from your database
-    const masterCompanyList = await ctx.runQuery(api.functions.masterCompanyList.getAllCompanies);
 
     // FETCH THE ACTUAL ARTICLE CONTENT
     const articleContent = await fetchArticleContent(link);
 
     if (!articleContent) {
       console.error(`❌ Could not fetch content for ${link}`);
-      
+
       await ctx.runMutation(api.functions.substackBlogs.updatePost, {
         postId,
         data: {
@@ -153,9 +108,9 @@ export const extractCompanyAction = action({
         },
       });
 
-      return { 
-        success: false, 
-        error: "Failed to fetch article content" 
+      return {
+        success: false,
+        error: "Failed to fetch article content",
       };
     }
 
@@ -246,49 +201,82 @@ You are an expert AI system designed to analyze and summarize blog posts related
         summaryLength: parsed.summary?.length || 0,
       });
 
-      // Match companies with master list
-      const matchedCompanies = matchCompaniesWithMasterList(
-        parsed.company_name,
-        masterCompanyList
-      );
+      const companyNamesToMatch = matchCompaniesWithIndex(parsed.company_name);
+
+      const matchedCompanies: Array<{ company_name: string; bse_code: string | null; nse_code: string | null }> = [];
+
+      for (const companyName of companyNamesToMatch) {
+        const match = await queryCompanyByName(companyName);
+
+        if (match) {
+          matchedCompanies.push({
+            company_name: match.name,
+            bse_code: match.bse_code || null,
+            nse_code: match.nse_code || null,
+          });
+          console.log(`✅ Matched: "${companyName}" → ${match.name}`);
+        } else {
+          const fallbackName = capitalizeWords(companyName);
+          matchedCompanies.push({
+            company_name: fallbackName,
+            bse_code: null,
+            nse_code: null,
+          });
+          console.log(
+            `⚠️ No match for: "${companyName}" → Keeping as: "${fallbackName}"`
+          );
+        }
+      }
+
+      const matchedCompaniesResult = {
+        company_name: matchedCompanies.map((c) => c.company_name).join(", ") || null,
+        bse_code:
+          matchedCompanies
+            .map((c) => c.bse_code || "")
+            .filter(Boolean)
+            .join(", ") || null,
+        nse_code:
+          matchedCompanies
+            .map((c) => c.nse_code || "")
+            .filter(Boolean)
+            .join(", ") || null,
+      };
 
       console.log(`✅ After matching:`, {
-        company: matchedCompanies.company_name,
-        bse_code: matchedCompanies.bse_code,
-        nse_code: matchedCompanies.nse_code,
+        company: matchedCompaniesResult.company_name,
+        bse_code: matchedCompaniesResult.bse_code,
+        nse_code: matchedCompaniesResult.nse_code,
       });
 
-      // Update the post in Convex DB
-      await ctx.runMutation(api.functions.substackBlogs.updatePost, {
+        await ctx.runMutation(api.functions.substackBlogs.updatePost, {
         postId,
         data: {
           summary: parsed.summary,
-          companyName: matchedCompanies.company_name || undefined,
-          bseCode: matchedCompanies.bse_code || undefined,
-          nseCode: matchedCompanies.nse_code || undefined,
+          companyName: matchedCompaniesResult.company_name || undefined,
+          bseCode: matchedCompaniesResult.bse_code || undefined,
+          nseCode: matchedCompaniesResult.nse_code || undefined,
           category: parsed.category || "Uncategorized",
           imageUrl: parsed.image_url || undefined,
         },
       });
 
       console.log(`✅ Updated post ${postId} with extracted data`);
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         data: {
           title: parsed.title,
           summary: parsed.summary,
-          company_name: matchedCompanies.company_name,
-          bse_code: matchedCompanies.bse_code,
-          nse_code: matchedCompanies.nse_code,
+          company_name: matchedCompaniesResult.company_name,
+          bse_code: matchedCompaniesResult.bse_code,
+          nse_code: matchedCompaniesResult.nse_code,
           category: parsed.category,
           image_url: parsed.image_url,
-        }
+        },
       };
-
     } catch (error) {
       console.error("❌ OpenAI API error:", error);
-      
+
       // Even on error, try to save a basic summary
       await ctx.runMutation(api.functions.substackBlogs.updatePost, {
         postId,
@@ -305,7 +293,7 @@ You are an expert AI system designed to analyze and summarize blog posts related
 
 // ACTION 2️⃣: Label all posts in entire database (recursive pagination)
 // export const labelAllCompanies = internalAction({
-//   args: { 
+//   args: {
 //     cursor: v.optional(v.string()),
 //     forceReprocess: v.optional(v.boolean()),
 //   },
@@ -339,9 +327,9 @@ You are an expert AI system designed to analyze and summarize blog posts related
 //     let scheduledCount = 0;
 //     for (const post of result.page) {
 //       // Process if: forcing reprocess OR missing summary OR missing category
-//       const needsProcessing = 
-//         forceReprocess || 
-//         !post.summary || 
+//       const needsProcessing =
+//         forceReprocess ||
+//         !post.summary ||
 //         !post.category ||
 //         post.summary === "unset" ||
 //         post.category === "unset";
@@ -389,17 +377,17 @@ You are an expert AI system designed to analyze and summarize blog posts related
 //   },
 //   handler: async (ctx, args) => {
 //     const forceReprocess = args.forceReprocess ?? false;
-    
+
 //     await ctx.scheduler.runAfter(
 //       0,
 //       internal.functions.labeling.labelAllCompanies,
-//       { 
+//       {
 //         cursor: undefined,
 //         forceReprocess,
 //       }
 //     );
-    
-//     return { 
+
+//     return {
 //       message: "Labeling process started!",
 //       forceReprocess,
 //       note: "Check Convex dashboard logs for progress"

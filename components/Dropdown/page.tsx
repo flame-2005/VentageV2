@@ -45,15 +45,15 @@ const Dropdown: React.FC<DropdownProps> = ({ title, titleAction, options }) => {
                 >
                     {title}
                 </div>
-                <span className="text-xs text-slate-500">
-                    +{options.length - 1}
-                </span>
+               { options.length >=1 &&<span className="text-xs text-slate-500">
+                    +{options.length}
+                </span>}
                 <ChevronDown className={`w-3 h-3 transition-transform ${showAllOptions ? 'rotate-180' : ''}`} />
             </button>
 
             {showAllOptions && (
                 <div className="absolute max-h-32 overflow-auto top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-10 min-w-[200px] py-1">
-                    {options.slice(1).map((company, idx) => (
+                    {options.map((company, idx) => (
                         <Link
                             key={idx}
                             href={company.link}
