@@ -11,14 +11,14 @@ import { useSearch } from "@/context/searchContext";
 export default function InvestmentDashboard() {
     const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
     const loadMoreRef = useRef<HTMLDivElement>(null);
-    
+
     // Get search term from context
     const { searchTerm } = useSearch();
 
     // Regular paginated query (no search)
     const regularQuery = usePaginatedQuery(
         api.functions.substackBlogs.getPaginatedPosts,
-         { paginationOpts: {} },
+        { paginationOpts: {} },
         { initialNumItems: 20 }
     );
 
@@ -30,8 +30,8 @@ export default function InvestmentDashboard() {
     );
 
     // Use the appropriate query based on whether search term exists
-    const { results: posts, status, loadMore } = searchTerm 
-        ? searchQuery 
+    const { results: posts, status, loadMore } = searchTerm
+        ? searchQuery
         : regularQuery;
 
     // Check loading states
@@ -75,14 +75,14 @@ export default function InvestmentDashboard() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-            <div className="max-w-5xl mx-auto px-4 py-8">
+            <div className="max-w-6xl mx-auto px-4 py-8">
                 {isLoading ? (
                     <CircularLoader />
                 ) : (
                     <>
-                    <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6">
-                        Latest Articles
-                    </h1>
+                        <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6">
+                            Latest Articles
+                        </h1>
                         {/* Articles */}
                         <div className="space-y-6">
                             {posts && posts.length > 0 ? (

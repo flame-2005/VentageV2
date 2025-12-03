@@ -13,19 +13,24 @@
     "fetch:wordpress": "tsx scripts/fetchWordPress.ts",
     "fetch:medium": "tsx scripts/fetchMedium.ts",
     "fetch:blogspot": "tsx scripts/fetchBlogspot.ts",
-    "fetch:masterCompany": "tsx scripts/masterCompany.ts"
+    "fetch:masterCompany": "tsx scripts/masterCompany.ts",
+    "test:program": "tsx scripts/test.ts",
+    "categorize:posts": "tsx scripts/tagCompany/categorization.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",
     "convex": "^1.28.2",
     "dotenv": "^17.2.3",
+    "json2csv": "^6.0.0-alpha.2",
     "lucide-react": "^0.553.0",
     "next": "16.0.1",
     "openai": "^6.8.1",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "rss-parser": "^3.13.0",
-    "supabase": "^2.58.5"
+    "supabase": "^2.58.5",
+    "yahoo-finance2": "^3.10.2",
+    "yfinance": "^0.0.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

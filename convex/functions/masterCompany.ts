@@ -16,6 +16,7 @@ export const replaceAllCompanies = mutation({
         record_hash: v.string(),
         created_at: v.string(),
         updated_at: v.string(),
+        market_cap: v.union(v.number(), v.null()),
       })
     ),
   },
@@ -43,6 +44,7 @@ export const replaceAllCompanies = mutation({
         record_hash: company.record_hash,
         created_at: company.created_at,
         updated_at: company.updated_at,
+        market_cap: company.market_cap ?? undefined,
       });
       inserted++;
     }
@@ -93,5 +95,44 @@ export const getCompanyCount = query({
   handler: async (ctx) => {
     const companies = await ctx.db.query("master_company_list").collect();
     return companies.length;
+  },
+});
+
+// Query to get companies that need enrichment
+export const getCompaniesNeedingEnrichment = query({
+  args: {
+    limit: v.number(),
+    offset: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const offset = args.offset ?? 0;
+    
+    // Get all companies (since we can't filter on undefined in Convex directly)
+    const allCompanies = await ctx.db
+      .query("master_company_list")
+      .collect();
+    
+    // Filter in memory for undefined/null market_cap
+    const needsEnrichment = allCompanies.filter(
+      (c) => c.market_cap == null  || c.market_cap === undefined
+    );
+    
+    // Apply pagination
+    return needsEnrichment
+  },
+});
+
+// Mutation to update company enrichment data
+export const updateCompanyEnrichment = mutation({
+  args: {
+    id: v.id("master_company_list"),
+    market_cap: v.union(v.number(), v.null()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      market_cap: args.market_cap ?? undefined,
+      updated_at: new Date().toISOString(),
+    });
+    return { success: true };
   },
 });

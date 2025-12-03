@@ -7,14 +7,12 @@ export default defineSchema({
     name: v.string(),
     domain: v.string(),
     feedUrl: v.string(),
-    historicalPostUrl: v.optional(v.string()),
     lastCheckedAt: v.optional(v.number()),
-    category: v.optional(v.string()),
-    companyName: v.optional(v.string()),
+    source: v.optional(v.string()),
   }),
 
   posts: defineTable({
-    blogId: v.id("blogs"),
+    blogId: v.optional(v.id("blogs")),
     title: v.string(),
     description: v.optional(v.string()),
     link: v.string(),
@@ -28,10 +26,23 @@ export default defineSchema({
     bseCode: v.optional(v.string()),
     nseCode: v.optional(v.string()),
     category: v.optional(v.string()),
+    companyDetails: v.optional(
+      v.array(
+        v.object({
+          company_name: v.string(),
+          bse_code: v.optional(v.string()),
+          nse_code: v.optional(v.string()),
+          market_cap: v.optional(v.number()),
+        })
+      )
+    ),
+    tags:v.optional(v.array(v.string())),
+    classification: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     views: v.optional(v.string()),
     likes: v.optional(v.string()),
     lastCheckedAt: v.optional(v.number()),
+    source:v.optional(v.string()),
   })
     .index("by_blog", ["blogId"])
     .index("by_link", ["link"])
@@ -46,6 +57,7 @@ export default defineSchema({
     instrument_token: v.number(),
     isin: v.optional(v.string()),
     exchange: v.string(),
+    market_cap: v.optional(v.number()),
     record_hash: v.string(),
     created_at: v.string(),
     updated_at: v.string(),

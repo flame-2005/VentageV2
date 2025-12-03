@@ -38,6 +38,7 @@ interface ProcessedCompany {
   record_hash: string;
   created_at: string;
   updated_at: string;
+  market_cap: number | null;
 }
 
 // Action to refresh master company details
@@ -245,6 +246,7 @@ function processInstrumentData(
       isin: isin,
       exchange: primaryRow.exchange,
       record_hash: hashString,
+      market_cap: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
