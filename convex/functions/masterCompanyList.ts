@@ -15,6 +15,7 @@ export const getAllCompanies = query({
       company_name: company.name,
       nse_code: company.nse_code || null,
       bse_code: company.bse_code || null,
+      market_cap: company.market_cap || null,
     }));
   },
 });

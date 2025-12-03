@@ -29,8 +29,10 @@ export const getPostsByCompany = query({
     // Use by_company index with range query
     const posts = await ctx.db
       .query("posts")
-      .withIndex("by_company", (q) => 
-        q.gte("companyName", companyName).lt("companyName", companyName + "\uffff")
+      .withIndex("by_company", (q) =>
+        q
+          .gte("companyName", companyName)
+          .lt("companyName", companyName + "\uffff")
       )
       .collect();
 
@@ -125,10 +127,10 @@ export const addPostIfNew = mutation({
     createdAt: v.number(),
     companyName: v.optional(v.string()),
   },
- handler: async (ctx, post) => {
+  handler: async (ctx, post) => {
     const existing = await ctx.db
       .query("posts")
-      .withIndex("by_link", q => q.eq("link", post.link))
+      .withIndex("by_link", (q) => q.eq("link", post.link))
       .unique();
 
     if (existing) return null;
@@ -154,6 +156,13 @@ export const getAllPosts = query({
   },
 });
 
+export const getAllPosts50 = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("posts").order("desc").take(50);
+  },
+});
+
 export const getPaginatedPosts = query({
   args: {
     paginationOpts: paginationOptsValidator,
@@ -163,7 +172,7 @@ export const getPaginatedPosts = query({
       .query("posts")
       .withIndex("by_pubDate")
       .order("desc")
-      .filter((q) => 
+      .filter((q) =>
         q.or(
           q.and(
             q.neq(q.field("bseCode"), undefined),
@@ -195,12 +204,34 @@ export const updatePost = mutation({
   args: {
     postId: v.id("posts"),
     data: v.object({
+      title: v.optional(v.string()),
+      description: v.optional(v.string()),
+      link: v.optional(v.string()),
+      author: v.optional(v.string()),
+      pubDate: v.optional(v.string()),
+      image: v.optional(v.string()),
+      content: v.optional(v.string()),
       summary: v.optional(v.string()),
       companyName: v.optional(v.string()),
       bseCode: v.optional(v.string()),
       nseCode: v.optional(v.string()),
       category: v.optional(v.string()),
+      classification: v.optional(v.string()),
       imageUrl: v.optional(v.string()),
+      views: v.optional(v.string()),
+      likes: v.optional(v.string()),
+      lastCheckedAt: v.optional(v.number()),
+      companyDetails: v.optional(
+        v.array(
+          v.object({
+            company_name: v.string(),
+            bse_code: v.optional(v.string()),
+            nse_code: v.optional(v.string()),
+            market_cap: v.optional(v.number()),
+          })
+        )
+      ),
+      tags: v.optional(v.array(v.string())),
     }),
   },
   handler: async (ctx, args) => {
@@ -211,6 +242,60 @@ export const updatePost = mutation({
   },
 });
 
+export const bulkUpdatePosts = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        postId: v.id("posts"),
+        data: v.object({
+          title: v.optional(v.string()),
+          description: v.optional(v.string()),
+          link: v.optional(v.string()),
+          author: v.optional(v.string()),
+          pubDate: v.optional(v.string()),
+          image: v.optional(v.string()),
+          content: v.optional(v.string()),
+          summary: v.optional(v.string()),
+          companyName: v.optional(v.string()),
+          bseCode: v.optional(v.string()),
+          nseCode: v.optional(v.string()),
+          category: v.optional(v.string()),
+          classification: v.optional(v.string()),
+          imageUrl: v.optional(v.string()),
+          views: v.optional(v.string()),
+          likes: v.optional(v.string()),
+          companyDetails: v.optional(
+            v.array(
+              v.object({
+                company_name: v.string(),
+                bse_code: v.optional(v.string()),
+                nse_code: v.optional(v.string()),
+                market_cap: v.optional(v.number()),
+              })
+            )
+          ),
+          tags: v.optional(v.array(v.string())),
+        }),
+      })
+    ),
+  },
+
+  handler: async (ctx, args) => {
+    // Limit to avoid users sending thousands at once
+    if (args.updates.length > 100) {
+      throw new Error("Cannot update more than 100 posts at once");
+    }
+
+    for (const { postId, data } of args.updates) {
+      await ctx.db.patch(postId, {
+        ...data,
+        lastCheckedAt: Date.now(),
+      });
+    }
+
+    return { success: true, updated: args.updates.length };
+  },
+});
 
 export const searchPosts = query({
   args: {
@@ -227,7 +312,7 @@ export const searchPosts = query({
     // Use by_company index with range query for efficient prefix matching
     const result = await ctx.db
       .query("posts")
-      .withIndex("by_company", (q) => 
+      .withIndex("by_company", (q) =>
         q.gte("companyName", term).lt("companyName", term + "\uffff")
       )
       .paginate(paginationOpts);
@@ -269,7 +354,7 @@ export const getCompanySuggestions = query({
 
     // Combine and deduplicate
     const combined = new Map();
-    
+
     [...matchingByName, ...matchingByCode].forEach((company) => {
       if (!combined.has(company._id)) {
         combined.set(company._id, company);
@@ -320,5 +405,51 @@ export const getCompanySuggestions = query({
       .slice(0, 10);
 
     return suggestions;
+  },
+});
+
+export const addBulkPost = mutation({
+  args: {
+    posts: v.array(
+      v.object({
+        blogId: v.optional(v.id("blogs")),
+        title: v.string(),
+        description: v.optional(v.string()),
+        link: v.string(),
+        author: v.optional(v.string()),
+        pubDate: v.string(),
+        image: v.optional(v.string()),
+        content: v.optional(v.string()),
+        createdAt: v.number(),
+        summary: v.optional(v.string()),
+        companyName: v.optional(v.string()),
+        bseCode: v.optional(v.string()),
+        nseCode: v.optional(v.string()),
+        category: v.optional(v.string()),
+        companyDetails: v.optional(
+          v.array(
+            v.object({
+              company_name: v.string(),
+              bse_code: v.optional(v.string()),
+              nse_code: v.optional(v.string()),
+              market_cap: v.optional(v.number()),
+            })
+          )
+        ),
+        tags: v.optional(v.array(v.string())),
+        classification: v.optional(v.string()),
+        imageUrl: v.optional(v.string()),
+        views: v.optional(v.string()),
+        likes: v.optional(v.string()),
+        source:v.optional(v.string()),
+        lastCheckedAt: v.optional(v.number()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    for (const post of args.posts) {
+      await ctx.db.insert("posts", post);
+    }
+    return true;
   },
 });

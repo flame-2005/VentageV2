@@ -79,7 +79,7 @@ export const extractCompanyAction = action({
     function matchCompaniesWithIndex(
       extractedCompanies: string | null
     ): string[] {
-       if (extractedCompanies === null) {
+      if (extractedCompanies === null) {
         return [];
       }
 
@@ -115,11 +115,11 @@ export const extractCompanyAction = action({
     }
 
     const prompt = `
-You are an expert AI system designed to analyze and summarize blog posts related to finance, startups, technology, and business.
+You are a world-class fundamental equity analyst summarizing an investment-thesis blog post.
 
-      Your task:
-      1. Visit the provided URL.
-      2. You are a world-class fundamental equity analyst summarizing an investment-thesis blog post.
+Your task:
+1. Read the article content provided below.
+  2. You are a world-class fundamental equity analyst summarizing an investment-thesis blog post.
 
       Your task:
       Produce a 1–2 line, punchy, high-signal summary that synthesizes:
@@ -134,33 +134,151 @@ You are an expert AI system designed to analyze and summarize blog posts related
       Assume the goal is to help a sophisticated investor quickly assess whether the underlying work is high-quality and worth clicking.
 
       Output format:
-      → One or two sentences. Max 40 words.
+      → One or two sentences. Max 60 words.
       → Direct, analytical, thesis-first.
 
       Example style:
 
       “Company X’s thesis hinges on its 70%+ recurring revenue cloud segment compounding at 30% YoY, giving it operating leverage toward mid-20s margins as legacy businesses shrink.”
 
-      “The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix.”
+      “The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix.”
 
-      3. Identify and extract the Company Name, BSE Code, NSE Code if possible.
-      4. If no company, provide a relevant Industry/Topic.
-      5. Extract featured image URL if available.
 
-      Return in this JSON format:
-      {
-        "title": "Title of the blog post",
-        "summary": "2–3 line summary",
-        "company_name": "Company name or null",
-        "bse_code": "BSE code or null",
-        "nse_code": "NSE code or null",
-        "category": "Industry or topic",
-        "image_url": "featured image URL or null"
-      }
+3. Identify companies:
+   - If multiple companies are discussed, list ALL of them separated by commas
+   - Only include REAL commercial companies (not institutions)
+   - If the article is sector-focused without specific companies, set company to []
 
-      Title: ${title}
-      Link: ${link}
-    `.trim();
+4. Identify the sector/industry (Technology, Pharma, Banking, etc.)
+
+5. Classify the blog into exactly ONE of the 5 categories below.
+
+Return ONLY valid JSON with this structure:
+{
+  "classification": "",
+  "company": [],
+  "sector": "",
+  "tags": [],
+  "category": "",
+  "summary": ""
+}
+
+Article Title: ${title}
+
+Article Content:
+${articleContent}
+
+────────────────────────────────────────
+📌 DO NOT extract non-commercial entities:
+────────────────────────────────────────
+Exclude:
+- IITs, IIMs, universities
+- Indian Navy, Army, Air Force
+- Ministries, Gov departments
+- NGOs, research institutes
+- Political entities
+
+────────────────────────────────────────
+📌 CATEGORY DEFINITIONS (STRICT, WITH EXAMPLES INCLUDING SUMMARY)
+────────────────────────────────────────
+
+1. Multiple_company_update
+   - Short factual updates on multiple companies (1–2 lines each)
+   - No analysis or thesis
+
+   Example Output:
+   {
+     "classification": "Multiple_company_update",
+     "company": ["TCS", "Infosys", "Reliance"],
+     "sector": "",
+     "tags": ["neutral"],
+     "category": "multiple",
+     "summary": "Large-cap IT names released event updates with no material thesis or directional financial impact."
+   }
+
+────────────────────────────────────────
+
+2. Multiple_company_analysis
+   - Shallow to moderate analysis (3–6 lines per company)
+   - Light reasoning across several businesses
+
+   Example Output:
+   {
+     "classification": "Multiple_company_analysis",
+     "company": ["ITC", "HUL", "Nestle"],
+     "sector": "",
+     "tags": ["moderately_bullish"],
+     "category": "multiple",
+     "summary": "FMCG players show margin stability and volume recovery, supported by rural demand improvement and cost moderation."
+   }
+
+────────────────────────────────────────
+
+3. Sector_analysis
+   - Deep dive on an entire industry or sector
+   - Companies only as examples supporting the sector thesis
+
+   Example Output:
+   {
+     "classification": "Sector_analysis",
+     "company": ["Sun Pharma", "Cipla", "Lupin"],
+     "sector": "Pharmaceuticals",
+     "tags": ["bullish_on_sector"],
+     "category": "sector",
+     "summary": "US generics shortages and domestic chronic growth strengthen long-term profitability for leading pharma exporters."
+   }
+
+────────────────────────────────────────
+
+4. Company_analysis
+   - Deep research into ONE company
+   - Covers financials, risks, valuations, competitive position
+
+   Example Output:
+   {
+     "classification": "Company_analysis",
+     "company": ["HDFC Bank"],
+     "sector": "Banking",
+     "tags": ["bullish"],
+     "category": "company",
+     "summary": "Stable NIMs, superior asset quality, and sustained loan growth support compounding ROE for HDFC Bank."
+   }
+
+────────────────────────────────────────
+
+5. General_investment_guide
+   - Pure education about investing
+   - Not about a sector or company
+
+   Example Output:
+   {
+     "classification": "General_investment_guide",
+     "company": [],
+     "sector": "",
+     "tags": ["educational"],
+     "category": "general",
+     "summary": "Disciplined SIP allocations and diversified portfolios reduce volatility and improve long-term risk-adjusted returns."
+   }
+
+────────────────────────────────────────
+📌 SENTIMENT TAGS
+────────────────────────────────────────
+Use only:
+["bullish", "bearish", "neutral", "positive", "negative", "cautious", "speculative"]
+
+────────────────────────────────────────
+⚠ IMPORTANT
+────────────────────────────────────────
+- ALWAYS return ONLY the JSON object.
+- No commentary, no steps, no explanation, no markdown.
+- Extract companies and sectors ONLY if the category requires it.
+
+────────────────────────────────────────
+END OF SYSTEM PROMPT
+────────────────────────────────────────
+
+
+`.trim();
     try {
       console.log(`🤖 Sending to OpenAI...`);
 
@@ -203,7 +321,11 @@ You are an expert AI system designed to analyze and summarize blog posts related
 
       const companyNamesToMatch = matchCompaniesWithIndex(parsed.company_name);
 
-      const matchedCompanies: Array<{ company_name: string; bse_code: string | null; nse_code: string | null }> = [];
+      const matchedCompanies: Array<{
+        company_name: string;
+        bse_code: string | null;
+        nse_code: string | null;
+      }> = [];
 
       for (const companyName of companyNamesToMatch) {
         const match = await queryCompanyByName(companyName);
@@ -229,7 +351,8 @@ You are an expert AI system designed to analyze and summarize blog posts related
       }
 
       const matchedCompaniesResult = {
-        company_name: matchedCompanies.map((c) => c.company_name).join(", ") || null,
+        company_name:
+          matchedCompanies.map((c) => c.company_name).join(", ") || null,
         bse_code:
           matchedCompanies
             .map((c) => c.bse_code || "")
@@ -248,7 +371,7 @@ You are an expert AI system designed to analyze and summarize blog posts related
         nse_code: matchedCompaniesResult.nse_code,
       });
 
-        await ctx.runMutation(api.functions.substackBlogs.updatePost, {
+      await ctx.runMutation(api.functions.substackBlogs.updatePost, {
         postId,
         data: {
           summary: parsed.summary,
@@ -290,107 +413,3 @@ You are an expert AI system designed to analyze and summarize blog posts related
     }
   },
 });
-
-// ACTION 2️⃣: Label all posts in entire database (recursive pagination)
-// export const labelAllCompanies = internalAction({
-//   args: {
-//     cursor: v.optional(v.string()),
-//     forceReprocess: v.optional(v.boolean()),
-//   },
-//   handler: async (ctx, args) => {
-//     const limit = 20;
-//     const cursor = args.cursor;
-//     const forceReprocess = args.forceReprocess ?? false;
-
-//     console.log("🔍 Starting batch with cursor:", cursor || "initial");
-//     console.log("🔄 Force reprocess:", forceReprocess);
-
-//     const result = await ctx.runQuery(
-//       api.functions.substackBlogs.getPaginatedPosts,
-//       {
-//         numItems: limit,
-//         cursor,
-//       }
-//     );
-
-//     console.log("📊 Query result:", {
-//       pageLength: result?.page?.length || 0,
-//       hasContinueCursor: !!result?.continueCursor,
-//       isDone: result?.isDone,
-//     });
-
-//     if (!result?.page?.length) {
-//       console.log("✅ No more posts found. All labeling complete!");
-//       return;
-//     }
-
-//     let scheduledCount = 0;
-//     for (const post of result.page) {
-//       // Process if: forcing reprocess OR missing summary OR missing category
-//       const needsProcessing =
-//         forceReprocess ||
-//         !post.summary ||
-//         !post.category ||
-//         post.summary === "unset" ||
-//         post.category === "unset";
-
-//       if (needsProcessing) {
-//         await ctx.scheduler.runAfter(
-//           0,
-//           api.functions.labeling.extractCompanyAction,
-//           {
-//             postId: post._id,
-//             title: post.title,
-//             link: post.link,
-//           }
-//         );
-//         scheduledCount++;
-//       }
-//     }
-
-//     console.log(
-//       `📦 Processed ${result.page.length} posts, scheduled ${scheduledCount} for labeling`
-//     );
-
-//     if (result.continueCursor) {
-//       console.log("🔄 Scheduling next batch with cursor:", result.continueCursor);
-//       await ctx.scheduler.runAfter(
-//         2000, // 2 second delay between batches
-//         internal.functions.labeling.labelAllCompanies,
-//         {
-//           cursor: result.continueCursor,
-//           forceReprocess,
-//         }
-//       );
-//     } else {
-//       console.log(
-//         "🎉 All posts in the database have been scheduled for labeling!"
-//       );
-//     }
-//   },
-// });
-
-// Create a public action to trigger the internal one
-// export const startLabelingAllCompanies = action({
-//   args: {
-//     forceReprocess: v.optional(v.boolean()),
-//   },
-//   handler: async (ctx, args) => {
-//     const forceReprocess = args.forceReprocess ?? false;
-
-//     await ctx.scheduler.runAfter(
-//       0,
-//       internal.functions.labeling.labelAllCompanies,
-//       {
-//         cursor: undefined,
-//         forceReprocess,
-//       }
-//     );
-
-//     return {
-//       message: "Labeling process started!",
-//       forceReprocess,
-//       note: "Check Convex dashboard logs for progress"
-//     };
-//   },
-// });
