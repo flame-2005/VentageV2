@@ -4,21 +4,20 @@ import { internalMutation, mutation, query } from "../_generated/server";
 import { api } from "../_generated/api";
 import { paginationOptsValidator } from "convex/server";
 
-export const add = mutation({
+export const addBlogs = mutation({
   args: {
     name: v.string(),
     domain: v.string(),
     feedUrl: v.string(),
-    historicalPostUrl: v.optional(v.string()), // ✅ optional field for API URL
+    source: v.string(),
   },
-  handler: async (ctx, { name, domain, feedUrl, historicalPostUrl }) => {
+  handler: async (ctx, { name, domain, feedUrl, source }) => {
     await ctx.db.insert("blogs", {
       name,
       domain,
       feedUrl,
-      historicalPostUrl: historicalPostUrl || `https://${domain}/api/v1/posts`,
       lastCheckedAt: Date.now(),
-      companyName: "",
+      source,
     });
   },
 });
@@ -210,6 +209,23 @@ export const addPostIfNew = mutation({
     if (existing) return null;
 
     return await ctx.db.insert("posts", post);
+  },
+});
+
+export const checkExistingPost = query({
+  args: { link: v.string() },
+
+  handler: async (ctx, { link }) => {
+    const existing = await ctx.db
+      .query("posts")
+      .withIndex("by_link", (q) => q.eq("link", link))
+      .first();
+
+    if (existing) {
+      return existing; // found match
+    }
+
+    return null; // no match found
   },
 });
 

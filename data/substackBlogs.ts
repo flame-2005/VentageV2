@@ -31,6 +31,20 @@ export const SubstackBlogs = [
   "themoneycarnival.substack.com"
 ];
 
+export const blogspotBlogs = [
+  "myweekendspot.blogspot.com",
+  "valuationinmotion.blogspot.com",
+  "ananthindianmarkets.blogspot.com"
+];
+
+export const wordpressBlogs = [
+  "theinvestinghub.wordpress.com",
+  "shatadalwrites.wordpress.com",
+  "bigvisioninvesting.wordpress.com",
+  "introspeckblog.wordpress.com",
+  "fundooprofessor.wordpress.com",
+  "marshmallowcapital.files.wordpress.com"
+];
 
 export enum SubstackDomains {
   InvestKaroIndia = "investkaroindia.substack.com",

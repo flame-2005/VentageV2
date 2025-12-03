@@ -7,10 +7,8 @@ export default defineSchema({
     name: v.string(),
     domain: v.string(),
     feedUrl: v.string(),
-    historicalPostUrl: v.optional(v.string()),
     lastCheckedAt: v.optional(v.number()),
-    category: v.optional(v.string()),
-    companyName: v.optional(v.string()),
+    source: v.optional(v.string()),
   }),
 
   posts: defineTable({
