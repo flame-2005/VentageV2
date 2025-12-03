@@ -34,6 +34,43 @@ export const getPostsByCompany = query({
           .gte("companyName", companyName)
           .lt("companyName", companyName + "\uffff")
       )
+      .filter((q) =>
+        q.and(
+          // ----------------------------
+          // Condition 1: Classification must ALWAYS match one of the 3
+          // ----------------------------
+          q.or(
+            q.eq(q.field("classification"), "Company_analysis"),
+            q.eq(q.field("classification"), "Multiple_company_analysis"),
+            q.eq(q.field("classification"), "Sector_analysis")
+          ),
+
+          // ----------------------------
+          // Condition 2: ONE of these must be true (OR)
+          // ----------------------------
+          q.or(
+            // has valid BSE code
+            q.and(
+              q.neq(q.field("bseCode"), undefined),
+              q.neq(q.field("bseCode"), null),
+              q.neq(q.field("bseCode"), "")
+            ),
+
+            // has valid NSE code
+            q.and(
+              q.neq(q.field("nseCode"), undefined),
+              q.neq(q.field("nseCode"), null),
+              q.neq(q.field("nseCode"), "")
+            ),
+
+            // has non-empty companyDetails
+            q.and(
+              q.neq(q.field("companyDetails"), undefined),
+              q.neq(q.field("companyDetails"), null)
+            )
+          )
+        )
+      )
       .collect();
 
     // Lightweight client-side filtering
@@ -72,6 +109,43 @@ export const getPostsByAuthor = query({
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", author))
+      .filter((q) =>
+        q.and(
+          // ----------------------------
+          // Condition 1: Classification must ALWAYS match one of the 3
+          // ----------------------------
+          q.or(
+            q.eq(q.field("classification"), "Company_analysis"),
+            q.eq(q.field("classification"), "Multiple_company_analysis"),
+            q.eq(q.field("classification"), "Sector_analysis")
+          ),
+
+          // ----------------------------
+          // Condition 2: ONE of these must be true (OR)
+          // ----------------------------
+          q.or(
+            // has valid BSE code
+            q.and(
+              q.neq(q.field("bseCode"), undefined),
+              q.neq(q.field("bseCode"), null),
+              q.neq(q.field("bseCode"), "")
+            ),
+
+            // has valid NSE code
+            q.and(
+              q.neq(q.field("nseCode"), undefined),
+              q.neq(q.field("nseCode"), null),
+              q.neq(q.field("nseCode"), "")
+            ),
+
+            // has non-empty companyDetails
+            q.and(
+              q.neq(q.field("companyDetails"), undefined),
+              q.neq(q.field("companyDetails"), null)
+            )
+          )
+        )
+      )
       .order("desc")
       .collect();
 
@@ -173,16 +247,39 @@ export const getPaginatedPosts = query({
       .withIndex("by_pubDate")
       .order("desc")
       .filter((q) =>
-        q.or(
-          q.and(
-            q.neq(q.field("bseCode"), undefined),
-            q.neq(q.field("bseCode"), null),
-            q.neq(q.field("bseCode"), "")
+        q.and(
+          // ----------------------------
+          // Condition 1: Classification must ALWAYS match one of the 3
+          // ----------------------------
+          q.or(
+            q.eq(q.field("classification"), "Company_analysis"),
+            q.eq(q.field("classification"), "Multiple_company_analysis"),
+            q.eq(q.field("classification"), "Sector_analysis")
           ),
-          q.and(
-            q.neq(q.field("nseCode"), undefined),
-            q.neq(q.field("nseCode"), null),
-            q.neq(q.field("nseCode"), "")
+
+          // ----------------------------
+          // Condition 2: ONE of these must be true (OR)
+          // ----------------------------
+          q.or(
+            // has valid BSE code
+            q.and(
+              q.neq(q.field("bseCode"), undefined),
+              q.neq(q.field("bseCode"), null),
+              q.neq(q.field("bseCode"), "")
+            ),
+
+            // has valid NSE code
+            q.and(
+              q.neq(q.field("nseCode"), undefined),
+              q.neq(q.field("nseCode"), null),
+              q.neq(q.field("nseCode"), "")
+            ),
+
+            // has non-empty companyDetails
+            q.and(
+              q.neq(q.field("companyDetails"), undefined),
+              q.neq(q.field("companyDetails"), null)
+            )
           )
         )
       )
@@ -315,6 +412,43 @@ export const searchPosts = query({
       .withIndex("by_company", (q) =>
         q.gte("companyName", term).lt("companyName", term + "\uffff")
       )
+      .filter((q) =>
+        q.and(
+          // ----------------------------
+          // Condition 1: Classification must ALWAYS match one of the 3
+          // ----------------------------
+          q.or(
+            q.eq(q.field("classification"), "Company_analysis"),
+            q.eq(q.field("classification"), "Multiple_company_analysis"),
+            q.eq(q.field("classification"), "Sector_analysis")
+          ),
+
+          // ----------------------------
+          // Condition 2: ONE of these must be true (OR)
+          // ----------------------------
+          q.or(
+            // has valid BSE code
+            q.and(
+              q.neq(q.field("bseCode"), undefined),
+              q.neq(q.field("bseCode"), null),
+              q.neq(q.field("bseCode"), "")
+            ),
+
+            // has valid NSE code
+            q.and(
+              q.neq(q.field("nseCode"), undefined),
+              q.neq(q.field("nseCode"), null),
+              q.neq(q.field("nseCode"), "")
+            ),
+
+            // has non-empty companyDetails
+            q.and(
+              q.neq(q.field("companyDetails"), undefined),
+              q.neq(q.field("companyDetails"), null)
+            )
+          )
+        )
+      )
       .paginate(paginationOpts);
 
     const sorted = result.page.sort((a, b) => {
@@ -441,7 +575,7 @@ export const addBulkPost = mutation({
         imageUrl: v.optional(v.string()),
         views: v.optional(v.string()),
         likes: v.optional(v.string()),
-        source:v.optional(v.string()),
+        source: v.optional(v.string()),
         lastCheckedAt: v.optional(v.number()),
       })
     ),

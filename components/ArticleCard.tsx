@@ -14,12 +14,19 @@ type ArticleCardProps = {
 
 const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
 
-    const companyNames = post.companyName && post.companyName !== 'null'
+    const companyNames = post.companyName && post.companyName !== 'null' && post.companyName !== undefined
         ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
         : []
     const isFullCaps = (name: string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim());
 
-    const fullCapsCompanies = companyNames.filter(isFullCaps);
+    const fullCapsCompanies = (() => {
+        const filtered = companyNames.filter(isFullCaps);
+        return filtered.length > 0
+            ? filtered
+            : (post.companyDetails?.map((c) => c.company_name) || []);
+    })();
+
+
     const firstCompany = fullCapsCompanies[0];
     const hasMultipleCompanies = fullCapsCompanies.length > 1;
 
@@ -80,6 +87,49 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                         </div>
 
                         <div className='flex flex-wrap gap-2 md:gap-4 justify-start md:justify-center items-center'>
+                            <div className="text-xs md:text-sm text-slate-500">
+                                {post.classification}
+                            </div>
+                            {post.tags && (
+
+                                <div className="flex flex-wrap gap-1.5">
+                                    {post.tags.map((tag, index) => {
+                                        const trimmedTag = tag.trim().toLowerCase();
+
+                                        // Sentiment-based color mapping
+                                        const getTagStyle = (tag: string) => {
+                                            switch (tag) {
+                                                case 'bullish':
+                                                case 'positive':
+                                                    return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                                                case 'bearish':
+                                                case 'negative':
+                                                    return 'bg-rose-100 text-rose-700 border-rose-200';
+                                                case 'neutral':
+                                                    return 'bg-slate-100 text-slate-700 border-slate-200';
+                                                case 'cautious':
+                                                    return 'bg-amber-100 text-amber-700 border-amber-200';
+                                                case 'speculative':
+                                                    return 'bg-purple-100 text-purple-700 border-purple-200';
+                                                default:
+                                                    return 'bg-blue-100 text-blue-700 border-blue-200';
+                                            }
+                                        };
+
+                                        return (
+                                            <span
+                                                key={index}
+                                                className={`px-2 py-0.5 rounded-full text-xs md:text-sm font-medium border ${getTagStyle(trimmedTag)}`}
+                                            >
+                                                {tag.trim()}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {/* {post.companyDetails && <div>
+                                {post.companyDetails.map((c) => c.company_name)} Companies
+                            </div>} */}
                             {/* Company Names Section */}
                             {fullCapsCompanies.length > 0 && firstCompany && (
                                 <div className="relative">
@@ -87,7 +137,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                         <Dropdown
                                             title={firstCompany}
                                             titleAction={() => {
-                                             router.push(`/company/${encodeURIComponent(firstCompany)}`);
+                                                router.push(`/company/${encodeURIComponent(firstCompany)}`);
                                             }}
                                             options={fullCapsCompanies.slice(1).map(name => ({
                                                 name,
