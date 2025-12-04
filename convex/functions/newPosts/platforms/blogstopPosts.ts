@@ -105,7 +105,6 @@ function parseBlogspotItems(
       published: item.pubDate || "",
       author,
       image: imageUrl,
-      content: item.content || item.contentSnippet || "",
       source,
     });
   }

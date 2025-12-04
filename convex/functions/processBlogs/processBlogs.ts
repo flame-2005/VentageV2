@@ -3,10 +3,12 @@
 import { action } from "../../_generated/server";
 import { v } from "convex/values";
 import { api } from "../../_generated/api";
-import { matchCompaniesWithMasterList, parseMultiMatch } from "../../helper/blogs";
+import { fetchArticleContent, matchCompaniesWithMasterList, parseMultiMatch } from "../../helper/blogs";
 import { Agent1Response, Agent2Response, CompanyDetail, IncomingPost } from "../../constant/posts";
+import { Id } from "../../_generated/dataModel";
 
 type EnrichedPost = {
+  blogId?: Id<"blogs">;
   title: string;
   link: string;
   pubDate: string;
@@ -43,7 +45,6 @@ export const processAndSavePosts = action({
         published: v.string(),
         author: v.optional(v.string()),
         image: v.optional(v.string()),
-        content: v.string(),
         source: v.string(),
       })
     ),
@@ -68,12 +69,12 @@ export const processAndSavePosts = action({
     for (const post of posts as IncomingPost[]) {
       console.log("📌 Processing:", post.title);
 
-      const blogContent = post.content;
+      const blogContent = await fetchArticleContent(post.link);
 
       // ---------------- AGENT 1 ----------------
       const agent1 = await ctx.runAction(
         api.functions.processBlogs.agents.classifierAgent.runAgent1,
-        { blogText: blogContent }
+        { blogText: blogContent! }
       );
 
       const agent1Typed = agent1 as Agent1Response;
@@ -98,6 +99,7 @@ export const processAndSavePosts = action({
 
       // ---------------- BUILD ENRICHED POST ----------------
       const enriched: EnrichedPost = {
+        blogId: post.blogId,
         title: post.title,
         link: post.link,
         pubDate: new Date(post.published).toISOString(),

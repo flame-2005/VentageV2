@@ -9,4 +9,5 @@ export type Blog = {
   description?: string;
   image?: string;
   companyName?: string;
+  blogId?: Id<"blogs">;
 };

@@ -51,7 +51,6 @@ export async function fetchSubstackRSS(substackUrl: string): Promise<IncomingPos
         published: pubDate,
         author,
         image: undefined, // RSS usually doesn't include image
-        content: description,
         source: substackUrl,
       });
     }

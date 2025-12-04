@@ -32,7 +32,10 @@ export const fetchAllBlogsAction = action({
           );
 
           if (!exists) {
-            newPosts.push(post); // keep IncomingPost structure
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            }); // keep IncomingPost structure
           }
         }
       }
@@ -50,7 +53,10 @@ export const fetchAllBlogsAction = action({
           );
 
           if (!exists) {
-            newPosts.push(post);
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            });
           }
         }
       }
@@ -69,7 +75,10 @@ export const fetchAllBlogsAction = action({
           );
 
           if (!exists) {
-            newPosts.push(post);
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            });
           }
         }
       }
