@@ -8,6 +8,7 @@ import { fetchSubstackRSS } from "./platforms/substackPost";
 import { fetchWordPressRSS } from "./platforms/wordpressPosts";
 import { fetchBlogspotRSS } from "./platforms/blogstopPosts";
 import { IncomingPost } from "../../constant/posts";
+import { fetchMediumPosts } from "./platforms/mediumPosts";
 
 export const fetchAllBlogsAction = action({
   args: {},
@@ -32,7 +33,10 @@ export const fetchAllBlogsAction = action({
           );
 
           if (!exists) {
-            newPosts.push(post); // keep IncomingPost structure
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            }); // keep IncomingPost structure
           }
         }
       }
@@ -50,7 +54,10 @@ export const fetchAllBlogsAction = action({
           );
 
           if (!exists) {
-            newPosts.push(post);
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            });
           }
         }
       }
@@ -69,7 +76,30 @@ export const fetchAllBlogsAction = action({
           );
 
           if (!exists) {
-            newPosts.push(post);
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            });
+          }
+        }
+      }
+      if (blog.source === "medium") {
+        const posts = await fetchMediumPosts(blog.feedUrl);
+        if (!posts) continue;
+
+        for (const post of posts) {
+          const exists = await ctx.runQuery(
+            api.functions.substackBlogs.checkExistingPost,
+            {
+              link: post.link,
+            }
+          );
+
+          if (!exists) {
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            });
           }
         }
       }

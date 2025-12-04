@@ -1,4 +1,5 @@
-import { CompanyDetail } from "../constant/posts";
+import { Doc } from "../_generated/dataModel";
+import { CompanyDetail, ValidClassification } from "../constant/posts";
 
 export async function fetchArticleContent(url: string): Promise<string | null> {
   try {
@@ -144,4 +145,25 @@ export function parseMultiMatch(matched: {
     nse_code: nse[i] || undefined,
     market_cap: mcaps[i] || undefined,
   }));
+}
+
+export function hasCompanyData(post: Doc<"posts">): boolean {
+  // check enum match safely
+  const validValues = Object.values(ValidClassification);
+  if (!validValues.includes(post.classification as ValidClassification)) {
+    return false;
+  }
+
+  const { bseCode, nseCode, companyDetails } = post;
+
+  const hasBse =
+    typeof bseCode === "string" && bseCode.trim().length > 0;
+
+  const hasNse =
+    typeof nseCode === "string" && nseCode.trim().length > 0;
+
+  const hasCompanyDetails =
+    Array.isArray(companyDetails) && companyDetails.length > 0;
+
+  return hasBse || hasNse || hasCompanyDetails;
 }

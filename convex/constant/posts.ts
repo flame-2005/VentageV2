@@ -1,3 +1,5 @@
+import { Id } from "../_generated/dataModel";
+
 export type CompanyDetail = {
   company_name: string;
   bse_code?: string;
@@ -25,6 +27,12 @@ export type IncomingPost = {
   published: string;
   author?: string;
   image?: string;
-  content: string;
   source: string;
+  blogId?: Id<"blogs">;
 };
+
+export enum ValidClassification {
+  CompanyAnalysis = "Company_analysis",
+  MultipleCompanyAnalysis = "Multiple_company_analysis",
+  SectorAnalysis = "Sector_analysis",
+}

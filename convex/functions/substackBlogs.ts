@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internalMutation, mutation, query } from "../_generated/server";
 import { api } from "../_generated/api";
 import { paginationOptsValidator } from "convex/server";
+import { hasCompanyData } from "../helper/blogs";
 
 export const addBlogs = mutation({
   args: {
@@ -33,47 +34,11 @@ export const getPostsByCompany = query({
           .gte("companyName", companyName)
           .lt("companyName", companyName + "\uffff")
       )
-      .filter((q) =>
-        q.and(
-          // ----------------------------
-          // Condition 1: Classification must ALWAYS match one of the 3
-          // ----------------------------
-          q.or(
-            q.eq(q.field("classification"), "Company_analysis"),
-            q.eq(q.field("classification"), "Multiple_company_analysis"),
-            q.eq(q.field("classification"), "Sector_analysis")
-          ),
-
-          // ----------------------------
-          // Condition 2: ONE of these must be true (OR)
-          // ----------------------------
-          q.or(
-            // has valid BSE code
-            q.and(
-              q.neq(q.field("bseCode"), undefined),
-              q.neq(q.field("bseCode"), null),
-              q.neq(q.field("bseCode"), "")
-            ),
-
-            // has valid NSE code
-            q.and(
-              q.neq(q.field("nseCode"), undefined),
-              q.neq(q.field("nseCode"), null),
-              q.neq(q.field("nseCode"), "")
-            ),
-
-            // has non-empty companyDetails
-            q.and(
-              q.neq(q.field("companyDetails"), undefined),
-              q.neq(q.field("companyDetails"), null)
-            )
-          )
-        )
-      )
       .collect();
 
+       const validPosts = posts.filter(hasCompanyData);
     // Lightweight client-side filtering
-    const matchingPosts = posts.filter((post) => {
+    const matchingPosts = validPosts.filter((post) => {
       if (!post.companyName || post.companyName === "null") {
         return false;
       }
@@ -108,48 +73,13 @@ export const getPostsByAuthor = query({
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_author", (q) => q.eq("author", author))
-      .filter((q) =>
-        q.and(
-          // ----------------------------
-          // Condition 1: Classification must ALWAYS match one of the 3
-          // ----------------------------
-          q.or(
-            q.eq(q.field("classification"), "Company_analysis"),
-            q.eq(q.field("classification"), "Multiple_company_analysis"),
-            q.eq(q.field("classification"), "Sector_analysis")
-          ),
-
-          // ----------------------------
-          // Condition 2: ONE of these must be true (OR)
-          // ----------------------------
-          q.or(
-            // has valid BSE code
-            q.and(
-              q.neq(q.field("bseCode"), undefined),
-              q.neq(q.field("bseCode"), null),
-              q.neq(q.field("bseCode"), "")
-            ),
-
-            // has valid NSE code
-            q.and(
-              q.neq(q.field("nseCode"), undefined),
-              q.neq(q.field("nseCode"), null),
-              q.neq(q.field("nseCode"), "")
-            ),
-
-            // has non-empty companyDetails
-            q.and(
-              q.neq(q.field("companyDetails"), undefined),
-              q.neq(q.field("companyDetails"), null)
-            )
-          )
-        )
-      )
       .order("desc")
       .collect();
 
+    const validPosts = posts.filter(hasCompanyData);
+
     // Filter to only include posts where companyName is defined and not 'null'
-    return posts.filter(
+    return validPosts.filter(
       (post) =>
         post.companyName &&
         (post.bseCode || post.nseCode) &&
@@ -257,51 +187,27 @@ export const getPaginatedPosts = query({
   args: {
     paginationOpts: paginationOptsValidator,
   },
+
   handler: async (ctx, args) => {
-    return ctx.db
+    // Step 1: Query only by index + pubDate ordering
+    const result = await ctx.db
       .query("posts")
       .withIndex("by_pubDate")
       .order("desc")
-      .filter((q) =>
-        q.and(
-          // ----------------------------
-          // Condition 1: Classification must ALWAYS match one of the 3
-          // ----------------------------
-          q.or(
-            q.eq(q.field("classification"), "Company_analysis"),
-            q.eq(q.field("classification"), "Multiple_company_analysis"),
-            q.eq(q.field("classification"), "Sector_analysis")
-          ),
-
-          // ----------------------------
-          // Condition 2: ONE of these must be true (OR)
-          // ----------------------------
-          q.or(
-            // has valid BSE code
-            q.and(
-              q.neq(q.field("bseCode"), undefined),
-              q.neq(q.field("bseCode"), null),
-              q.neq(q.field("bseCode"), "")
-            ),
-
-            // has valid NSE code
-            q.and(
-              q.neq(q.field("nseCode"), undefined),
-              q.neq(q.field("nseCode"), null),
-              q.neq(q.field("nseCode"), "")
-            ),
-
-            // has non-empty companyDetails
-            q.and(
-              q.neq(q.field("companyDetails"), undefined),
-              q.neq(q.field("companyDetails"), null)
-            )
-          )
-        )
-      )
       .paginate(args.paginationOpts);
+
+    // Step 2: Filter using your TS helper
+    const filteredPage = result.page.filter(hasCompanyData);
+
+    // You can return the same pagination metadata
+    return {
+      page: filteredPage,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
   },
 });
+
 
 export const updateCompanyName = mutation({
   args: {
@@ -428,46 +334,11 @@ export const searchPosts = query({
       .withIndex("by_company", (q) =>
         q.gte("companyName", term).lt("companyName", term + "\uffff")
       )
-      .filter((q) =>
-        q.and(
-          // ----------------------------
-          // Condition 1: Classification must ALWAYS match one of the 3
-          // ----------------------------
-          q.or(
-            q.eq(q.field("classification"), "Company_analysis"),
-            q.eq(q.field("classification"), "Multiple_company_analysis"),
-            q.eq(q.field("classification"), "Sector_analysis")
-          ),
-
-          // ----------------------------
-          // Condition 2: ONE of these must be true (OR)
-          // ----------------------------
-          q.or(
-            // has valid BSE code
-            q.and(
-              q.neq(q.field("bseCode"), undefined),
-              q.neq(q.field("bseCode"), null),
-              q.neq(q.field("bseCode"), "")
-            ),
-
-            // has valid NSE code
-            q.and(
-              q.neq(q.field("nseCode"), undefined),
-              q.neq(q.field("nseCode"), null),
-              q.neq(q.field("nseCode"), "")
-            ),
-
-            // has non-empty companyDetails
-            q.and(
-              q.neq(q.field("companyDetails"), undefined),
-              q.neq(q.field("companyDetails"), null)
-            )
-          )
-        )
-      )
       .paginate(paginationOpts);
 
-    const sorted = result.page.sort((a, b) => {
+      const validPage = result.page.filter(hasCompanyData);
+
+    const sorted = validPage.sort((a, b) => {
       return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
     });
 
@@ -490,19 +361,16 @@ export const getCompanySuggestions = query({
 
     const lowerSearchTerm = searchTerm.toLowerCase().trim();
 
-    // Query companies that start with the search term (using index)
     const matchingByName = await ctx.db
       .query("master_company_list")
       .withIndex("name", (q) => q.gte("name", searchTerm))
       .collect();
 
-    // Also query by NSE code
     const matchingByCode = await ctx.db
       .query("master_company_list")
       .withIndex("nse_code", (q) => q.gte("nse_code", searchTerm.toUpperCase()))
       .collect();
 
-    // Combine and deduplicate
     const combined = new Map();
 
     [...matchingByName, ...matchingByCode].forEach((company) => {
@@ -598,8 +466,85 @@ export const addBulkPost = mutation({
   },
   handler: async (ctx, args) => {
     for (const post of args.posts) {
-      await ctx.db.insert("posts", post);
+      await ctx.db.insert("posts", {
+        ...post,
+        lastCheckedAt: Date.now(),
+      });
     }
     return true;
+  },
+});
+
+export const splitPosts = query({
+  handler: async (ctx) => {
+    const posts = await ctx.db
+      .query("posts")
+      .withIndex("by_classification", (q) =>
+        q.eq("classification", "Company_analysis")
+      )
+      .collect();
+
+    const posts2 = await ctx.db
+      .query("posts")
+      .withIndex("by_classification", (q) =>
+        q.eq("classification", "Multiple_company_analysis")
+      )
+      .collect();
+
+    const posts3 = await ctx.db
+      .query("posts")
+      .withIndex("by_classification", (q) =>
+        q.eq("classification", "Sector_analysis")
+      )
+      .collect();
+    const posts4 = await ctx.db
+      .query("posts")
+      .withIndex("by_classification", (q) =>
+        q.eq("classification", "Multiple_company_update")
+      )
+      .collect();
+    const posts5 = await ctx.db
+      .query("posts")
+      .withIndex("by_classification", (q) =>
+        q.eq("classification", "General_investment_guide")
+      )
+      .collect();
+
+    const all = [...posts, ...posts2, ...posts3,...posts4,...posts5];
+
+    const matched = [];
+    const notMatched = [];
+
+    for (const p of all) {
+      if (hasCompanyData
+      (p)) matched.push(p);
+      else notMatched.push(p);
+    }
+
+    return { matched, notMatched };
+  },
+});
+
+
+
+export const incrementClickCount = mutation({
+  args: {
+    postId: v.id("posts"),
+  },
+  handler: async (ctx, args) => {
+    const post = await ctx.db.get(args.postId);
+    
+    if (!post) {
+      throw new Error("Post not found");
+    }
+
+    const currentCount = post.clickedCount ?? 0;
+    
+    await ctx.db.patch(args.postId, {
+      clickedCount: currentCount + 1,
+      lastCheckedAt: Date.now(),
+    });
+
+    return { success: true, newCount: currentCount + 1 };
   },
 });

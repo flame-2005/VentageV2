@@ -19,11 +19,41 @@ interface BlogspotFeedItem {
 
 export async function fetchBlogspotRSS(
   blogUrl: string,
-  maxPerBatch: number = 50
+  maxResults: number = 500
 ): Promise<IncomingPost[] | null> {
   try {
-    const normalized = blogUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
-    const feedBaseUrl = `https://${normalized}/feeds/posts/default`;
+    // Remove protocol and trailing slash
+    let normalized = blogUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    
+    // Remove /feed or /feeds/posts/default if present
+    normalized = normalized.replace(/\/feeds?.*$/, "");
+
+    const feedUrl = `https://${normalized}/feeds/posts/default?max-results=${maxResults}`;
+
+    console.log(`📡 Fetching Blogspot feed: ${feedUrl}`);
+
+    const response = await fetch(feedUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        Referer: `https://${normalized}/`,
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "document",
+      },
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const xmlText = await response.text();
 
     const parser = new Parser({
       customFields: {
@@ -36,38 +66,30 @@ export async function fetchBlogspotRSS(
       },
     });
 
-    const allPosts: IncomingPost[] = [];
-    let startIndex = 1;
-    let batch = 1;
+    const feed = await parser.parseString(xmlText);
 
-    while (true) {
-      const url = `${feedBaseUrl}?start-index=${startIndex}&max-results=${maxPerBatch}&orderby=published`;
-
-      console.log(`📡 Blogspot Fetch: Batch ${batch} → ${url}`);
-
-      const feed = await parser.parseURL(url);
-
-      if (!feed.items || feed.items.length === 0) {
-        console.log("✓ No more Blogspot posts.");
-        break;
-      }
-
-      const converted = parseBlogspotItems(feed.items, `https://${normalized}`);
-      allPosts.push(...converted);
-
-      console.log(`✓ Batch ${batch}: ${converted.length} posts`);
-
-      if (feed.items.length < maxPerBatch) break;
-
-      startIndex += maxPerBatch;
-      batch++;
-
-      await new Promise((r) => setTimeout(r, 800));
+    if (!feed.items || feed.items.length === 0) {
+      console.log("⚠️ No posts found in feed");
+      return [];
     }
 
-    return allPosts;
+    const posts = parseBlogspotItems(feed.items, `https://${normalized}`);
+    console.log(`✓ Fetched ${posts.length} posts from Blogspot`);
+
+    return posts;
   } catch (err) {
     console.error("❌ Blogspot RSS Fetch Error:", err);
+    
+    if (err instanceof Error) {
+      if (err.message.includes('404')) {
+        console.error(`   Feed URL doesn't exist. Check: ${blogUrl}`);
+      } else if (err.message.includes('403')) {
+        console.error(`   Access forbidden. Blog might be private.`);
+      } else if (err.name === 'AbortError') {
+        console.error(`   Request timed out after 15 seconds`);
+      }
+    }
+    
     return null;
   }
 }
@@ -79,7 +101,6 @@ function parseBlogspotItems(
   const posts: IncomingPost[] = [];
 
   for (const item of items) {
-    // Extract image
     let imageUrl: string | undefined;
 
     if (item["media:thumbnail"]?.$?.url) {
@@ -88,7 +109,6 @@ function parseBlogspotItems(
       imageUrl = item.enclosure.url;
     }
 
-    // Extract author
     let author: string | undefined;
 
     if (typeof item.author === "string") {
@@ -105,8 +125,7 @@ function parseBlogspotItems(
       published: item.pubDate || "",
       author,
       image: imageUrl,
-      content: item.content || item.contentSnippet || "",
-      source,
+      source: 'blogspot',
     });
   }
 

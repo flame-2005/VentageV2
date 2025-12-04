@@ -153,6 +153,7 @@ Do NOT extract:
       "summary": "The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix."
    }
 
+   NOTE : company_analysis  should  strictly have only one company in the array if more than one company is present  it should be classified as multiple_company_analysis this rule is mandatory 
 
 ────────────────────────────────────────
 ⚠ IMPORTANT INSTRUCTIONS

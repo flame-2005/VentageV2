@@ -27,32 +27,49 @@ export async function fetchSubstackRSS(substackUrl: string): Promise<IncomingPos
 
     // Helper to extract tag content
     const extract = (block: string, tag: string): string | null => {
-      const reg = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`);
+      const reg = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`);
       const match = block.match(reg);
       return match ? match[1].trim() : null;
     };
 
-    const items: IncomingPost[] = [];
+    // Helper to strip CDATA wrappers
+    const stripCDATA = (text: string | null): string => {
+      if (!text) return "";
+      return text.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
+    };
 
+    const items: IncomingPost[] = [];
     const matches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
 
     for (const match of matches) {
       const item = match[1];
 
-      const title = extract(item, "title") ?? "";
       const link = extract(item, "link") ?? "";
+
+      const rawTitle = extract(item, "title");
+      const title = stripCDATA(rawTitle) || "Untitled";
+
+      const enclosureMatch = item.match(/<enclosure[^>]+url=["']([^"']+)["']/i);
+      const enclosureUrl = enclosureMatch ? enclosureMatch[1] : null;
+
+      const contentEncoded = extract(item, "content:encoded");
+      const contentEncodedImg = contentEncoded?.match(/<img[^>]+src="([^">]+)"/)?.[1] ?? null;
+
+      const image = enclosureUrl ?? contentEncodedImg ?? undefined;
+
+
+      const rawAuthor = extract(item, "dc:creator");
+      const author = stripCDATA(rawAuthor) || undefined;
+
       const pubDate = extract(item, "pubDate") ?? "";
-      const description = extract(item, "description") ?? "";
-      const author = extract(item, "dc:creator") ?? undefined;
 
       items.push({
         title,
         link,
         published: pubDate,
         author,
-        image: undefined, // RSS usually doesn't include image
-        content: description,
-        source: substackUrl,
+        image,
+        source: "substack",
       });
     }
 

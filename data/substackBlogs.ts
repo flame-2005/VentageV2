@@ -46,6 +46,14 @@ export const wordpressBlogs = [
   "marshmallowcapital.files.wordpress.com"
 ];
 
+
+export const mediumBlogs = [
+  "medium.com/@deepakabbot",
+"medium.com/@colinbaird_51123",
+"medium.com/@nitya_shah"
+]
+
+
 export enum SubstackDomains {
   InvestKaroIndia = "investkaroindia.substack.com",
   EquityManiac = "equitymaniac.substack.com",
