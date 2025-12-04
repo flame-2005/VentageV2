@@ -40,6 +40,7 @@ export const processAndSavePosts = action({
   args: {
     posts: v.array(
       v.object({
+        blogId: v.optional(v.id("blogs")),
         title: v.string(),
         link: v.string(),
         published: v.string(),

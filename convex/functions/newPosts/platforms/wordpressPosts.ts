@@ -88,7 +88,7 @@ function parseWPItems(items: WPFeedItem[], sourceUrl: string): IncomingPost[] {
       published: item.pubDate || "",
       author: item.creator,
       image: imageUrl,
-      source: sourceUrl,
+      source: "wordpress",
     });
   }
 
