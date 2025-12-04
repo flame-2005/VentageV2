@@ -40,6 +40,7 @@ export default defineSchema({
     classification: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     views: v.optional(v.string()),
+    clickedCount: v.optional(v.number()),
     likes: v.optional(v.string()),
     lastCheckedAt: v.optional(v.number()),
     source:v.optional(v.string()),
@@ -48,7 +49,9 @@ export default defineSchema({
     .index("by_link", ["link"])
     .index("by_author", ["author"])
     .index("by_company", ["companyName"])
-    .index("by_pubDate", ["pubDate"]),
+    .index("by_pubDate", ["pubDate"])
+    .index("by_classification_pubDate", ["classification", "pubDate"])
+    .index("by_classification", ["classification"]) ,
 
   master_company_list: defineTable({
     bse_code: v.optional(v.string()),

@@ -17,6 +17,7 @@ import type * as functions_masterCompany from "../functions/masterCompany.js";
 import type * as functions_masterCompanyList from "../functions/masterCompanyList.js";
 import type * as functions_newPosts_checkNewPosts from "../functions/newPosts/checkNewPosts.js";
 import type * as functions_newPosts_platforms_blogstopPosts from "../functions/newPosts/platforms/blogstopPosts.js";
+import type * as functions_newPosts_platforms_mediumPosts from "../functions/newPosts/platforms/mediumPosts.js";
 import type * as functions_newPosts_platforms_substackPost from "../functions/newPosts/platforms/substackPost.js";
 import type * as functions_newPosts_platforms_wordpressPosts from "../functions/newPosts/platforms/wordpressPosts.js";
 import type * as functions_processBlogs_agents_classifierAgent from "../functions/processBlogs/agents/classifierAgent.js";
@@ -24,6 +25,7 @@ import type * as functions_processBlogs_agents_companyAgent from "../functions/p
 import type * as functions_processBlogs_processBlogs from "../functions/processBlogs/processBlogs.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
 import type * as helper_blogs from "../helper/blogs.js";
+import type * as helper_post from "../helper/post.js";
 import type * as posts from "../posts.js";
 
 import type {
@@ -50,6 +52,7 @@ declare const fullApi: ApiFromModules<{
   "functions/masterCompanyList": typeof functions_masterCompanyList;
   "functions/newPosts/checkNewPosts": typeof functions_newPosts_checkNewPosts;
   "functions/newPosts/platforms/blogstopPosts": typeof functions_newPosts_platforms_blogstopPosts;
+  "functions/newPosts/platforms/mediumPosts": typeof functions_newPosts_platforms_mediumPosts;
   "functions/newPosts/platforms/substackPost": typeof functions_newPosts_platforms_substackPost;
   "functions/newPosts/platforms/wordpressPosts": typeof functions_newPosts_platforms_wordpressPosts;
   "functions/processBlogs/agents/classifierAgent": typeof functions_processBlogs_agents_classifierAgent;
@@ -57,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   "functions/processBlogs/processBlogs": typeof functions_processBlogs_processBlogs;
   "functions/substackBlogs": typeof functions_substackBlogs;
   "helper/blogs": typeof helper_blogs;
+  "helper/post": typeof helper_post;
   posts: typeof posts;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

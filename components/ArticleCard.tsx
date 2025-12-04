@@ -4,6 +4,9 @@ import Link from 'next/link'
 import React, { useEffect, useRef, useState } from 'react'
 import Dropdown from './Dropdown/page'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/context/toastContext';
+import { useMutation } from 'convex/react'
+import { api } from '@/convex/_generated/api'
 
 
 type ArticleCardProps = {
@@ -18,7 +21,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
         ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
         : []
     const isFullCaps = (name: string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim());
-
+    const incrementClickCount = useMutation(api.functions.substackBlogs.incrementClickCount);
     const fullCapsCompanies = (() => {
         const filtered = companyNames.filter(isFullCaps);
         return filtered.length > 0
@@ -26,13 +29,19 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
             : (post.companyDetails?.map((c) => c.company_name) || []);
     })();
 
-
+    const { addToast } = useToast();
     const firstCompany = fullCapsCompanies[0];
     const hasMultipleCompanies = fullCapsCompanies.length > 1;
 
     const router = useRouter();
 
-
+    const handlePostClick = async () => {
+        try {
+            await incrementClickCount({ postId: post._id });
+        } catch (error) {
+            console.error("Failed to update click count:", error);
+        }
+    };
     return (
         <article
             key={post._id}
@@ -53,6 +62,7 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                 {/* Main content */}
                 <div className="flex-1 p-3 md:p-6">
                     <a
+                        onClick={() => handlePostClick()}
                         href={post.link}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -84,7 +94,9 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                     year: "numeric",
                                 })}
                             </span>
+                            {post.clickedCount ? post.clickedCount : 0} Clicks
                         </div>
+
 
                         <div className='flex flex-wrap gap-2 md:gap-4 justify-start md:justify-center items-center'>
                             <div className="text-xs md:text-sm text-slate-500">
@@ -164,12 +176,19 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
                                 Likes <Heart className={`w-4 h-4 ${likedPosts.has(post._id) ? "fill-current" : ""}`} />
                             </button>
                             <button
-                                onClick={() => toggleLike(post._id)}
-                                className={`flex items-center gap-1 transition-colors ${likedPosts.has(post._id) ? "text-rose-500" : "hover:text-rose-500"
-                                    }`}
+                                onClick={async () => {
+                                    try {
+                                        await navigator.clipboard.writeText(post.link);
+                                        addToast('success', 'Link Copied!', 'The link has been copied to your clipboard.');
+                                    } catch (error) {
+                                        addToast('error', 'Copy Failed', 'Unable to copy link to clipboard.');
+                                    }
+                                }}
+                                className={`flex items-center gap-1 transition-colors hover:text-rose-500`}
                             >
-                                Shares <Share2 className={`w-4 h-4 ${likedPosts.has(post._id) ? "fill-current" : ""}`} />
+                                Share <Share2 className="w-4 h-4" />
                             </button>
+
                         </div>
                     </div>
                 </div>

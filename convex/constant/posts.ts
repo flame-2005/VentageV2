@@ -30,3 +30,9 @@ export type IncomingPost = {
   source: string;
   blogId?: Id<"blogs">;
 };
+
+export enum ValidClassification {
+  CompanyAnalysis = "Company_analysis",
+  MultipleCompanyAnalysis = "Multiple_company_analysis",
+  SectorAnalysis = "Sector_analysis",
+}
