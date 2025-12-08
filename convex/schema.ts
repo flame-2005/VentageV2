@@ -73,7 +73,7 @@ export default defineSchema({
     username: v.string(),
     email: v.string(),
     userId: v.string(), // Supabase user ID
-    createdAt: v.number(),
+    lastUpdatedAt: v.number(),
     companiesFollowing: v.array(v.string()), // Array of company names or IDs
     blogWebsitesFollowing: v.array(v.string()), // Array of blog URLs or IDs
     avatarUrl: v.optional(v.string()),

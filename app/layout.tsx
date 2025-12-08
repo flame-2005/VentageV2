@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar/page";
 import { useState } from "react";
 import { SearchProvider } from "@/context/searchContext";
 import { ToastProvider } from "@/context/toastContext";
+import { UserProvider } from "@/context/userContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,13 +33,14 @@ export default function RootLayout({
       >
 
         <ConvexProvider client={convex}>
-          <ToastProvider>
-
-            <SearchProvider>
-              <Navbar />
-              {children}
-            </SearchProvider>
-          </ToastProvider>
+          <UserProvider>
+            <ToastProvider>
+              <SearchProvider>
+                <Navbar />
+                {children}
+              </SearchProvider>
+            </ToastProvider>
+          </UserProvider>
         </ConvexProvider>
       </body>
     </html>

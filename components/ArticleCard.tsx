@@ -11,11 +11,11 @@ import { api } from '@/convex/_generated/api'
 
 type ArticleCardProps = {
     post: Doc<'posts'>
-    likedPosts: Set<string>
-    toggleLike: (postId: Id<"posts">) => void;
 }
 
-const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
+const ArticleCard = ({ post }: ArticleCardProps) => {
+
+    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
 
     const companyNames = post.companyName && post.companyName !== 'null' && post.companyName !== undefined
         ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
@@ -41,6 +41,19 @@ const ArticleCard = ({ post, likedPosts, toggleLike }: ArticleCardProps) => {
         } catch (error) {
             console.error("Failed to update click count:", error);
         }
+    };
+
+
+    const toggleLike = (postId: Id<"posts">) => {
+        setLikedPosts((prev) => {
+            const newSet = new Set(prev);
+            if (newSet.has(postId)) {
+                newSet.delete(postId);
+            } else {
+                newSet.add(postId);
+            }
+            return newSet;
+        });
     };
     return (
         <article

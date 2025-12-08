@@ -45,7 +45,7 @@ export const createOrUpdateUser = mutation({
       username,
       fullName: args.fullName,
       avatarUrl: args.avatarUrl,
-      createdAt: Date.now(),
+      lastUpdatedAt: Date.now(),
       companiesFollowing: [],
       blogWebsitesFollowing: [],
     });
