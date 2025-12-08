@@ -1,4 +1,4 @@
-"use node"
+"use node";
 
 import OpenAI from "openai";
 import { IncomingPost as BlogPost } from "../../../../constant/posts";
@@ -9,7 +9,7 @@ export async function extractPostsFromHTML_AI(
   html: string,
   url: string
 ): Promise<BlogPost[]> {
-const prompt = `
+  const prompt = `
 You are an expert blog content extractor.
 
 Your task is to extract ALL blog posts found in the provided HTML. 
@@ -83,12 +83,46 @@ Format MUST be:
   }
 ]
 
+NOTE: RULE: Every returned post must include a valid author field.
+
+If the author is missing, null, empty, or cannot be reliably extracted, exclude that post completely.
+Do not return any post without a valid author under any circumstance.
+
+When extracting posts, follow these steps:
+
+Attempt to extract author from any of these fields (in order):
+
+dc:creator
+
+creator
+
+author
+
+itunes:author
+
+meta:author
+
+article:author
+
+atom:author
+
+If none of these fields exist or contain a usable value → discard the post.
+
+Only return posts that include all of this mandatory information:
+
+ "title": "string",
+ "link": "string",
+ "published": "string",
+ "author": "string",
+ "image": "string | null",
+ "source": "others"
+
+
 -----------------------------------
 HTML CONTENT TO ANALYZE (TRUNCATED)
 -----------------------------------
 ${html.substring(0, 15000)}
 `;
-
 
   const resp = await openai.chat.completions.create({
     model: "gpt-4o-mini",

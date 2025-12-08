@@ -2,7 +2,7 @@ import { action, query } from "../_generated/server";
 import Papa from "papaparse";
 import { hasCompanyData } from "./blogs";
 import { api } from "../_generated/api";
-import { IncomingPost } from "../constant/posts";
+import { IncomingPost, RSSItem } from "../constant/posts";
 
 
 // 2️⃣ Generate CSV for both
@@ -73,4 +73,67 @@ export function isValidIncomingPost(post: unknown): post is IncomingPost {
     typeof p.source === "string"
   );
 }
+
+export function extractAuthor(item: RSSItem): string | null {
+  const fields: (keyof RSSItem)[] = [
+    "dc:creator",
+    "creator",
+    "author",
+    "itunes:author",
+    "meta:author",
+    "article:author",
+    "atom:author",
+  ];
+
+  for (const field of fields) {
+    const value = item[field];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+export function extractImage(item: RSSItem): string | null {
+  const possibleImages: (string | undefined)[] = [
+    item.enclosure?.url,
+    item["media:content"]?.url,
+    item["media:thumbnail"]?.url,
+    item["media:group"]?.["media:content"]?.url,
+    item["post-thumbnail"],
+    item.featuredImage,
+    item.image,
+  ];
+
+  for (const img of possibleImages) {
+    if (typeof img === "string" && img.trim().length > 0) {
+      return img;
+    }
+  }
+
+  return null;
+}
+
+export function extractDate(item: RSSItem): string {
+  const fields: (keyof RSSItem)[] = [
+    "isoDate",
+    "pubDate",
+    "published",
+    "dc:date",
+    "updated",
+    "lastBuildDate",
+  ];
+
+  for (const field of fields) {
+    const value = item[field];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+
 

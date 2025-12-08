@@ -226,9 +226,19 @@ export const getPaginatedPosts = query({
               q.neq(q.field("companyDetails"), undefined),
               q.neq(q.field("companyDetails"), null)
             )
+          ),
+
+          // ----------------------------
+          // Condition 3: Author must be defined and non-empty
+          // ----------------------------
+          q.and(
+            q.neq(q.field("author"), undefined),
+            q.neq(q.field("author"), null),
+            q.neq(q.field("author"), "")
           )
         )
       )
+
       .paginate(args.paginationOpts);
   },
 });
