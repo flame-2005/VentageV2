@@ -36,7 +36,7 @@ export const getPostsByCompany = query({
       )
       .collect();
 
-       const validPosts = posts.filter(hasCompanyData);
+    const validPosts = posts.filter(hasCompanyData);
     // Lightweight client-side filtering
     const matchingPosts = validPosts.filter((post) => {
       if (!post.companyName || post.companyName === "null") {
@@ -187,27 +187,51 @@ export const getPaginatedPosts = query({
   args: {
     paginationOpts: paginationOptsValidator,
   },
-
   handler: async (ctx, args) => {
-    // Step 1: Query only by index + pubDate ordering
-    const result = await ctx.db
+    return ctx.db
       .query("posts")
       .withIndex("by_pubDate")
       .order("desc")
+      .filter((q) =>
+        q.and(
+          // ----------------------------
+          // Condition 1: Classification must ALWAYS match one of the 3
+          // ----------------------------
+          q.or(
+            q.eq(q.field("classification"), "Company_analysis"),
+            q.eq(q.field("classification"), "Multiple_company_analysis"),
+            q.eq(q.field("classification"), "Sector_analysis")
+          ),
+
+          // ----------------------------
+          // Condition 2: ONE of these must be true (OR)
+          // ----------------------------
+          q.or(
+            // has valid BSE code
+            q.and(
+              q.neq(q.field("bseCode"), undefined),
+              q.neq(q.field("bseCode"), null),
+              q.neq(q.field("bseCode"), "")
+            ),
+
+            // has valid NSE code
+            q.and(
+              q.neq(q.field("nseCode"), undefined),
+              q.neq(q.field("nseCode"), null),
+              q.neq(q.field("nseCode"), "")
+            ),
+
+            // has non-empty companyDetails
+            q.and(
+              q.neq(q.field("companyDetails"), undefined),
+              q.neq(q.field("companyDetails"), null)
+            )
+          )
+        )
+      )
       .paginate(args.paginationOpts);
-
-    // Step 2: Filter using your TS helper
-    const filteredPage = result.page.filter(hasCompanyData);
-
-    // You can return the same pagination metadata
-    return {
-      page: filteredPage,
-      continueCursor: result.continueCursor,
-      isDone: result.isDone,
-    };
   },
 });
-
 
 export const updateCompanyName = mutation({
   args: {
@@ -336,7 +360,7 @@ export const searchPosts = query({
       )
       .paginate(paginationOpts);
 
-      const validPage = result.page.filter(hasCompanyData);
+    const validPage = result.page.filter(hasCompanyData);
 
     const sorted = validPage.sort((a, b) => {
       return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
@@ -510,14 +534,13 @@ export const splitPosts = query({
       )
       .collect();
 
-    const all = [...posts, ...posts2, ...posts3,...posts4,...posts5];
+    const all = [...posts, ...posts2, ...posts3, ...posts4, ...posts5];
 
     const matched = [];
     const notMatched = [];
 
     for (const p of all) {
-      if (hasCompanyData
-      (p)) matched.push(p);
+      if (hasCompanyData(p)) matched.push(p);
       else notMatched.push(p);
     }
 
@@ -525,21 +548,19 @@ export const splitPosts = query({
   },
 });
 
-
-
 export const incrementClickCount = mutation({
   args: {
     postId: v.id("posts"),
   },
   handler: async (ctx, args) => {
     const post = await ctx.db.get(args.postId);
-    
+
     if (!post) {
       throw new Error("Post not found");
     }
 
     const currentCount = post.clickedCount ?? 0;
-    
+
     await ctx.db.patch(args.postId, {
       clickedCount: currentCount + 1,
       lastCheckedAt: Date.now(),

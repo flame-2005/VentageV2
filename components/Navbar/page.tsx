@@ -5,6 +5,7 @@ import { useSearch } from '@/context/searchContext';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import Link from 'next/link';
+import { GoogleLogo } from '@/constants/assets/googleLogo.svg';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -145,8 +146,12 @@ const Navbar = () => {
   return (
     <header className="bg-white/80 backdrop-blur-xl pt-8 border-slate-200 sticky top-0 z-10 shadow-sm pb-12">
       <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-center mb-4">
-          <Link href={'/home'} className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent flex">
+        <div className="flex items-center justify-between mb-4">
+          {/* Spacer for mobile, invisible element to maintain layout */}
+          <div className="w-10 md:w-0"></div>
+
+          {/* Centered Logo */}
+          <Link href={'/home'} className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent flex mx-auto md:mx-0">
             <span className="text-black">
               The Vant
             </span>
@@ -154,6 +159,50 @@ const Navbar = () => {
               Edge
             </span>
           </Link>
+
+          {/* Auth Section */}
+          <div className="flex items-center gap-3">
+            {loading ? (
+              <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse" />
+            ) : user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="w-10 h-10 rounded-full bg-blue-600 text-white font-semibold flex items-center justify-center hover:bg-blue-700 transition-colors overflow-hidden"
+                >
+                  {getUserAvatar() ? (
+                    <img src={getUserAvatar()} alt="User avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    getUserInitial()
+                  )}
+                </button>
+
+                {/* User Dropdown */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-slate-200">
+                      <p className="font-semibold text-slate-900">{getUserFullName()}</p>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={signOut}
+                      className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={signInWithGoogle}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all shadow-sm font-medium text-slate-700"
+              >
+               <GoogleLogo />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Search Bar */}

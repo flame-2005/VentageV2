@@ -16,6 +16,12 @@ import type * as functions_masterCompanies from "../functions/masterCompanies.js
 import type * as functions_masterCompany from "../functions/masterCompany.js";
 import type * as functions_masterCompanyList from "../functions/masterCompanyList.js";
 import type * as functions_newPosts_checkNewPosts from "../functions/newPosts/checkNewPosts.js";
+import type * as functions_newPosts_platforms_blogsiteFetchers_extractPostsFromHTML from "../functions/newPosts/platforms/blogsiteFetchers/extractPostsFromHTML.js";
+import type * as functions_newPosts_platforms_blogsiteFetchers_extractRss from "../functions/newPosts/platforms/blogsiteFetchers/extractRss.js";
+import type * as functions_newPosts_platforms_blogsiteFetchers_fetchHTML from "../functions/newPosts/platforms/blogsiteFetchers/fetchHTML.js";
+import type * as functions_newPosts_platforms_blogsiteFetchers_getPostsFromRss from "../functions/newPosts/platforms/blogsiteFetchers/getPostsFromRss.js";
+import type * as functions_newPosts_platforms_blogsiteFetchers_main from "../functions/newPosts/platforms/blogsiteFetchers/main.js";
+import type * as functions_newPosts_platforms_blogsiteFetchers_paginatedCrawler from "../functions/newPosts/platforms/blogsiteFetchers/paginatedCrawler.js";
 import type * as functions_newPosts_platforms_blogstopPosts from "../functions/newPosts/platforms/blogstopPosts.js";
 import type * as functions_newPosts_platforms_mediumPosts from "../functions/newPosts/platforms/mediumPosts.js";
 import type * as functions_newPosts_platforms_substackPost from "../functions/newPosts/platforms/substackPost.js";
@@ -51,6 +57,12 @@ declare const fullApi: ApiFromModules<{
   "functions/masterCompany": typeof functions_masterCompany;
   "functions/masterCompanyList": typeof functions_masterCompanyList;
   "functions/newPosts/checkNewPosts": typeof functions_newPosts_checkNewPosts;
+  "functions/newPosts/platforms/blogsiteFetchers/extractPostsFromHTML": typeof functions_newPosts_platforms_blogsiteFetchers_extractPostsFromHTML;
+  "functions/newPosts/platforms/blogsiteFetchers/extractRss": typeof functions_newPosts_platforms_blogsiteFetchers_extractRss;
+  "functions/newPosts/platforms/blogsiteFetchers/fetchHTML": typeof functions_newPosts_platforms_blogsiteFetchers_fetchHTML;
+  "functions/newPosts/platforms/blogsiteFetchers/getPostsFromRss": typeof functions_newPosts_platforms_blogsiteFetchers_getPostsFromRss;
+  "functions/newPosts/platforms/blogsiteFetchers/main": typeof functions_newPosts_platforms_blogsiteFetchers_main;
+  "functions/newPosts/platforms/blogsiteFetchers/paginatedCrawler": typeof functions_newPosts_platforms_blogsiteFetchers_paginatedCrawler;
   "functions/newPosts/platforms/blogstopPosts": typeof functions_newPosts_platforms_blogstopPosts;
   "functions/newPosts/platforms/mediumPosts": typeof functions_newPosts_platforms_mediumPosts;
   "functions/newPosts/platforms/substackPost": typeof functions_newPosts_platforms_substackPost;

@@ -79,17 +79,28 @@ export function matchCompaniesWithMasterList(
   companyNames.forEach((companyName) => {
     const match = masterCompanyList.find((masterCompany) => {
       const masterName = masterCompany.company_name?.toLowerCase() || "";
+      const nseCode = masterCompany.nse_code?.toLowerCase() || "";
 
-      return (
-        masterName === companyName || // exact
-        masterName.startsWith(companyName) || // prefix
-        companyName.startsWith(masterName) || // safe prefix
-        masterName.split(" ").includes(companyName) ||
-        companyName.split(" ").includes(masterName) ||
-        // NEW: Check if first two words match
-        masterName.split(" ").slice(0, 2).join(" ") ===
-          companyName.split(" ").slice(0, 2).join(" ")
-      );
+      // 1️⃣ If extracted string matches NSE code → return this company immediately
+      if (companyName === nseCode) return true;
+
+      // 2️⃣ Exact company name match
+      if (masterName === companyName) return true;
+
+      // 3️⃣ Prefix checks (dangerous for short names but keeping as per your logic)
+      if (masterName.startsWith(companyName)) return true;
+      if (companyName.startsWith(masterName)) return true;
+
+      // 4️⃣ Word-by-word match
+      if (masterName.split(" ").includes(companyName)) return true;
+      if (companyName.split(" ").includes(masterName)) return true;
+
+      // 5️⃣ First two words match
+      const masterTwo = masterName.split(" ").slice(0, 2).join(" ");
+      const companyTwo = companyName.split(" ").slice(0, 2).join(" ");
+      if (masterTwo === companyTwo) return true;
+
+      return false;
     });
 
     if (match && match.market_cap !== null && match.market_cap >= 30000000) {
@@ -156,14 +167,19 @@ export function hasCompanyData(post: Doc<"posts">): boolean {
 
   const { bseCode, nseCode, companyDetails } = post;
 
-  const hasBse =
-    typeof bseCode === "string" && bseCode.trim().length > 0;
+  const hasBse = typeof bseCode === "string" && bseCode.trim().length > 0;
 
-  const hasNse =
-    typeof nseCode === "string" && nseCode.trim().length > 0;
+  const hasNse = typeof nseCode === "string" && nseCode.trim().length > 0;
 
   const hasCompanyDetails =
     Array.isArray(companyDetails) && companyDetails.length > 0;
 
   return hasBse || hasNse || hasCompanyDetails;
+}
+
+export function normalizeUrl(url: string): string {
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    return `https://${url}`;
+  }
+  return url;
 }

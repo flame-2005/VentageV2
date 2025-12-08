@@ -9,6 +9,9 @@ import { fetchWordPressRSS } from "./platforms/wordpressPosts";
 import { fetchBlogspotRSS } from "./platforms/blogstopPosts";
 import { IncomingPost } from "../../constant/posts";
 import { fetchMediumPosts } from "./platforms/mediumPosts";
+import { getAllPosts } from "./platforms/blogsiteFetchers/main";
+import { normalizeUrl } from "../../helper/blogs";
+import { isValidIncomingPost } from "../../helper/post";
 
 export const fetchAllBlogsAction = action({
   args: {},
@@ -103,11 +106,34 @@ export const fetchAllBlogsAction = action({
           }
         }
       }
+      if (blog.source === "others") {
+        const posts = await getAllPosts(normalizeUrl(blog.feedUrl));
+        if (!posts) continue;
+
+        for (const post of posts) {
+          const exists = await ctx.runQuery(
+            api.functions.substackBlogs.checkExistingPost,
+            {
+              link: post.link,
+            }
+          );
+
+          if (!exists && isValidIncomingPost(post)) {
+            newPosts.push({
+              ...post,
+              blogId: blog._id,
+            });
+          } else if (!isValidIncomingPost(post)) {
+            console.warn("❌ Invalid IncomingPost skipped:", post);
+          }
+        }
+      }
     }
     console.log(`🆕 Total new posts: ${newPosts.length}`);
 
     if (newPosts.length > 0) {
-      await ctx.runAction(
+      await ctx.scheduler.runAfter(
+        0,
         api.functions.processBlogs.processBlogs.processAndSavePosts,
         {
           posts: newPosts,
