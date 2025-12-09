@@ -9,6 +9,7 @@ export default defineSchema({
     feedUrl: v.string(),
     lastCheckedAt: v.optional(v.number()),
     source: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
   }),
 
   posts: defineTable({

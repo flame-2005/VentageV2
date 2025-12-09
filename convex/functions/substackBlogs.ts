@@ -579,3 +579,27 @@ export const incrementClickCount = mutation({
     return { success: true, newCount: currentCount + 1 };
   },
 });
+
+export const bulkUpdateBlogs = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        id: v.id("blogs"),
+        imageUrl: v.string(),
+      })
+    ),
+  },
+
+  handler: async (ctx, { updates }) => {
+    let count = 0;
+
+    for (const update of updates) {
+      await ctx.db.patch(update.id, {
+        imageUrl: update.imageUrl,
+      });
+      count++;
+    }
+
+    return { updated: count };
+  },
+});

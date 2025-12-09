@@ -9,6 +9,7 @@
  */
 
 import type * as _client from "../_client.js";
+import type * as constant_fetcher from "../constant/fetcher.js";
 import type * as constant_posts from "../constant/posts.js";
 import type * as crons from "../crons.js";
 import type * as functions_cleanUp from "../functions/cleanUp.js";
@@ -31,7 +32,10 @@ import type * as functions_processBlogs_agents_companyAgent from "../functions/p
 import type * as functions_processBlogs_processBlogs from "../functions/processBlogs/processBlogs.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
 import type * as functions_users from "../functions/users.js";
+import type * as helper_addBlogImage from "../helper/addBlogImage.js";
+import type * as helper_addImage from "../helper/addImage.js";
 import type * as helper_blogs from "../helper/blogs.js";
+import type * as helper_feedParser from "../helper/feedParser.js";
 import type * as helper_post from "../helper/post.js";
 import type * as posts from "../posts.js";
 
@@ -51,6 +55,7 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   _client: typeof _client;
+  "constant/fetcher": typeof constant_fetcher;
   "constant/posts": typeof constant_posts;
   crons: typeof crons;
   "functions/cleanUp": typeof functions_cleanUp;
@@ -73,7 +78,10 @@ declare const fullApi: ApiFromModules<{
   "functions/processBlogs/processBlogs": typeof functions_processBlogs_processBlogs;
   "functions/substackBlogs": typeof functions_substackBlogs;
   "functions/users": typeof functions_users;
+  "helper/addBlogImage": typeof helper_addBlogImage;
+  "helper/addImage": typeof helper_addImage;
   "helper/blogs": typeof helper_blogs;
+  "helper/feedParser": typeof helper_feedParser;
   "helper/post": typeof helper_post;
   posts: typeof posts;
 }>;
