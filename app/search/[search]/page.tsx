@@ -1,45 +1,32 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { usePaginatedQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import ArticleCard from "@/components/ArticleCard";
-import CircularLoader from "@/components/circularLoader";
-import { useSearch } from "@/context/searchContext";
+import ArticleCard from '@/components/ArticleCard';
+import CircularLoader from '@/components/circularLoader';
+import { api } from '@/convex/_generated/api';
+import { usePaginatedQuery } from 'convex/react';
+import { useParams } from 'next/navigation';
+import React, { useEffect, useRef, useState } from 'react'
 
-export default function InvestmentDashboard() {
-    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
-    const loadMoreRef = useRef<HTMLDivElement>(null);
-
-    // Get search term from context
-    const { searchTerm } = useSearch();
-
-    // Regular paginated query (no search)
-    const regularQuery = usePaginatedQuery(
-        api.functions.substackBlogs.getPaginatedPosts,
-        { paginationOpts: {} },
-        { initialNumItems: 20 }
-    );
+const Page = () => {
+    const params = useParams();
+    const searchTerm = decodeURIComponent(params.searchParams as string);
 
     // Search query (with search term)
     const searchQuery = usePaginatedQuery(
         api.functions.substackBlogs.searchPosts,
-        { searchTerm: searchTerm || "" },
+        { searchTerm },
         { initialNumItems: 20 }
     );
 
-    // Use the appropriate query based on whether search term exists
-    const { results: posts, status, loadMore } = searchTerm
-        ? searchQuery
-        : regularQuery;
+    const { results: posts, status, loadMore } = searchQuery;
 
     // Check loading states
     const isLoading = status === "LoadingFirstPage";
     const isLoadingMore = status === "LoadingMore";
     const canLoadMore = status === "CanLoadMore";
 
-    // Infinite scroll: Load more when user scrolls to bottom
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!loadMoreRef.current || !canLoadMore || isLoadingMore) return;
 
@@ -60,18 +47,6 @@ export default function InvestmentDashboard() {
 
         return () => observer.disconnect();
     }, [canLoadMore, isLoadingMore, loadMore]);
-
-    const toggleLike = (postId: Id<"posts">) => {
-        setLikedPosts((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(postId)) {
-                newSet.delete(postId);
-            } else {
-                newSet.add(postId);
-            }
-            return newSet;
-        });
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -132,5 +107,7 @@ export default function InvestmentDashboard() {
                 )}
             </div>
         </div>
-    );
+    )
 }
+
+export default Page;

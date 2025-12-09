@@ -5,6 +5,9 @@ import { useSearch } from '@/context/searchContext';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import Link from 'next/link';
+import { GoogleLogo } from '@/constants/assets/googleLogo.svg';
+import { signInWithGoogle } from '@/lib/users';
+import { useUser } from '@/context/userContext';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
@@ -18,12 +21,13 @@ type UserMetadata = {
 };
 
 const Navbar = () => {
-  const [user, setUser] = useState<User | null>(null);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { supabaseUser, user, isLoading, signOut } = useUser();
+
 
   const { searchTerm, inputValue, setInputValue, applySearch, clearSearch } = useSearch();
 
@@ -33,24 +37,24 @@ const Navbar = () => {
     inputValue.length >= 1 ? { searchTerm: inputValue } : "skip"
   );
 
-  useEffect(() => {
-    // Check active session
-    const checkSession = async (): Promise<void> => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
-    };
+  // useEffect(() => {
+  //   // Check active session
+  //   const checkSession = async (): Promise<void> => {
+  //     const { data: { session } } = await supabase.auth.getSession();
+  //     setUser(session?.user ?? null);
+  //     setLoading(false);
+  //   };
 
-    checkSession();
+  //   checkSession();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
-      setUser(session?.user ?? null);
-    });
+  //   const {
+  //     data: { subscription },
+  //   } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
+  //     setUser(session?.user ?? null);
+  //   });
 
-    return () => subscription.unsubscribe();
-  }, []);
+  //   return () => subscription.unsubscribe();
+  // }, []);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -69,33 +73,17 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const signInWithGoogle = async (): Promise<void> => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-    } catch (error) {
-      const authError = error as AuthError;
-      console.error('Error signing in:', authError.message);
-      alert('Failed to sign in with Google');
-    }
-  };
-
-  const signOut = async (): Promise<void> => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      setShowDropdown(false);
-    } catch (error) {
-      const authError = error as AuthError;
-      console.error('Error signing out:', authError.message);
-      alert('Failed to sign out');
-    }
-  };
+  // const signOut = async (): Promise<void> => {
+  //   try {
+  //     const { error } = await supabase.auth.signOut();
+  //     if (error) throw error;
+  //     setShowDropdown(false);
+  //   } catch (error) {
+  //     const authError = error as AuthError;
+  //     console.error('Error signing out:', authError.message);
+  //     alert('Failed to sign out');
+  //   }
+  // };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
@@ -120,33 +108,37 @@ const Navbar = () => {
     setShowSuggestions(false);
   };
 
-  const getUserInitial = (): string => {
-    const metadata = user?.user_metadata as UserMetadata | undefined;
+  // const getUserInitial = (): string => {
+  //   const metadata = user?.user_metadata as UserMetadata | undefined;
 
-    if (metadata?.full_name) {
-      return metadata.full_name.charAt(0).toUpperCase();
-    }
-    if (user?.email) {
-      return user.email.charAt(0).toUpperCase();
-    }
-    return 'U';
-  };
+  //   if (metadata?.full_name) {
+  //     return metadata.full_name.charAt(0).toUpperCase();
+  //   }
+  //   if (user?.email) {
+  //     return user.email.charAt(0).toUpperCase();
+  //   }
+  //   return 'U';
+  // };
 
-  const getUserAvatar = (): string | undefined => {
-    const metadata = user?.user_metadata as UserMetadata | undefined;
-    return metadata?.avatar_url;
-  };
+  // const getUserAvatar = (): string | undefined => {
+  //   const metadata = user?.user_metadata as UserMetadata | undefined;
+  //   return metadata?.avatar_url;
+  // };
 
-  const getUserFullName = (): string => {
-    const metadata = user?.user_metadata as UserMetadata | undefined;
-    return metadata?.full_name || 'User';
-  };
+  // const getUserFullName = (): string => {
+  //   const metadata = user?.user_metadata as UserMetadata | undefined;
+  //   return metadata?.full_name || 'User';
+  // };
 
   return (
     <header className="bg-white/80 backdrop-blur-xl pt-8 border-slate-200 sticky top-0 z-10 shadow-sm pb-12">
       <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-center mb-4">
-          <Link href={'/home'} className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent flex">
+        <div className="flex items-center justify-between mb-4">
+          {/* Spacer for mobile, invisible element to maintain layout */}
+          <div className="w-10 md:w-0"></div>
+
+          {/* Centered Logo */}
+          <Link href={'/home'} className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent flex mx-auto md:mx-0">
             <span className="text-black">
               The Vant
             </span>
@@ -154,6 +146,50 @@ const Navbar = () => {
               Edge
             </span>
           </Link>
+
+          {/* Auth Section */}
+          <div className="flex items-center gap-3">
+            {isLoading ? (
+              <div className="w-10 h-10 rounded-full bg-slate-200 animate-pulse" />
+            ) : user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="w-10 h-10 rounded-full bg-blue-600 text-white font-semibold flex items-center justify-center hover:bg-blue-700 transition-colors overflow-hidden"
+                >
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="User avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    user.username
+                  )}
+                </button>
+
+                {/* User Dropdown */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-2 z-50">
+                    <div className="px-4 py-2 border-b border-slate-200">
+                      <p className="font-semibold text-slate-900">{user.fullName || user.username}</p>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={signOut}
+                      className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={signInWithGoogle}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all shadow-sm font-medium text-slate-700"
+              >
+               <GoogleLogo />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Search Bar */}

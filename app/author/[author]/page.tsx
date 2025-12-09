@@ -29,8 +29,6 @@ export default function AuthorPage() {
                     <ArticleCard
                         key={post._id}
                         post={post}
-                        likedPosts={new Set()}
-                        toggleLike={() => { }}
                     />
                 ))}
             </div>

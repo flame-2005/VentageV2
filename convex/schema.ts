@@ -36,14 +36,14 @@ export default defineSchema({
         })
       )
     ),
-    tags:v.optional(v.array(v.string())),
+    tags: v.optional(v.array(v.string())),
     classification: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
     views: v.optional(v.string()),
     clickedCount: v.optional(v.number()),
     likes: v.optional(v.string()),
     lastCheckedAt: v.optional(v.number()),
-    source:v.optional(v.string()),
+    source: v.optional(v.string()),
   })
     .index("by_blog", ["blogId"])
     .index("by_link", ["link"])
@@ -51,7 +51,7 @@ export default defineSchema({
     .index("by_company", ["companyName"])
     .index("by_pubDate", ["pubDate"])
     .index("by_classification_pubDate", ["classification", "pubDate"])
-    .index("by_classification", ["classification"]) ,
+    .index("by_classification", ["classification"]),
 
   master_company_list: defineTable({
     bse_code: v.optional(v.string()),
@@ -68,4 +68,32 @@ export default defineSchema({
     .index("nse_code", ["nse_code"])
     .index("record_hash", ["record_hash"])
     .index("name", ["name"]),
+
+  users: defineTable({
+    username: v.string(),
+    email: v.string(),
+    userId: v.string(), // Supabase user ID
+    lastUpdatedAt: v.number(),
+    companiesFollowing: v.array(v.string()), // Array of company names or IDs
+    blogWebsitesFollowing: v.array(v.string()), // Array of blog URLs or IDs
+    avatarUrl: v.optional(v.string()),
+    fullName: v.optional(v.string()),
+  })
+    .index("by_email", ["email"])
+    .index("by_userId", ["userId"])
+    .index("by_username", ["username"]),
+
+  companies: defineTable({
+    name: v.string(),
+    nseCode: v.optional(v.string()),
+    description: v.optional(v.string()),
+    followersCount: v.number(),
+  }).index("by_name", ["name"]),
+
+  blogWebsites: defineTable({
+    url: v.string(),
+    name: v.string(),
+    description: v.optional(v.string()),
+    followersCount: v.number(),
+  }).index("by_url", ["url"]),
 });

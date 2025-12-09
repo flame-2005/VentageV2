@@ -36,3 +36,41 @@ export enum ValidClassification {
   MultipleCompanyAnalysis = "Multiple_company_analysis",
   SectorAnalysis = "Sector_analysis",
 }
+
+export interface RSSItem {
+  title?: string;
+  link?: string;
+  isoDate?: string;
+  pubDate?: string;
+  published?: string;
+
+  // Author variations
+  "dc:creator"?: string;
+  creator?: string;
+  author?: string;
+  "itunes:author"?: string;
+  "meta:author"?: string;
+  "article:author"?: string;
+  "atom:author"?: string;
+
+  // Images
+  enclosure?: { url?: string };
+  "media:content"?: { url?: string };
+  "media:thumbnail"?: { url?: string };
+  "media:group"?: {
+    "media:content"?: { url?: string };
+  };
+
+  
+  image?: string;
+  featuredImage?: string;
+  "post-thumbnail"?: string;
+
+  // Dates
+  "dc:date"?: string;
+  updated?: string;
+  lastBuildDate?: string;
+
+  // Allow unknown fields safely without any
+  [key: string]: unknown;
+}
