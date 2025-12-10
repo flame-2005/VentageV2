@@ -41,9 +41,10 @@ export default defineSchema({
     tags: v.optional(v.array(v.string())),
     classification: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
-    views: v.optional(v.string()),
     clickedCount: v.optional(v.number()),
-    likes: v.optional(v.string()),
+    usersLiked: v.optional(v.array(v.string())),
+    shareCount: v.optional(v.number()),
+    usersShared: v.optional(v.array(v.string())),
     lastCheckedAt: v.optional(v.number()),
     source: v.optional(v.string()),
   })
@@ -78,6 +79,8 @@ export default defineSchema({
     lastUpdatedAt: v.number(),
     companiesFollowing: v.array(v.string()), // Array of company names or IDs
     blogWebsitesFollowing: v.array(v.string()), // Array of blog URLs or IDs
+    likedPosts: v.optional(v.array(v.id("posts"))),
+    sharedPosts: v.optional(v.array(v.id("posts"))),
     avatarUrl: v.optional(v.string()),
     fullName: v.optional(v.string()),
   })
