@@ -14,6 +14,7 @@
     "label:substack": "tsx scripts/labelCompanyNames.ts",
     "fetch:wordpress": "tsx scripts/fetchWordPress.ts",
     "fetch:medium": "tsx scripts/fetchMedium.ts",
+    "fetch:feedUrls": "tsx scripts/getFeedUrl.ts",
     "fetch:blogspot": "tsx scripts/fetchBlogspot.ts",
     "fetch:masterCompany": "tsx scripts/masterCompany.ts",
     "test:program": "tsx scripts/test.ts",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",
+    "axios": "^1.13.2",
     "convex": "^1.28.2",
     "dotenv": "^17.2.3",
     "json2csv": "^6.0.0-alpha.2",

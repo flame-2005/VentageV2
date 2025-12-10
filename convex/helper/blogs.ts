@@ -236,10 +236,3 @@ export const assignBlogIdsToPosts = mutation({
   },
 });
 
-interface Blog {
-  _id: Id<"blogs">;
-  feedUrl?: string;
-  imageUrl?: string;
-}
-
-

@@ -1,4 +1,3 @@
-"use node"
 export async function fetchHtml(url: string, timeout = 15000): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);

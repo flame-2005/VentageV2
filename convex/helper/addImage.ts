@@ -29,6 +29,8 @@ export const assignPostImagesFromBlogs = mutation({
 
     for (const post of posts) {
 
+      if (post.imageUrl) continue;
+
       if (!post.blogId) continue;
 
       const blog = blogMap.get(post.blogId);

@@ -5,6 +5,9 @@ import Parser from "rss-parser";
 import { api } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 import { tryParseFeed } from "./feedParser";
+import { fetchHtml } from "../functions/newPosts/platforms/blogsiteFetchers/fetchHTML";
+import { aiExtractImage } from "./agents/extractImage";
+import { normalizeUrl } from "./blogs";
 
 interface Blog {
   _id: Id<"blogs">;
@@ -12,57 +15,57 @@ interface Blog {
   imageUrl?: string;
 }
 
-export default action({
-  handler: async (ctx) => {
-    const parser = new Parser();
+export function extractOgImage(html: string): string | null {
+  const match = html.match(
+    /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i
+  );
+  return match ? match[1] : null;
+}
 
-    const blogs = (await ctx.runQuery(
-      api.functions.substackBlogs.getAllBlogs,
-      {}
-    )) as Blog[];
+export async function extractBlogImage(blog: Blog): Promise<string | null> {
+  const parser = new Parser();
 
-    const updates: { id: Id<"blogs">; imageUrl: string }[] = [];
+  if (!blog.feedUrl) return null;
 
-    for (const blog of blogs) {
-      if (!blog.feedUrl) continue;
-      if (blog.imageUrl) continue;
+  const baseUrl = normalizeUrl(blog.feedUrl);
 
-      try {
-        const feed = await tryParseFeed(parser, blog.feedUrl);
+  try {
+    // 1️⃣ Try RSS feed
+    const feed = await tryParseFeed(parser, baseUrl);
 
-        if (!feed) {
-          console.log("No valid RSS feed found for:", blog.feedUrl);
-          continue;
-        }
+    if (!feed) {
+      console.log("No valid RSS feed found for:", blog.feedUrl);
 
-        const feedRecord = feed as unknown as Record<string, unknown>;
+      // 2️⃣ Try HTML fallback
+      const html = await fetchHtml(baseUrl);
+      if (!html) return null;
 
-        const mediaThumbnail = feedRecord["media:thumbnail"] as
-          | { url?: string }
-          | undefined;
+      // 3️⃣ Try OG image
+      const ogImage = extractOgImage(html);
+      if (ogImage) return ogImage;
 
-        const feedImage =
-          feed.image?.url || feed.image?.link || mediaThumbnail?.url || null;
-      } catch (e) {
-        console.log("Feed fetch failed:", blog.feedUrl, e);
-      }
+      // 4️⃣ Try AI extraction
+      const aiImage = await aiExtractImage(html, baseUrl);
+      if (aiImage) return aiImage;
+
+      return null;
     }
 
-    // -------------------------------
-    // 🔥 BULK UPDATE IN BATCHES OF 100
-    // -------------------------------
-    let updated = 0;
+    // 5️⃣ Extract from RSS feed
+    const feedRecord = feed as unknown as Record<string, unknown>;
+    const mediaThumbnail = feedRecord["media:thumbnail"] as
+      | { url?: string }
+      | undefined;
 
-    for (let i = 0; i < updates.length; i += 100) {
-      const chunk = updates.slice(i, i + 100);
+    const feedImage =
+      feed.image?.url ||
+      feed.image?.link ||
+      mediaThumbnail?.url ||
+      null;
 
-      await ctx.runMutation(api.functions.substackBlogs.bulkUpdateBlogs, {
-        updates: chunk,
-      });
-
-      updated += chunk.length;
-    }
-
-    return { updated };
-  },
-});
+    return feedImage ?? null;
+  } catch (err) {
+    console.log("Image extraction failed:", blog.feedUrl, err);
+    return null;
+  }
+}

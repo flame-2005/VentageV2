@@ -9,5 +9,6 @@ export type Blog = {
   description?: string;
   image?: string;
   companyName?: string;
+  extractionMethod?:string
   blogId?: Id<"blogs">;
 };

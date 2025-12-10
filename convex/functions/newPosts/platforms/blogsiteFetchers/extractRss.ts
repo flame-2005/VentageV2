@@ -1,17 +1,56 @@
-"use node";
-
 export function extractRSSLinks(html: string, baseUrl: string): string[] {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
+  try {
+    const feeds: string[] = [];
 
-  const feeds: string[] = [];
+    // Use regex to extract RSS/Atom feed links (works in Node.js without external deps)
+    const linkRegex = /<link[^>]*type=["'](application\/rss\+xml|application\/atom\+xml)["'][^>]*>/gi;
+    const hrefRegex = /href=["']([^"']+)["']/i;
 
-  doc.querySelectorAll('link[type="application/rss+xml"], link[type="application/atom+xml"]').forEach((el) => {
-    const href = el.getAttribute("href");
-    if (href) feeds.push(href.startsWith("http") ? href : new URL(href, baseUrl).href);
-  });
+    const matches = html.match(linkRegex);
+    
+    if (matches) {
+      for (const linkTag of matches) {
+        const hrefMatch = linkTag.match(hrefRegex);
+        if (hrefMatch && hrefMatch[1]) {
+          const href = hrefMatch[1];
+          try {
+            const feedUrl = href.startsWith('http') ? href : new URL(href, baseUrl).href;
+            feeds.push(feedUrl);
+          } catch (error) {
+            console.warn(`Failed to parse feed URL: ${href}`, error);
+          }
+        }
+      }
+    }
 
-  // fallback guesses
-  const guesses = ["feed", "rss", "atom"].map((p) => `${baseUrl}/${p}`);
-  return [...feeds, ...guesses];
+    // Fallback guesses
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    const guesses = [
+      'feed', 
+      'rss', 
+      'atom', 
+      'feed.xml', 
+      'rss.xml', 
+      'atom.xml',
+      'index.xml',
+      'feeds/posts/default'  // Common for Blogger
+    ].map(p => `${normalizedBase}/${p}`);
+    
+    return [...feeds, ...guesses];
+  } catch (error) {
+    console.error('Error extracting RSS links:', error);
+    
+    // Return fallback guesses even if parsing fails
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    return [
+      'feed', 
+      'rss', 
+      'atom', 
+      'feed.xml', 
+      'rss.xml', 
+      'atom.xml',
+      'index.xml',
+      'feeds/posts/default'
+    ].map(p => `${normalizedBase}/${p}`);
+  }
 }

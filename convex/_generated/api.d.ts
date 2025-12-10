@@ -9,9 +9,11 @@
  */
 
 import type * as _client from "../_client.js";
+import type * as constant_blogs from "../constant/blogs.js";
 import type * as constant_fetcher from "../constant/fetcher.js";
 import type * as constant_posts from "../constant/posts.js";
 import type * as crons from "../crons.js";
+import type * as functions_blogs from "../functions/blogs.js";
 import type * as functions_cleanUp from "../functions/cleanUp.js";
 import type * as functions_masterCompanies from "../functions/masterCompanies.js";
 import type * as functions_masterCompany from "../functions/masterCompany.js";
@@ -33,8 +35,11 @@ import type * as functions_processBlogs_processBlogs from "../functions/processB
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
 import type * as functions_users from "../functions/users.js";
 import type * as helper_addBlogImage from "../helper/addBlogImage.js";
+import type * as helper_addBulkBlogs from "../helper/addBulkBlogs.js";
 import type * as helper_addImage from "../helper/addImage.js";
+import type * as helper_agents_extractImage from "../helper/agents/extractImage.js";
 import type * as helper_blogs from "../helper/blogs.js";
+import type * as helper_classifyBlog from "../helper/classifyBlog.js";
 import type * as helper_feedParser from "../helper/feedParser.js";
 import type * as helper_post from "../helper/post.js";
 import type * as posts from "../posts.js";
@@ -55,9 +60,11 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   _client: typeof _client;
+  "constant/blogs": typeof constant_blogs;
   "constant/fetcher": typeof constant_fetcher;
   "constant/posts": typeof constant_posts;
   crons: typeof crons;
+  "functions/blogs": typeof functions_blogs;
   "functions/cleanUp": typeof functions_cleanUp;
   "functions/masterCompanies": typeof functions_masterCompanies;
   "functions/masterCompany": typeof functions_masterCompany;
@@ -79,8 +86,11 @@ declare const fullApi: ApiFromModules<{
   "functions/substackBlogs": typeof functions_substackBlogs;
   "functions/users": typeof functions_users;
   "helper/addBlogImage": typeof helper_addBlogImage;
+  "helper/addBulkBlogs": typeof helper_addBulkBlogs;
   "helper/addImage": typeof helper_addImage;
+  "helper/agents/extractImage": typeof helper_agents_extractImage;
   "helper/blogs": typeof helper_blogs;
+  "helper/classifyBlog": typeof helper_classifyBlog;
   "helper/feedParser": typeof helper_feedParser;
   "helper/post": typeof helper_post;
   posts: typeof posts;

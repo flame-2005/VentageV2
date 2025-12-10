@@ -10,6 +10,7 @@ export default defineSchema({
     lastCheckedAt: v.optional(v.number()),
     source: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
+    extractionMethod: v.optional(v.string()),
   }),
 
   posts: defineTable({

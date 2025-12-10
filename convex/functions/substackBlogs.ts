@@ -585,21 +585,25 @@ export const bulkUpdateBlogs = mutation({
     updates: v.array(
       v.object({
         id: v.id("blogs"),
-        imageUrl: v.string(),
+        imageUrl: v.optional(v.string()) ,
+        extractionMethod: v.optional(v.string()),
+        feedUrl: v.optional(v.string()),
       })
     ),
   },
 
-  handler: async (ctx, { updates }) => {
-    let count = 0;
-
-    for (const update of updates) {
-      await ctx.db.patch(update.id, {
-        imageUrl: update.imageUrl,
-      });
-      count++;
+  handler: async (ctx, args) => {
+    if (args.updates.length > 100) {
+      throw new Error("Cannot update more than 100 blogs at once");
     }
 
-    return { updated: count };
+    for (const { id, ...data } of args.updates) {
+      await ctx.db.patch(id, {
+        ...data,
+        lastCheckedAt: Date.now(),
+      });
+    }
+
+    return { success: true, updated: args.updates.length };
   },
 });
