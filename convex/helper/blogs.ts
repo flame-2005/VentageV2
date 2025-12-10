@@ -1,5 +1,7 @@
-import { Doc } from "../_generated/dataModel";
-import { CompanyDetail, ValidClassification } from "../constant/posts";
+import { Doc, Id } from "../_generated/dataModel";
+import { action, mutation } from "../_generated/server";
+import { CompanyDetail, RSSItem, ValidClassification } from "../constant/posts";
+import { api } from "../_generated/api";
 
 export async function fetchArticleContent(url: string): Promise<string | null> {
   try {
@@ -178,8 +180,59 @@ export function hasCompanyData(post: Doc<"posts">): boolean {
 }
 
 export function normalizeUrl(url: string): string {
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    return `https://${url}`;
-  }
-  return url;
+  // Ensure protocol
+  let normalized = url.startsWith("http://") || url.startsWith("https://")
+    ? url
+    : `https://${url}`;
+
+  // Remove trailing slashes
+  normalized = normalized.replace(/\/+$/, "");
+
+  // Remove any feed-like suffix
+  normalized = normalized.replace(
+    /\/(feed|rss|rss\.xml|index\.xml|atom\.xml)$/i,
+    ""
+  );
+
+  return normalized;
 }
+
+
+
+export const assignBlogIdsToPosts = mutation({
+  handler: async (ctx) => {
+    const blogs = await ctx.db.query("blogs").collect();
+    const posts = await ctx.db.query("posts").collect();
+
+    let updatedCount = 0;
+
+    // Function to normalize URLs
+    const normalize = (url: string) =>
+      url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+
+    for (const post of posts) {
+      if (post.blogId) continue;
+      if (!post.link) continue;
+
+      const postNorm = normalize(post.link);
+
+      const matchedBlog = blogs.find((blog) => {
+        if (!blog.feedUrl) return false;
+
+        // Remove /feed or /rss etc.
+        const base = blog.feedUrl.replace(/\/feed$|\/rss$|\/atom$/, "");
+        const baseNorm = normalize(base);
+
+        return postNorm.startsWith(baseNorm);
+      });
+
+      if (matchedBlog) {
+        await ctx.db.patch(post._id, { blogId: matchedBlog._id });
+        updatedCount++;
+      }
+    }
+
+    return { updated: updatedCount };
+  },
+});
+

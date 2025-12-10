@@ -579,3 +579,31 @@ export const incrementClickCount = mutation({
     return { success: true, newCount: currentCount + 1 };
   },
 });
+
+export const bulkUpdateBlogs = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        id: v.id("blogs"),
+        imageUrl: v.optional(v.string()) ,
+        extractionMethod: v.optional(v.string()),
+        feedUrl: v.optional(v.string()),
+      })
+    ),
+  },
+
+  handler: async (ctx, args) => {
+    if (args.updates.length > 100) {
+      throw new Error("Cannot update more than 100 blogs at once");
+    }
+
+    for (const { id, ...data } of args.updates) {
+      await ctx.db.patch(id, {
+        ...data,
+        lastCheckedAt: Date.now(),
+      });
+    }
+
+    return { success: true, updated: args.updates.length };
+  },
+});

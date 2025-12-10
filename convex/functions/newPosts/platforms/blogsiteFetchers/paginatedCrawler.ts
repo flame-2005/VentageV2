@@ -1,5 +1,3 @@
-"use node"
-
 import { fetchHtml } from "./fetchHTML";
 import { extractPostsFromHTML_AI } from "./extractPostsFromHTML";
 

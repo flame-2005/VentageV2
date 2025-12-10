@@ -1,5 +1,3 @@
-"use node";
-
 import OpenAI from "openai";
 import { IncomingPost as BlogPost } from "../../../../constant/posts";
 

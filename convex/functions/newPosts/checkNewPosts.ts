@@ -107,7 +107,7 @@ export const fetchAllBlogsAction = action({
         }
       }
       if (blog.source === "others") {
-        const posts = await getAllPosts(normalizeUrl(blog.feedUrl));
+        const posts = await getAllPosts(blog);
         if (!posts) continue;
 
         for (const post of posts) {

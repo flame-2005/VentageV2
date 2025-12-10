@@ -162,7 +162,7 @@ Do NOT extract:
 - Do NOT include explanations, commentary, or reasoning.
 - Extract company names and sector names ONLY if the category requires it.
 - All tags must be sentiment-style keywords such as:
-  ["bullish", "bearish", "neutral", "positive", "negative", "cautious", "speculative"]
+  ["bullish", "bearish", "neutral"]
 
 ────────────────────────────────────────
 END OF SYSTEM PROMPT
@@ -195,7 +195,7 @@ Where:
 - "sector" = detected sector name (empty if none applies)
 
 - "tags" = sentiment-style tags such as:
-    "bullish", "bearish", "neutral", "positive", "negative", "cautious", "speculative"
+    "bullish", "bearish", "neutral"
 
 - "category" = one of:
     "multiple", "sector", "company", "general"

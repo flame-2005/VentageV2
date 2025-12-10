@@ -65,7 +65,7 @@ const ArticleCard = ({ post }: ArticleCardProps) => {
                 <div className="flex w-24 md:w-48 bg-gradient-to-br from-blue-50 to-indigo-50 items-center justify-center border-r border-slate-200">
                     <div className="text-center w-full h-32 md:h-40 flex items-center justify-center">
                         <img
-                            src={post.image}
+                            src={post.image || post.imageUrl}
                             alt={post.companyName || 'Company logo'}
                             className="max-w-full max-h-full object-contain"
                         />

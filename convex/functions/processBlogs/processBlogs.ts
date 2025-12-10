@@ -15,7 +15,8 @@ type EnrichedPost = {
   pubDate: string;
   createdAt: number;
   author?: string;
-  image?: string;
+  image?: string | undefined ;
+  imageUrl?: string | undefined ;
   source: string;
 
   summary?: string;
@@ -62,6 +63,10 @@ export const processAndSavePosts = action({
       api.functions.masterCompanyList.getAllCompanies,
       {}
     );
+
+    const blogs = await ctx.runQuery(api.functions.substackBlogs.getAllBlogs, {});
+const blogMap = new Map(blogs.map(b => [b._id, b]));
+
 
     // Process posts in parallel batches of 5
     const PARALLEL_BATCH_SIZE = 10;
@@ -119,7 +124,8 @@ export const processAndSavePosts = action({
               pubDate: convertRssDateToIso(post.published),
               createdAt: Date.now(),
               author: post.author,
-              image: post.image,
+              image: post.image ?? undefined,
+              imageUrl: blogMap.get(post.blogId!)?.imageUrl ?? undefined,
               source: post.source,
               summary: agent1Typed.summary,
               classification: agent1Typed.classification,

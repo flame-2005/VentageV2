@@ -61,9 +61,14 @@ export interface RSSItem {
     "media:content"?: { url?: string };
   };
 
-  
+  logo?: string;
+  icon?: string;
   image?: string;
   featuredImage?: string;
+  coverImage?: string;
+  avatar?: string;
+  ogImage?: string;
+  thumbnail?: string;
   "post-thumbnail"?: string;
 
   // Dates

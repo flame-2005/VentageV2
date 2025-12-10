@@ -1,4 +1,4 @@
-import { action, query } from "../_generated/server";
+import { action, mutation, query } from "../_generated/server";
 import Papa from "papaparse";
 import { hasCompanyData } from "./blogs";
 import { api } from "../_generated/api";
@@ -134,6 +134,49 @@ export function extractDate(item: RSSItem): string {
 
   return "";
 }
+
+export const deleteNewsBlogs = mutation({
+  handler: async (ctx) => {
+    // List of domains to remove
+    const bannedDomains = [
+      "https://www.visualcapitalist.com",
+      "https://www.moneylife.in",
+      "https://www.theverge.com",
+      "https://www.forbesindia.com",
+      "https://www.cnbctv18.com",
+      "https://finshots.in",
+      "https://www.theceomagazine.com",
+      "https://knowledge.wharton.upenn.edu",
+      "https://www.businesstoday.in",
+      "https://yourstory.com",
+      "https://www.dsij.in",
+      "https://www.moneycontrol.com",
+      "https://thelogicalindian.com",
+      "https://thedailybrief.zerodha.com",
+      "https://www.fortuneindia.com",
+      "https://shows.ivmpodcasts.com",
+    ];
+
+
+    // Fetch all blogs
+    const blogs = await ctx.db.query("blogs").collect();
+
+    // Match blogs whose feedUrl contains any banned domain
+    const toDelete = blogs.filter((blog) =>
+      bannedDomains.some((domain) => blog.feedUrl?.includes(domain))
+    );
+
+    // Delete matching blogs
+    for (const blog of toDelete) {
+      await ctx.db.delete(blog._id);
+    }
+
+    return { deleted: toDelete.length };
+  },
+});
+
+
+
 
 
 
