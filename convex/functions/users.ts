@@ -311,3 +311,83 @@ export const isFollowingBlog = query({
     return user.blogWebsitesFollowing.includes(args.blogUrl);
   },
 });
+
+export const likePost = mutation({
+  args: {
+    postId: v.id("posts"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, { postId, userId }) => {
+    // Fetch post
+    const post = await ctx.db.get(postId);
+    if (!post) throw new Error("Post not found");
+
+    // Fetch user
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const alreadyLiked = post.usersLiked?.includes(userId) ?? false;
+
+    if (!alreadyLiked) {
+      // ----- LIKE -----
+      await ctx.db.patch(postId, {
+        usersLiked: [...(post.usersLiked ?? []), userId],
+      });
+
+      await ctx.db.patch(userId, {
+        likedPosts: [...(user.likedPosts ?? []), postId],
+      });
+
+      return { status: "liked" };
+    } else {
+      // ----- UNLIKE -----
+      await ctx.db.patch(postId, {
+        usersLiked: (post.usersLiked ?? []).filter((id) => id !== userId),
+      });
+
+      await ctx.db.patch(userId, {
+        likedPosts: (user.likedPosts ?? []).filter((id) => id !== postId),
+      });
+
+      return { status: "unliked" };
+    }
+  },
+});
+
+export const sharePost = mutation({
+  args: {
+    postId: v.id("posts"),
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, { postId, userId }) => {
+    if(!userId){
+      // Just increment share count if no userId provided
+      const post = await ctx.db.get(postId);
+      if (!post) throw new Error("Post not found");
+        await ctx.db.patch(postId, { shareCount: (post.shareCount ?? 0) + 1 });
+        return { status: "shared", newShareCount: (post.shareCount ?? 0) + 1 };
+    }
+    const post = await ctx.db.get(postId);
+    if (!post) throw new Error("Post not found");
+
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    // Increase share count ALWAYS
+    await ctx.db.patch(postId, {
+      shareCount: (post.shareCount ?? 0) + 1,
+      usersShared: post.usersShared?.includes(userId)
+        ? post.usersShared
+        : [...(post.usersShared ?? []), userId],
+    });
+
+    // Add postId to user's sharedPosts ONCE
+    await ctx.db.patch(userId, {
+      sharedPosts: user.sharedPosts?.includes(postId)
+        ? user.sharedPosts
+        : [...(user.sharedPosts ?? []), postId],
+    });
+
+    return { status: "shared", newShareCount: (post.shareCount ?? 0) + 1 };
+  },
+});
