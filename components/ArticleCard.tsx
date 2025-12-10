@@ -22,6 +22,7 @@ const ArticleCard = ({ post }: ArticleCardProps) => {
     const [likeCount, setLikeCount] = useState(post.usersLiked?.length || 0);
     const [shareCount, setShareCount] = useState(post.shareCount || 0);
     const [clickedCount, setClickedCount] = useState(post.clickedCount || 0);
+    const [imageError, setImageError] = useState(false);
 
     const companyNames = post.companyName && post.companyName !== 'null' && post.companyName !== undefined
         ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
@@ -70,7 +71,7 @@ const ArticleCard = ({ post }: ArticleCardProps) => {
         setShareCount(shareCount + 1);
         await shareMutation({
             postId: post._id,
-            userId: user?._id || undefined ,
+            userId: user?._id || undefined,
         });
     };
 
@@ -80,16 +81,23 @@ const ArticleCard = ({ post }: ArticleCardProps) => {
             className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 group"
         >
             <div className="flex flex-row">
-                {/* Company block - Hidden on mobile, fixed height with object-fit */}
                 <div className="flex w-24 md:w-48 bg-gradient-to-br from-blue-50 to-indigo-50 items-center justify-center border-r border-slate-200">
                     <div className="text-center w-full h-32 md:h-40 flex items-center justify-center">
-                        <img
-                            src={post.image || post.imageUrl}
-                            alt={post.companyName || 'Company logo'}
-                            className="max-w-full max-h-full object-contain"
-                        />
+                        {!imageError ? (
+                            <img
+                                src={post.image || post.imageUrl}
+                                alt={post.companyName || 'Company logo'}
+                                className="max-w-full max-h-full object-contain"
+                                onError={() => setImageError(true)}
+                            />
+                        ) : (
+                            <div className="text-xl  font-bold text-indigo-600">
+                                {firstCompany}
+                            </div>
+                        )}
                     </div>
                 </div>
+                
 
                 {/* Main content */}
                 <div className="flex-1 p-3 md:p-6">
