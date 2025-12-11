@@ -1,8 +1,9 @@
-import { action, mutation, query } from "../_generated/server";
+import { action, internalMutation, mutation, query } from "../_generated/server";
 import Papa from "papaparse";
 import { hasCompanyData } from "./blogs";
 import { api } from "../_generated/api";
 import { IncomingPost, RSSItem } from "../constant/posts";
+import { v } from "convex/values";
 
 
 // 2️⃣ Generate CSV for both
@@ -172,6 +173,73 @@ export const deleteNewsBlogs = mutation({
     }
 
     return { deleted: toDelete.length };
+  },
+});
+
+export const migrateCompanyPosts = internalMutation({
+  args: {
+    batchSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const batchSize = args.batchSize || 100;
+    
+    // Get all posts
+    const posts = await ctx.db.query("posts").collect();
+    
+    let totalCreated = 0;
+    let postsProcessed = 0;
+    const errors: Array<{ postId: string; error: string }> = [];
+
+    for (const post of posts) {
+      postsProcessed++;
+      
+      try {
+        // Check if post has companyDetails array
+        if (post.companyDetails && post.companyDetails.length > 0) {
+          // Create a companyPost entry for each company in the array
+          for (const company of post.companyDetails) {
+            await ctx.db.insert("companyPosts", {
+              postId: post._id,
+              companyName: company.company_name,
+              bseCode: company.bse_code,
+              nseCode: company.nse_code,
+              pubDate: post.pubDate,
+              marketCap: company.market_cap,
+            });
+            totalCreated++;
+          }
+        }
+        // Fallback: if no companyDetails but has top-level company fields
+        else if (post.companyName) {
+          await ctx.db.insert("companyPosts", {
+            postId: post._id,
+            companyName: post.companyName,
+            bseCode: post.bseCode,
+            nseCode: post.nseCode,
+            pubDate: post.pubDate,
+            marketCap: undefined,
+          });
+          totalCreated++;
+        }
+
+        // Process in batches to avoid timeouts
+        if (postsProcessed % batchSize === 0) {
+          console.log(`Processed ${postsProcessed}/${posts.length} posts, created ${totalCreated} company posts`);
+        }
+      } catch (error) {
+        errors.push({
+          postId: post._id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return {
+      success: true,
+      totalPostsProcessed: postsProcessed,
+      totalCompanyPostsCreated: totalCreated,
+      errors: errors.length > 0 ? errors : undefined,
+    };
   },
 });
 

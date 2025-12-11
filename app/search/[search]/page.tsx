@@ -5,13 +5,12 @@ import CircularLoader from '@/components/circularLoader';
 import { api } from '@/convex/_generated/api';
 import { usePaginatedQuery } from 'convex/react';
 import { useParams } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 const Page = () => {
     const params = useParams();
-    const searchTerm = decodeURIComponent(params.searchParams as string);
+    const searchTerm = decodeURIComponent(params.search as string);
 
-    // Search query (with search term)
     const searchQuery = usePaginatedQuery(
         api.functions.substackBlogs.searchPosts,
         { searchTerm },
@@ -20,33 +19,70 @@ const Page = () => {
 
     const { results: posts, status, loadMore } = searchQuery;
 
-    // Check loading states
+    const uniquePosts = useMemo(() => {
+        if (!posts) return [];
+
+        const seen = new Set<string>();
+        const output = [];
+
+        for (const p of posts) {
+            if (!seen.has(p._id)) {
+                seen.add(p._id);
+                output.push(p);
+            }
+        }
+
+        return output;
+    }, [posts]);
+
     const isLoading = status === "LoadingFirstPage";
     const isLoadingMore = status === "LoadingMore";
     const canLoadMore = status === "CanLoadMore";
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
+    const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
+        // Clear any existing timeout
+        if (loadingTimeoutRef.current) {
+            clearTimeout(loadingTimeoutRef.current);
+        }
+
         if (!loadMoreRef.current || !canLoadMore || isLoadingMore) return;
+
+        const currentRef = loadMoreRef.current;
 
         const observer = new IntersectionObserver(
             (entries) => {
-                // When the loader div is visible, load more
                 if (entries[0].isIntersecting && canLoadMore && !isLoadingMore) {
                     loadMore(20);
                 }
             },
             {
-                threshold: 0.1, // Trigger when 10% of the element is visible
-                rootMargin: "100px", // Start loading 100px before reaching the element
+                threshold: 0.1,
+                rootMargin: "200px", // Increased for better triggering
             }
         );
 
-        observer.observe(loadMoreRef.current);
+        observer.observe(currentRef);
 
-        return () => observer.disconnect();
-    }, [canLoadMore, isLoadingMore, loadMore]);
+        return () => {
+            observer.disconnect();
+        };
+    }, [canLoadMore, isLoadingMore, loadMore, posts]);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (loadingTimeoutRef.current) {
+                clearTimeout(loadingTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        console.log(canLoadMore, isLoadingMore, status);
+    }, [status]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -58,10 +94,9 @@ const Page = () => {
                         <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6">
                             Latest Articles
                         </h1>
-                        {/* Articles */}
                         <div className="space-y-6">
-                            {posts && posts.length > 0 ? (
-                                posts.map((post) => (
+                            {uniquePosts && uniquePosts.length > 0 ? (
+                                uniquePosts.map((post) => (
                                     <ArticleCard
                                         key={post._id}
                                         post={post}
@@ -80,11 +115,11 @@ const Page = () => {
                             )}
                         </div>
 
-                        {/* Infinite scroll trigger + Loading indicator */}
-                        {(canLoadMore || isLoadingMore) && posts && posts.length > 0 && (
+                        {/* Keep the trigger div mounted as long as we can load more OR are currently loading */}
+                        {(canLoadMore || isLoadingMore) && uniquePosts && uniquePosts.length > 0 && (
                             <div
                                 ref={loadMoreRef}
-                                className="flex justify-center items-center py-8"
+                                className="flex justify-center items-center py-8 min-h-[80px]"
                             >
                                 {isLoadingMore && (
                                     <div className="flex items-center gap-3 text-blue-500">
@@ -96,7 +131,7 @@ const Page = () => {
                         )}
 
                         {/* End of results message */}
-                        {status === "Exhausted" && posts && posts.length > 0 && (
+                        {status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
                             <div className="text-center py-8">
                                 <p className="text-slate-500 font-medium">
                                     You&apos;ve reached the end! No more articles to load.

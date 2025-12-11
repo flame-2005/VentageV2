@@ -114,7 +114,7 @@ export const getCompaniesNeedingEnrichment = query({
     
     // Filter in memory for undefined/null market_cap
     const needsEnrichment = allCompanies.filter(
-      (c) => c.market_cap == null  || c.market_cap === undefined
+      (c) => (c.market_cap == null  || c.market_cap === undefined) && c.checked_market_cap === undefined
     );
     
     // Apply pagination
@@ -127,12 +127,39 @@ export const updateCompanyEnrichment = mutation({
   args: {
     id: v.id("master_company_list"),
     market_cap: v.union(v.number(), v.null()),
+    checked_market_cap: v.union(v.boolean(), v.null()),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.id, {
       market_cap: args.market_cap ?? undefined,
       updated_at: new Date().toISOString(),
+      checked_market_cap: args.checked_market_cap ?? undefined,
     });
     return { success: true };
+  },
+});
+
+
+export const bulkUpdateCompanyEnrichment = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        id: v.id("master_company_list"),
+        market_cap: v.union(v.number(), v.null()),
+        checked_market_cap: v.union(v.boolean(), v.null()),
+      })
+    ),
+  },
+
+  handler: async (ctx, { updates }) => {
+    for (const item of updates) {
+      await ctx.db.patch(item.id, {
+        market_cap: item.market_cap ?? undefined,
+        checked_market_cap: item.checked_market_cap ?? undefined,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    return { success: true, updated: updates.length };
   },
 });

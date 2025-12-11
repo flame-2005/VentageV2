@@ -8,17 +8,12 @@ import Link from 'next/link';
 import { GoogleLogo } from '@/constants/assets/googleLogo.svg';
 import { signInWithGoogle } from '@/lib/users';
 import { useUser } from '@/context/userContext';
+import { useRouter } from 'next/navigation';
 
 // Initialize Supabase client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-type UserMetadata = {
-  avatar_url?: string;
-  full_name?: string;
-  email?: string;
-};
 
 const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
@@ -26,10 +21,12 @@ const Navbar = () => {
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { supabaseUser, user, isLoading, signOut } = useUser();
+  const { user, isLoading, signOut } = useUser();
+
+  const router = useRouter();
 
 
-  const { searchTerm, inputValue, setInputValue, applySearch, clearSearch } = useSearch();
+  const { searchTerm, inputValue, setInputValue, clearSearch } = useSearch();
 
   // Get company suggestions based on input
   const suggestions = useQuery(
@@ -37,26 +34,6 @@ const Navbar = () => {
     inputValue.length >= 1 ? { searchTerm: inputValue } : "skip"
   );
 
-  // useEffect(() => {
-  //   // Check active session
-  //   const checkSession = async (): Promise<void> => {
-  //     const { data: { session } } = await supabase.auth.getSession();
-  //     setUser(session?.user ?? null);
-  //     setLoading(false);
-  //   };
-
-  //   checkSession();
-
-  //   const {
-  //     data: { subscription },
-  //   } = supabase.auth.onAuthStateChange((_event, session: Session | null) => {
-  //     setUser(session?.user ?? null);
-  //   });
-
-  //   return () => subscription.unsubscribe();
-  // }, []);
-
-  // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -73,21 +50,9 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // const signOut = async (): Promise<void> => {
-  //   try {
-  //     const { error } = await supabase.auth.signOut();
-  //     if (error) throw error;
-  //     setShowDropdown(false);
-  //   } catch (error) {
-  //     const authError = error as AuthError;
-  //     console.error('Error signing out:', authError.message);
-  //     alert('Failed to sign out');
-  //   }
-  // };
-
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
     if (e.key === 'Enter') {
-      applySearch();
+      router.push(`/search/${encodeURIComponent(inputValue)}`);
       setShowSuggestions(false);
     }
   };
@@ -97,38 +62,10 @@ const Navbar = () => {
     setShowSuggestions(e.target.value.length >= 1);
   };
 
-  const handleSuggestionClick = (companyName: string) => {
-    setInputValue(companyName);
-    applySearch(companyName);
-    setShowSuggestions(false);
-  };
-
   const handleClearSearch = (): void => {
     clearSearch();
     setShowSuggestions(false);
   };
-
-  // const getUserInitial = (): string => {
-  //   const metadata = user?.user_metadata as UserMetadata | undefined;
-
-  //   if (metadata?.full_name) {
-  //     return metadata.full_name.charAt(0).toUpperCase();
-  //   }
-  //   if (user?.email) {
-  //     return user.email.charAt(0).toUpperCase();
-  //   }
-  //   return 'U';
-  // };
-
-  // const getUserAvatar = (): string | undefined => {
-  //   const metadata = user?.user_metadata as UserMetadata | undefined;
-  //   return metadata?.avatar_url;
-  // };
-
-  // const getUserFullName = (): string => {
-  //   const metadata = user?.user_metadata as UserMetadata | undefined;
-  //   return metadata?.full_name || 'User';
-  // };
 
   return (
     <header className="bg-white/80 backdrop-blur-xl pt-8 border-slate-200 sticky top-0 z-10 shadow-sm pb-12">
@@ -186,7 +123,7 @@ const Navbar = () => {
                 onClick={signInWithGoogle}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all shadow-sm font-medium text-slate-700"
               >
-               <GoogleLogo />
+                <GoogleLogo />
               </button>
             )}
           </div>
@@ -218,13 +155,17 @@ const Navbar = () => {
           {/* Suggestions Dropdown */}
           {showSuggestions && suggestions && suggestions.length > 0 && (
             <div
+              onClick={() => {
+                setShowSuggestions(false)
+              }}
               ref={suggestionsRef}
               className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg max-h-80 overflow-y-auto z-50"
             >
               {suggestions.map((suggestion, index) => (
-                <button
+                <Link
                   key={index}
-                  onClick={() => handleSuggestionClick(suggestion.companyName)}
+                  onClick={() => { setInputValue(suggestion.companyName) }}
+                  href={`/search/${encodeURIComponent(suggestion.companyName)}`}
                   className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group"
                 >
                   <span className="font-medium text-slate-900 group-hover:text-blue-600">
@@ -235,11 +176,11 @@ const Navbar = () => {
                       {suggestion.nseCode}
                     </span>
                   )}
-                </button>
+                </Link>
               ))}
 
               {/* Search everywhere option */}
-              <button
+              {/* <button
                 onClick={() => {
                   applySearch();
                   setShowSuggestions(false);
@@ -247,7 +188,7 @@ const Navbar = () => {
                 className="w-full px-4 py-3 text-left text-blue-600 hover:bg-blue-50 transition-colors font-medium border-t-2 border-blue-100"
               >
                 Search everywhere: {inputValue}
-              </button>
+              </button> */}
             </div>
           )}
         </div>
