@@ -9,11 +9,8 @@ import CircularLoader from "@/components/circularLoader";
 import { useSearch } from "@/context/searchContext";
 
 export default function InvestmentDashboard() {
-    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
     const loadMoreRef = useRef<HTMLDivElement>(null);
 
-    // Get search term from context
-    const { searchTerm } = useSearch();
 
     // Regular paginated query (no search)
     const regularQuery = usePaginatedQuery(
@@ -22,17 +19,9 @@ export default function InvestmentDashboard() {
         { initialNumItems: 20 }
     );
 
-    // Search query (with search term)
-    const searchQuery = usePaginatedQuery(
-        api.functions.substackBlogs.searchPosts,
-        { searchTerm: searchTerm || "" },
-        { initialNumItems: 20 }
-    );
 
     // Use the appropriate query based on whether search term exists
-    const { results: posts, status, loadMore } = searchTerm
-        ? searchQuery
-        : regularQuery;
+    const { results: posts, status, loadMore } = regularQuery;
 
     // Check loading states
     const isLoading = status === "LoadingFirstPage";
@@ -60,18 +49,6 @@ export default function InvestmentDashboard() {
 
         return () => observer.disconnect();
     }, [canLoadMore, isLoadingMore, loadMore]);
-
-    const toggleLike = (postId: Id<"posts">) => {
-        setLikedPosts((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(postId)) {
-                newSet.delete(postId);
-            } else {
-                newSet.add(postId);
-            }
-            return newSet;
-        });
-    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -111,7 +88,7 @@ export default function InvestmentDashboard() {
                                 ref={loadMoreRef}
                                 className="flex justify-center items-center py-8"
                             >
-                                {isLoadingMore && (
+                                {isLoadingMore &&  (
                                     <div className="flex items-center gap-3 text-blue-500">
                                         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                                         <span className="font-medium">Loading more articles...</span>

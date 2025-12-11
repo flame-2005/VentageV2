@@ -24,46 +24,35 @@ export const addBlogs = mutation({
 });
 
 export const getPostsByCompany = query({
-  args: { companyName: v.string() },
-  handler: async (ctx, { companyName }) => {
-    // Use by_company index with range query
-    const posts = await ctx.db
-      .query("posts")
-      .withIndex("by_company", (q) =>
-        q
-          .gte("companyName", companyName)
-          .lt("companyName", companyName + "\uffff")
-      )
+  args: {
+    companyName: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { companyName, limit = 50 }) => {
+    // Step 1: Get top N companyPosts (sorted by pubDate via index)
+    const companyPostEntries = await ctx.db
+      .query("companyPosts")
+      .withIndex("by_company_pubDate", (q) => q.eq("companyName", companyName))
+      .order("desc")
       .collect();
 
-    const validPosts = posts.filter(hasCompanyData);
-    // Lightweight client-side filtering
-    const matchingPosts = validPosts.filter((post) => {
-      if (!post.companyName || post.companyName === "null") {
-        return false;
-      }
+    const postIds = [...new Set(companyPostEntries.map((cp) => cp.postId))];
 
-      // Split comma-separated company names and check if any match
-      const companyNames = post.companyName
-        .split(",")
-        .map((name) => name.trim().toLowerCase());
+    const posts = await Promise.all(
+      postIds.map((postId) => ctx.db.get(postId))
+    );
 
-      return companyNames.includes(companyName.toLowerCase());
-    });
-
-    // Filter to only include posts where author is defined and not 'null'
-    // Also sort by pubDate descending
-    return matchingPosts
-      .filter(
-        (post) =>
-          post.author &&
-          (post.bseCode || post.nseCode) &&
+    // Step 3: Filter and return
+    return posts
+      .filter((post): post is NonNullable<typeof post> => {
+        return (
+          post !== null &&
+          !!post.author &&
           post.author !== "null" &&
           post.author.trim() !== ""
-      )
-      .sort((a, b) => {
-        return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
-      });
+        );
+      })
+      .slice(0, limit);
   },
 });
 
@@ -72,7 +61,7 @@ export const getPostsByAuthor = query({
   handler: async (ctx, { author }) => {
     const posts = await ctx.db
       .query("posts")
-      .withIndex("by_author", (q) => q.eq("author", author))
+      .withIndex("by_author_pubDate", (q) => q.eq("author", author))
       .order("desc")
       .collect();
 
@@ -359,30 +348,50 @@ export const searchPosts = query({
       id: v.number(),
     }),
   },
+
   handler: async (ctx, { searchTerm, paginationOpts }) => {
     const term = searchTerm.toUpperCase();
 
-    // Use by_company index with range query for efficient prefix matching
+    // Step 1: get companyPost entries (already sorted by pubDate via index)
     const result = await ctx.db
-      .query("posts")
-      .withIndex("by_company", (q) =>
+      .query("companyPosts")
+      .withIndex("by_company_pubDate", (q) =>
         q.gte("companyName", term).lt("companyName", term + "\uffff")
       )
+      .order("desc")
       .paginate(paginationOpts);
 
-    const validPage = result.page.filter(hasCompanyData);
+    // Step 2: Keep only exact PREFIX matches (companyName.startsWith)
+    const matchingCompanyPosts = result.page.filter((entry) =>
+      entry.companyName.toLowerCase().startsWith(term.toLowerCase())
+    );
 
-    const sorted = validPage.sort((a, b) => {
-      return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+    // Step 3: Extract unique postIds
+    const postIds = [...new Set(matchingCompanyPosts.map((cp) => cp.postId))];
+
+    // Step 4: Fetch posts
+    const posts = await Promise.all(postIds.map((postId) => ctx.db.get(postId)));
+    
+
+    // Step 5: Filter valid posts (author good)
+    const validPosts = posts.filter((post): post is NonNullable<typeof post> => {
+      return (
+        post !== null &&
+        !!post.author &&
+        post.author !== "null" &&
+        post.author.trim() !== ""
+      );
     });
 
+    // No sorting needed — index already ensures correct pubDate DESC
     return {
-      page: sorted,
+      page: validPosts,
       continueCursor: result.continueCursor,
       isDone: result.isDone,
     };
   },
 });
+
 
 export const getCompanySuggestions = query({
   args: {
@@ -585,7 +594,7 @@ export const bulkUpdateBlogs = mutation({
     updates: v.array(
       v.object({
         id: v.id("blogs"),
-        imageUrl: v.optional(v.string()) ,
+        imageUrl: v.optional(v.string()),
         extractionMethod: v.optional(v.string()),
         feedUrl: v.optional(v.string()),
       })

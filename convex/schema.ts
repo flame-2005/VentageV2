@@ -51,6 +51,7 @@ export default defineSchema({
     .index("by_blog", ["blogId"])
     .index("by_link", ["link"])
     .index("by_author", ["author"])
+    .index("by_author_pubDate", ["author", "pubDate"])
     .index("by_company", ["companyName"])
     .index("by_pubDate", ["pubDate"])
     .index("by_classification_pubDate", ["classification", "pubDate"])
@@ -65,6 +66,7 @@ export default defineSchema({
     exchange: v.string(),
     market_cap: v.optional(v.number()),
     record_hash: v.string(),
+    checked_market_cap: v.optional(v.boolean()),
     created_at: v.string(),
     updated_at: v.string(),
   })
@@ -101,4 +103,19 @@ export default defineSchema({
     description: v.optional(v.string()),
     followersCount: v.number(),
   }).index("by_url", ["url"]),
+
+  companyPosts: defineTable({
+    postId: v.id("posts"),
+    companyName: v.string(),
+    pubDate: v.string(),
+    bseCode: v.optional(v.string()),
+    nseCode: v.optional(v.string()),
+    marketCap: v.optional(v.number()),
+  })
+    .index("by_post", ["postId"])
+    .index("by_company_pubDate", ["companyName", "pubDate"])
+
+    .index("by_company", ["companyName"])
+    .index("by_bse", ["bseCode"])
+    .index("by_nse", ["nseCode"]),
 });
