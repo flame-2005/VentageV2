@@ -53,10 +53,10 @@ export async function getAllPosts(blog: Blog) {
   // ---------------------------------------------------------
   // 3️⃣ HISTORICAL POSTS CRAWLING (DEEP LINKS)
   // ---------------------------------------------------------
-  console.log("📚 Crawling historical posts...");
-  const historical = await crawlHistoricalPosts(baseUrl);
+  // console.log("📚 Crawling historical posts...");
+  // const historical = await crawlHistoricalPosts(baseUrl);
 
-  posts.push(...historical);
+  // posts.push(...historical);
 
   console.log(`✅ Total posts extracted: ${posts.length}`);
   return posts;

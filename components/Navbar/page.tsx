@@ -18,22 +18,37 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [debouncedInputValue, setDebouncedInputValue] = useState<string>('');
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { user, isLoading, signOut } = useUser();
-
   const router = useRouter();
-
 
   const { searchTerm, inputValue, setInputValue, clearSearch } = useSearch();
 
-  // Get company suggestions based on input
+  const [imgError, setImgError] = useState(false);
+
+  const displayName = user ? (user.fullName || user.username ) : "";
+  const fallbackLetter = displayName ? displayName.charAt(0).toUpperCase() : "";
+
+  // Debounce logic: Update debouncedInputValue after 300ms of no typing
+  useEffect(() => {
+
+    const timer = setTimeout(() => {
+      setDebouncedInputValue(inputValue);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [inputValue]);
+
+  // Get company suggestions based on DEBOUNCED input
   const suggestions = useQuery(
     api.functions.substackBlogs.getCompanySuggestions,
-    inputValue.length >= 1 ? { searchTerm: inputValue } : "skip"
+    debouncedInputValue.length >= 2 ? { searchTerm: debouncedInputValue } : "skip"
   );
 
+  // Handle clicks outside suggestions dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -58,14 +73,22 @@ const Navbar = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    setShowSuggestions(e.target.value.length >= 1);
+    const value = e.target.value;
+    setInputValue(value);
+
+    // Show suggestions immediately if there's input (loading state)
+    // Actual suggestions will load after debounce
+    setShowSuggestions(value.length >= 2);
   };
 
   const handleClearSearch = (): void => {
     clearSearch();
     setShowSuggestions(false);
+    setDebouncedInputValue('');
   };
+
+  // Show loading state while debouncing
+  const isDebouncing = inputValue.length >= 2 && inputValue !== debouncedInputValue;
 
   return (
     <header className="bg-white/80 backdrop-blur-xl pt-8 border-slate-200 sticky top-0 z-10 shadow-sm pb-12">
@@ -94,11 +117,19 @@ const Navbar = () => {
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="w-10 h-10 rounded-full bg-blue-600 text-white font-semibold flex items-center justify-center hover:bg-blue-700 transition-colors overflow-hidden"
                 >
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="User avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    user.username
-                  )}
+                  <div className="w-full h-full flex items-center justify-center bg-black text-white font-semibold">
+                    {!imgError && user.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt="User avatar"
+                        className="w-full h-full object-cover"
+                        onError={() => setImgError(true)}
+                      />
+                    ) : (
+                      fallbackLetter
+                    )}
+                  </div>
+
                 </button>
 
                 {/* User Dropdown */}
@@ -139,7 +170,7 @@ const Navbar = () => {
             value={inputValue}
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
-            onFocus={() => inputValue.length >= 1 && setShowSuggestions(true)}
+            onFocus={() => inputValue.length >= 2 && setShowSuggestions(true)}
             className="w-full pl-12 pr-12 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all shadow-sm"
           />
           {(inputValue || searchTerm) && (
@@ -153,42 +184,41 @@ const Navbar = () => {
           )}
 
           {/* Suggestions Dropdown */}
-          {showSuggestions && suggestions && suggestions.length > 0 && (
+          {showSuggestions && inputValue.length >= 2 && (
             <div
-              onClick={() => {
-                setShowSuggestions(false)
-              }}
               ref={suggestionsRef}
               className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg max-h-80 overflow-y-auto z-50"
             >
-              {suggestions.map((suggestion, index) => (
-                <Link
-                  key={index}
-                  onClick={() => { setInputValue(suggestion.companyName) }}
-                  href={`/search/${encodeURIComponent(suggestion.companyName)}`}
-                  className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group"
-                >
-                  <span className="font-medium text-slate-900 group-hover:text-blue-600">
-                    {suggestion.companyName}
-                  </span>
-                  {suggestion.nseCode && (
-                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600">
-                      {suggestion.nseCode}
-                    </span>
-                  )}
-                </Link>
-              ))}
+              {/* Loading State */}
+              {isDebouncing && (
+                <div className="px-4 py-3 text-slate-500 text-sm">
+                  Searching...
+                </div>
+              )}
 
-              {/* Search everywhere option */}
-              {/* <button
-                onClick={() => {
-                  applySearch();
-                  setShowSuggestions(false);
-                }}
-                className="w-full px-4 py-3 text-left text-blue-600 hover:bg-blue-50 transition-colors font-medium border-t-2 border-blue-100"
-              >
-                Search everywhere: {inputValue}
-              </button> */}
+              {/* Show suggestions after debounce */}
+              {!isDebouncing && suggestions && suggestions.length > 0 ? (
+                suggestions.map((suggestion, index) => (
+                  <Link
+                    key={index}
+                    onClick={() => {
+                      setInputValue(suggestion.companyName);
+                      setShowSuggestions(false);
+                    }}
+                    href={`/search/${encodeURIComponent(suggestion.companyName)}`}
+                    className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group"
+                  >
+                    <span className="font-medium text-slate-900 group-hover:text-blue-600">
+                      {suggestion.companyName}
+                    </span>
+                    {suggestion.nseCode && (
+                      <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600">
+                        {suggestion.nseCode}
+                      </span>
+                    )}
+                  </Link>
+                ))
+              ) : null}
             </div>
           )}
         </div>

@@ -26,7 +26,7 @@ export type IncomingPost = {
   link: string;
   published: string;
   author?: string;
-  image?: string;
+  image?: string | null;
   source: string;
   blogId?: Id<"blogs">;
 };
