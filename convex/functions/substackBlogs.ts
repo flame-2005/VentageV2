@@ -4,6 +4,7 @@ import { internalMutation, mutation, query } from "../_generated/server";
 import { api } from "../_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { hasCompanyData } from "../helper/blogs";
+import { Id } from "../_generated/dataModel";
 
 export const addBlogs = mutation({
   args: {
@@ -398,77 +399,77 @@ export const getCompanySuggestions = query({
     searchTerm: v.string(),
   },
   handler: async (ctx, { searchTerm }) => {
+    // Return empty if search term too short
     if (!searchTerm || searchTerm.trim().length < 1) {
       return [];
     }
 
-    const lowerSearchTerm = searchTerm.toLowerCase().trim();
+    const term = searchTerm.trim();
+    const upperTerm = term.toUpperCase();
+    const lowerTerm = term.toLowerCase();
 
+    // Use index range queries with LIMITS to avoid full scans
     const matchingByName = await ctx.db
       .query("master_company_list")
-      .withIndex("name", (q) => q.gte("name", searchTerm))
-      .collect();
+      .withIndex("name", (q) => 
+        q.gte("name", lowerTerm).lt("name", lowerTerm + "\uffff")
+      )
+      .take(20);
 
     const matchingByCode = await ctx.db
       .query("master_company_list")
-      .withIndex("nse_code", (q) => q.gte("nse_code", searchTerm.toUpperCase()))
-      .collect();
+      .withIndex("nse_code", (q) => 
+        q.gte("nse_code", upperTerm).lt("nse_code", upperTerm + "\uffff")
+      )
+      .take(20); 
 
-    const combined = new Map();
-
-    [...matchingByName, ...matchingByCode].forEach((company) => {
-      if (!combined.has(company._id)) {
-        combined.set(company._id, company);
+    // Deduplicate using Map
+    const uniqueCompanies = new Map();
+    
+    for (const company of [...matchingByName, ...matchingByCode]) {
+      if (!uniqueCompanies.has(company._id)) {
+        uniqueCompanies.set(company._id, company);
       }
-    });
+    }
 
-    const allMatches = Array.from(combined.values())
+    // Filter for exact prefix matches only
+    const filtered = Array.from(uniqueCompanies.values())
       .filter((company) => {
         const companyName = company.name.toLowerCase();
         const nseCode = company.nse_code.toLowerCase();
-
+        
         return (
-          companyName.includes(lowerSearchTerm) ||
-          nseCode.includes(lowerSearchTerm)
+          companyName.startsWith(lowerTerm) ||
+          nseCode.startsWith(lowerTerm)
         );
-      })
-      .map((company) => ({
-        companyName: company.name,
-        nseCode: company.nse_code,
-        bseCode: company.bse_code,
-        isin: company.isin,
-        instrumentToken: company.instrument_token,
-      }));
+      });
 
     // Sort by relevance
-    const suggestions = allMatches
-      .sort((a, b) => {
-        const aNameStartsWith = a.companyName
-          .toLowerCase()
-          .startsWith(lowerSearchTerm);
-        const bNameStartsWith = b.companyName
-          .toLowerCase()
-          .startsWith(lowerSearchTerm);
-        const aCodeStartsWith = a.nseCode
-          .toLowerCase()
-          .startsWith(lowerSearchTerm);
-        const bCodeStartsWith = b.nseCode
-          .toLowerCase()
-          .startsWith(lowerSearchTerm);
+    const sorted = filtered.sort((a, b) => {
+      const aCodeMatch = a.nse_code.toLowerCase().startsWith(lowerTerm);
+      const bCodeMatch = b.nse_code.toLowerCase().startsWith(lowerTerm);
+      const aNameMatch = a.name.toLowerCase().startsWith(lowerTerm);
+      const bNameMatch = b.name.toLowerCase().startsWith(lowerTerm);
 
-        if (aCodeStartsWith && !bCodeStartsWith) return -1;
-        if (!aCodeStartsWith && bCodeStartsWith) return 1;
-        if (aNameStartsWith && !bNameStartsWith) return -1;
-        if (!aNameStartsWith && bNameStartsWith) return 1;
+      // Prioritize: exact code match > code prefix > name prefix
+      if (aCodeMatch && !bCodeMatch) return -1;
+      if (!aCodeMatch && bCodeMatch) return 1;
+      if (aNameMatch && !bNameMatch) return -1;
+      if (!aNameMatch && bNameMatch) return 1;
 
-        return a.companyName.localeCompare(b.companyName);
-      })
-      .slice(0, 10);
+      return a.name.localeCompare(b.name);
+    });
 
-    return suggestions;
+    // Return top 10
+    return sorted.slice(0, 10).map((company) => ({
+      companyName: company.name,
+      nseCode: company.nse_code,
+      bseCode: company.bse_code,
+      isin: company.isin,
+      instrumentToken: company.instrument_token,
+    }));
   },
 });
-
 export const addBulkPost = mutation({
   args: {
     posts: v.array(
@@ -614,5 +615,13 @@ export const bulkUpdateBlogs = mutation({
     }
 
     return { success: true, updated: args.updates.length };
+  },
+});
+
+
+export const getPostById = query({
+  args: { id: v.id("posts") },
+  handler: async ({ db }, { id }) => {
+    return await db.get(id as Id<"posts">);
   },
 });

@@ -6,10 +6,12 @@ import "./globals.css";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { convex } from "@/convex/_client";
 import Navbar from "@/components/Navbar/page";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SearchProvider } from "@/context/searchContext";
 import { ToastProvider } from "@/context/toastContext";
 import { UserProvider } from "@/context/userContext";
+import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +27,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+
+  const pathname = usePathname();
+
+  // Scroll to top when component mounts or pathname changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
 
   return (
     <html lang="en">

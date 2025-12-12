@@ -4,10 +4,10 @@ import { IncomingPost } from "../../../constant/posts";
 
 export async function fetchSubstackRSS(substackUrl: string): Promise<IncomingPost[] | null> {
   try {
-    const rssFeedUrl =
-      substackUrl.endsWith("/feed")
-        ? `${substackUrl}`
-        : `${substackUrl}/feed`;
+    const rssFeedUrl = substackUrl
+      // substackUrl.endsWith("/feed")
+      //   ? `${substackUrl}`
+      //   : `${substackUrl}/feed`;
 
     console.log(`📡 Fetching RSS feed: ${rssFeedUrl}`);
 

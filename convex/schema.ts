@@ -72,7 +72,8 @@ export default defineSchema({
   })
     .index("nse_code", ["nse_code"])
     .index("record_hash", ["record_hash"])
-    .index("name", ["name"]),
+    .index("name", ["name"])
+    .index("bse_code", ["bse_code"]),
 
   users: defineTable({
     username: v.string(),

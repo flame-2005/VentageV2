@@ -97,7 +97,7 @@ const ArticleCard = ({ post }: ArticleCardProps) => {
                         )}
                     </div>
                 </div>
-                
+
 
                 {/* Main content */}
                 <div className="flex-1 p-3 md:p-6">
@@ -231,19 +231,31 @@ const ArticleCard = ({ post }: ArticleCardProps) => {
                             </button>
                             <button
                                 onClick={async () => {
-                                    sharePost();
                                     try {
-                                        await navigator.clipboard.writeText(post.link);
-                                        addToast('success', 'Link Copied!', 'The link has been copied to your clipboard.');
+                                        await sharePost();
+                                        const shareUrl = `${window.location.origin}/share/${post._id}`;
+                                        await navigator.clipboard.writeText(shareUrl);
+                                        addToast(
+                                            "success",
+                                            "Link Copied!",
+                                            "The share link has been copied to your clipboard."
+                                        );
                                     } catch (error) {
-                                        addToast('error', 'Copy Failed', 'Unable to copy link to clipboard.');
+                                        console.error(error);
+
+                                        addToast(
+                                            "error",
+                                            "Copy Failed",
+                                            "Unable to copy link to clipboard. Try again!"
+                                        );
                                     }
                                 }}
-                                className={`flex items-center gap-1 transition-colors hover:text-rose-500`}
+                                className="flex items-center gap-1 transition-colors hover:text-rose-500"
                             >
                                 <Share2 className="w-4 h-4" />
                                 {shareCount}
                             </button>
+
                             <div className="flex items-center gap-1"                        >
                                 <MousePointerClick className="w- h-6" />
                                 {clickedCount}

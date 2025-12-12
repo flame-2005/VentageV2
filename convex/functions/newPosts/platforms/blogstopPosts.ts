@@ -28,7 +28,7 @@ export async function fetchBlogspotRSS(
     // Remove /feed or /feeds/posts/default if present
     normalized = normalized.replace(/\/feeds?.*$/, "");
 
-    const feedUrl = `https://${normalized}/feeds/posts/default?max-results=${maxResults}`;
+    const feedUrl = blogUrl;
 
     console.log(`📡 Fetching Blogspot feed: ${feedUrl}`);
 

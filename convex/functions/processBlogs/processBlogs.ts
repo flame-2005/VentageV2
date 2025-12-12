@@ -3,8 +3,17 @@
 import { action } from "../../_generated/server";
 import { v } from "convex/values";
 import { api } from "../../_generated/api";
-import { fetchArticleContent, matchCompaniesWithMasterList, parseMultiMatch } from "../../helper/blogs";
-import { Agent1Response, Agent2Response, CompanyDetail, IncomingPost } from "../../constant/posts";
+import {
+  fetchArticleContent,
+  matchCompaniesWithMasterList,
+  parseMultiMatch,
+} from "../../helper/blogs";
+import {
+  Agent1Response,
+  Agent2Response,
+  CompanyDetail,
+  IncomingPost,
+} from "../../constant/posts";
 import { Id } from "../../_generated/dataModel";
 import { convertRssDateToIso } from "../../helper/post";
 
@@ -15,8 +24,8 @@ type EnrichedPost = {
   pubDate: string;
   createdAt: number;
   author?: string;
-  image?: string | undefined ;
-  imageUrl?: string | undefined ;
+  image?: string | undefined;
+  imageUrl?: string | undefined;
   source: string;
 
   summary?: string;
@@ -47,13 +56,16 @@ export const processAndSavePosts = action({
         link: v.string(),
         published: v.string(),
         author: v.optional(v.string()),
-        image: v.optional(v.string()),
+        image: v.optional(v.union(v.string(), v.null())),
         source: v.string(),
       })
     ),
   },
 
-  handler: async (ctx, { posts }): Promise<{
+  handler: async (
+    ctx,
+    { posts }
+  ): Promise<{
     totalProcessed: number;
     batches: number;
   }> => {
@@ -64,9 +76,11 @@ export const processAndSavePosts = action({
       {}
     );
 
-    const blogs = await ctx.runQuery(api.functions.substackBlogs.getAllBlogs, {});
-const blogMap = new Map(blogs.map(b => [b._id, b]));
-
+    const blogs = await ctx.runQuery(
+      api.functions.substackBlogs.getAllBlogs,
+      {}
+    );
+    const blogMap = new Map(blogs.map((b) => [b._id, b]));
 
     // Process posts in parallel batches of 5
     const PARALLEL_BATCH_SIZE = 10;
@@ -74,7 +88,9 @@ const blogMap = new Map(blogs.map(b => [b._id, b]));
 
     for (let i = 0; i < posts.length; i += PARALLEL_BATCH_SIZE) {
       const batch = posts.slice(i, i + PARALLEL_BATCH_SIZE);
-      console.log(`🔄 Processing batch ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(posts.length / PARALLEL_BATCH_SIZE)}`);
+      console.log(
+        `🔄 Processing batch ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(posts.length / PARALLEL_BATCH_SIZE)}`
+      );
 
       const batchResults = await Promise.all(
         batch.map(async (post) => {
@@ -114,7 +130,10 @@ const blogMap = new Map(blogs.map(b => [b._id, b]));
                 ? agent2Typed.public.join(", ")
                 : agent2Typed.private.join(", ");
 
-            const matched = matchCompaniesWithMasterList(joined, masterCompanyList);
+            const matched = matchCompaniesWithMasterList(
+              joined,
+              masterCompanyList
+            );
             const companyDetails = parseMultiMatch(matched);
 
             const enriched: EnrichedPost = {
@@ -131,11 +150,14 @@ const blogMap = new Map(blogs.map(b => [b._id, b]));
               classification: agent1Typed.classification,
               category: agent1Typed.classification,
               tags: agent1Typed.tags.length > 0 ? agent1Typed.tags : undefined,
-              companyDetails: companyDetails.length > 0 ? companyDetails : undefined,
+              companyDetails:
+                companyDetails.length > 0 ? companyDetails : undefined,
             };
 
             if (companyDetails.length > 0) {
-              enriched.companyName = companyDetails.map((c) => c.company_name).join(", ");
+              enriched.companyName = companyDetails
+                .map((c) => c.company_name)
+                .join(", ");
               if (companyDetails.length === 1) {
                 enriched.bseCode = companyDetails[0].bse_code;
                 enriched.nseCode = companyDetails[0].nse_code;
@@ -150,7 +172,9 @@ const blogMap = new Map(blogs.map(b => [b._id, b]));
         })
       );
 
-      enrichedPosts.push(...batchResults.filter((p): p is EnrichedPost => p !== null));
+      enrichedPosts.push(
+        ...batchResults.filter((p): p is EnrichedPost => p !== null)
+      );
     }
 
     // Save in batches
