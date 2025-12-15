@@ -38,9 +38,7 @@ export async function generateMetadata({
     };
   }
 
-  const imageUrl = post.image?.startsWith('http')
-    ? post.image
-    : `${baseUrl}${post.image}`;
+  const imageUrl = post.image || post.imageUrl
 
   console.log("Image URL:", imageUrl);
   console.log("=== METADATA GENERATION END ===");
