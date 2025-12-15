@@ -1,18 +1,20 @@
-// app/share/[shareLink]/page.tsx (Server Component)
+// app/share/[shareLink]/page.tsx
 import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { Id } from "@/convex/_generated/dataModel";
-import SharePageClient from "@/components/loadingDots";
+import SharePageClient from "./SharePageClient";
 
 export async function generateMetadata({ 
   params 
 }: { 
   params: Promise<{ shareLink: string }> 
 }) {
-  console.log("🔍 generateMetadata CALLED");
+  console.log("=== METADATA GENERATION START ===");
   
   const resolvedParams = await params;
   const shareLink = decodeURIComponent(resolvedParams.shareLink);
+  
+  console.log("ShareLink:", shareLink);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ventage-v2-git-bugs-fixing-flame2005s-projects.vercel.app";
 
@@ -21,6 +23,7 @@ export async function generateMetadata({
     post = await fetchQuery(api.functions.substackBlogs.getPostById, {
       id: shareLink as Id<"posts">,
     });
+    console.log("Post fetched:", post?.title);
   } catch (e) {
     console.error("Metadata fetch failed:", e);
     return {
@@ -29,6 +32,7 @@ export async function generateMetadata({
   }
 
   if (!post) {
+    console.log("Post not found");
     return {
       title: "Post not found",
     };
@@ -37,6 +41,9 @@ export async function generateMetadata({
   const imageUrl = post.image?.startsWith('http') 
     ? post.image 
     : `${baseUrl}${post.image}`;
+
+  console.log("Image URL:", imageUrl);
+  console.log("=== METADATA GENERATION END ===");
 
   return {
     title: post.title ?? "Shared Post",
@@ -64,7 +71,6 @@ export async function generateMetadata({
   };
 }
 
-// Server component that renders the client component
 export default function SharePage() {
   return <SharePageClient />;
 }
