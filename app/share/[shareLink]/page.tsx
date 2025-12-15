@@ -1,46 +1,76 @@
-"use client";
-
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+// app/share/[shareLink]/page.tsx
 import { api } from "@/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { fetchQuery } from "convex/nextjs";
 import { Id } from "@/convex/_generated/dataModel";
+import SharePageClient from "@/components/loadingDots";
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ shareLink: string }> 
+}) {
+  console.log("=== METADATA GENERATION START ===");
+  
+  const resolvedParams = await params;
+  const shareLink = decodeURIComponent(resolvedParams.shareLink);
+  
+  console.log("ShareLink:", shareLink);
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ventage-v2-git-bugs-fixing-flame2005s-projects.vercel.app";
+
+  let post;
+  try {
+    post = await fetchQuery(api.functions.substackBlogs.getPostById, {
+      id: shareLink as Id<"posts">,
+    });
+    console.log("Post fetched:", post?.title);
+  } catch (e) {
+    console.error("Metadata fetch failed:", e);
+    return {
+      title: "Post Not Found",
+    };
+  }
+
+  if (!post) {
+    console.log("Post not found");
+    return {
+      title: "Post not found",
+    };
+  }
+
+  const imageUrl = post.image?.startsWith('http') 
+    ? post.image 
+    : `${baseUrl}${post.image}`;
+
+  console.log("Image URL:", imageUrl);
+  console.log("=== METADATA GENERATION END ===");
+
+  return {
+    title: post.title ?? "Shared Post",
+    description: post.description ?? "Check out this post!",
+    openGraph: {
+      title: post.title ?? "Shared Post",
+      description: post.description ?? "Check out this post!",
+      url: `${baseUrl}/share/${shareLink}`,
+      type: "article",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.title ?? "Post image",
+        }
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title ?? "Shared Post",
+      description: post.description ?? "Check out this post!",
+      images: [imageUrl],
+    },
+  };
+}
 
 export default function SharePage() {
-  const router = useRouter();
-  const params = useParams();
-  const shareLink = decodeURIComponent(params.shareLink as string);
-
-  // Fetch post data from Convex using the shareLink (post ID)
-  const post = useQuery(api.functions.substackBlogs.getPostById, {
-    id: shareLink as Id<"posts">,
-  });
-
-
-  // useEffect(() => {
-  //   if (post === undefined) return; // still loading
-
-  //   if (!post) {
-  //     console.error("Post not found!");
-  //     return;
-  //   }
-
-  //   // Redirect to the actual post.link
-  //   router.replace(post.link);
-  // }, [post, router]);
-
-  return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="text-center">
-        <div className="flex gap-2 justify-center mb-6">
-          <div className="w-4 h-4 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-          <div className="w-4 h-4 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-          <div className="w-4 h-4 bg-indigo-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-        </div>
-        <p className="text-lg font-medium text-gray-700">
-          Redirecting...
-        </p>
-      </div>
-    </div>
-  );
+  return <SharePageClient />;
 }
