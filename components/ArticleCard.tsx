@@ -233,7 +233,7 @@ const ArticleCard = ({ post }: ArticleCardProps) => {
                                 onClick={async () => {
                                     try {
                                         await sharePost();
-                                        const shareUrl = `https://5a390f14c90b.ngrok-free.app/share/${post._id}`;
+                                        const shareUrl = `${window.location.origin}/share/${post._id}`;
                                         await navigator.clipboard.writeText(shareUrl);
                                         addToast(
                                             "success",

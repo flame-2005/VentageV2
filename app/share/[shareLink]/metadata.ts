@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: { shareLink: string
       title: post.title,
       description: post.description,
       images: [{ url: post.image }],
-      url: `https://5a390f14c90b.ngrok-free.app/${shareLink}`,
+      url: `${window.location.origin}/${shareLink}`,
       type: "article",
     },
     twitter: {
