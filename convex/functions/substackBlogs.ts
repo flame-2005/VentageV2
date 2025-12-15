@@ -508,16 +508,55 @@ export const addBulkPost = mutation({
       })
     ),
   },
+
   handler: async (ctx, args) => {
     for (const post of args.posts) {
-      await ctx.db.insert("posts", {
+      // Insert into posts table
+      const postId = await ctx.db.insert("posts", {
         ...post,
         lastCheckedAt: Date.now(),
       });
+
+      // --- Extract company names ---
+      let companyNames: string[] = [];
+
+      // Case 1: companyDetails present → use them
+      if (post.companyDetails && post.companyDetails.length > 0) {
+        companyNames = post.companyDetails.map((c) => c.company_name.trim());
+      }
+
+      // Case 2: fallback to companyName
+      else if (post.companyName && post.companyName.trim() !== "") {
+        companyNames = [post.companyName.trim()];
+      }
+
+      // No company → skip
+      if (companyNames.length === 0) continue;
+
+      // Insert into companyPosts
+      for (const companyName of companyNames) {
+        // Prevent duplicates (Convex-safe)
+        const existing = await ctx.db
+          .query("companyPosts")
+          .withIndex("by_company_postId", (q) =>
+            q.eq("companyName", companyName).eq("postId", postId)
+          )
+          .unique();
+
+        if (!existing) {
+          await ctx.db.insert("companyPosts", {
+            companyName,
+            postId,
+            pubDate: post.pubDate,
+          });
+        }
+      }
     }
+
     return true;
   },
 });
+
 
 export const splitPosts = query({
   handler: async (ctx) => {
