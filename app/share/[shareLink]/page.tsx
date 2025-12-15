@@ -4,16 +4,16 @@ import { fetchQuery } from "convex/nextjs";
 import { Id } from "@/convex/_generated/dataModel";
 import SharePageClient from "@/components/loadingDots";
 
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: Promise<{ shareLink: string }> 
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ shareLink: string }>
 }) {
   console.log("=== METADATA GENERATION START ===");
-  
+
   const resolvedParams = await params;
   const shareLink = decodeURIComponent(resolvedParams.shareLink);
-  
+
   console.log("ShareLink:", shareLink);
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ventage-v2-git-bugs-fixing-flame2005s-projects.vercel.app";
@@ -38,9 +38,7 @@ export async function generateMetadata({
     };
   }
 
-  const imageUrl = post.image?.startsWith('http') 
-    ? post.image 
-    : `${baseUrl}${post.image}`;
+  const imageUrl = post.image || post.imageUrl
 
   console.log("Image URL:", imageUrl);
   console.log("=== METADATA GENERATION END ===");
@@ -66,7 +64,12 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: post.title ?? "Shared Post",
       description: post.description ?? "Check out this post!",
-      images: [imageUrl],
+      images: [{
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+        alt: post.title ?? "Post image",
+      }],
     },
   };
 }
