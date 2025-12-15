@@ -115,7 +115,7 @@ export default defineSchema({
   })
     .index("by_post", ["postId"])
     .index("by_company_pubDate", ["companyName", "pubDate"])
-
+    .index("by_company_postId", ["companyName", "postId"])
     .index("by_company", ["companyName"])
     .index("by_bse", ["bseCode"])
     .index("by_nse", ["nseCode"]),
