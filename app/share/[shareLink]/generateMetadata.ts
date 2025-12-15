@@ -19,20 +19,22 @@ export async function generateMetadata({ params }: { params: { shareLink: string
     };
   }
 
+  const baseUrl = "https://www.soapbox.co.in";
+
   return {
     title: post.title || "Shared Post",
     description: post.description || "Check out this post!",
     openGraph: {
       title: post.title,
-      description: post.description,
+      description: post.description || "Check out this post!",
       images: [{ url: post.image }],
-      url: `${window.location.origin}/share/${shareLink}`,
+      url: `${baseUrl}/share/${shareLink}`,
       type: "article",
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
-      description: post.description,
+      description: post.description || "Check out this post!",
       images: [post.image],
     },
   };

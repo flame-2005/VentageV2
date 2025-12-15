@@ -17,17 +17,17 @@ export default function SharePage() {
   });
 
 
-  useEffect(() => {
-    if (post === undefined) return; // still loading
+  // useEffect(() => {
+  //   if (post === undefined) return; // still loading
 
-    if (!post) {
-      console.error("Post not found!");
-      return;
-    }
+  //   if (!post) {
+  //     console.error("Post not found!");
+  //     return;
+  //   }
 
-    // Redirect to the actual post.link
-    router.replace(post.link);
-  }, [post, router]);
+  //   // Redirect to the actual post.link
+  //   router.replace(post.link);
+  // }, [post, router]);
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
