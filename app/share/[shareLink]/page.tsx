@@ -2,7 +2,7 @@
 import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { Id } from "@/convex/_generated/dataModel";
-import SharePageClient from "./SharePageClient";
+import SharePageClient from "@/components/loadingDots";
 
 export async function generateMetadata({ 
   params 
