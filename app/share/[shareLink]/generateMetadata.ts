@@ -6,7 +6,7 @@ export async function generateMetadata({ params }: { params: { shareLink: string
   const shareLink = decodeURIComponent(params.shareLink);
 
   // Base URL MUST be static, not window.origin
-  const baseUrl = "https://ventage-v2-kcu3sncdi-flame2005s-projects.vercel.app";
+  const baseUrl = "https://ventage-v2-git-bugs-fixing-flame2005s-projects.vercel.app";
 
   // --- Fetch post from Convex ---
   let post;
