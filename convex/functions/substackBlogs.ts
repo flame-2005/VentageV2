@@ -79,6 +79,30 @@ export const getPostsByAuthor = query({
   },
 });
 
+export const searchPostsByAuthor = query({
+  args: {
+    author: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { author, limit = 20 }) => {
+    const term = author.trim().toLowerCase();
+
+    // 🚨 CRITICAL GUARD
+    if (term.length < 2) return [];
+
+    const posts = await ctx.db
+      .query("posts")
+      .withIndex("by_authorLower_pubDate", (q) =>
+        q.gte("authorLower", term).lt("authorLower", term + "\uffff")
+      )
+      .order("desc")
+      .take(limit);
+
+    return posts.filter(hasCompanyData);
+  },
+});
+
+
 export const getBlogs = query({
   handler: async (ctx) => {
     return await ctx.db.query("blogs").collect();
@@ -371,18 +395,21 @@ export const searchPosts = query({
     const postIds = [...new Set(matchingCompanyPosts.map((cp) => cp.postId))];
 
     // Step 4: Fetch posts
-    const posts = await Promise.all(postIds.map((postId) => ctx.db.get(postId)));
-    
+    const posts = await Promise.all(
+      postIds.map((postId) => ctx.db.get(postId))
+    );
 
     // Step 5: Filter valid posts (author good)
-    const validPosts = posts.filter((post): post is NonNullable<typeof post> => {
-      return (
-        post !== null &&
-        !!post.author &&
-        post.author !== "null" &&
-        post.author.trim() !== ""
-      );
-    });
+    const validPosts = posts.filter(
+      (post): post is NonNullable<typeof post> => {
+        return (
+          post !== null &&
+          !!post.author &&
+          post.author !== "null" &&
+          post.author.trim() !== ""
+        );
+      }
+    );
 
     // No sorting needed — index already ensures correct pubDate DESC
     return {
@@ -392,7 +419,6 @@ export const searchPosts = query({
     };
   },
 });
-
 
 export const getCompanySuggestions = query({
   args: {
@@ -404,28 +430,26 @@ export const getCompanySuggestions = query({
       return [];
     }
 
-    const term = searchTerm.trim();
-    const upperTerm = term.toUpperCase();
-    const lowerTerm = term.toLowerCase();
+    const upperTerm = searchTerm.trim().toUpperCase();
 
     // Use index range queries with LIMITS to avoid full scans
     const matchingByName = await ctx.db
       .query("master_company_list")
-      .withIndex("name", (q) => 
-        q.gte("name", lowerTerm).lt("name", lowerTerm + "\uffff")
+      .withIndex("name", (q) =>
+        q.gte("name", upperTerm).lt("name", upperTerm + "\uffff")
       )
       .take(20);
 
     const matchingByCode = await ctx.db
       .query("master_company_list")
-      .withIndex("nse_code", (q) => 
+      .withIndex("nse_code", (q) =>
         q.gte("nse_code", upperTerm).lt("nse_code", upperTerm + "\uffff")
       )
-      .take(20); 
+      .take(20);
 
     // Deduplicate using Map
     const uniqueCompanies = new Map();
-    
+
     for (const company of [...matchingByName, ...matchingByCode]) {
       if (!uniqueCompanies.has(company._id)) {
         uniqueCompanies.set(company._id, company);
@@ -433,23 +457,27 @@ export const getCompanySuggestions = query({
     }
 
     // Filter for exact prefix matches only
-    const filtered = Array.from(uniqueCompanies.values())
-      .filter((company) => {
-        const companyName = company.name.toLowerCase();
-        const nseCode = company.nse_code.toLowerCase();
-        
-        return (
-          companyName.startsWith(lowerTerm) ||
-          nseCode.startsWith(lowerTerm)
-        );
-      });
+    const filtered = Array.from(uniqueCompanies.values()).filter((company) => {
+      const companyNameUpper = company.name.toUpperCase();
+      const nseCodeUpper = company.nse_code.toUpperCase();
 
-    // Sort by relevance
+      return (
+        companyNameUpper.startsWith(upperTerm) ||
+        nseCodeUpper.startsWith(upperTerm)
+      );
+    });
+
+    // Sort by relevance (cache uppercase values to avoid repeated conversions)
     const sorted = filtered.sort((a, b) => {
-      const aCodeMatch = a.nse_code.toLowerCase().startsWith(lowerTerm);
-      const bCodeMatch = b.nse_code.toLowerCase().startsWith(lowerTerm);
-      const aNameMatch = a.name.toLowerCase().startsWith(lowerTerm);
-      const bNameMatch = b.name.toLowerCase().startsWith(lowerTerm);
+      const aCodeUpper = a.nse_code.toUpperCase();
+      const bCodeUpper = b.nse_code.toUpperCase();
+      const aNameUpper = a.name.toUpperCase();
+      const bNameUpper = b.name.toUpperCase();
+
+      const aCodeMatch = aCodeUpper.startsWith(upperTerm);
+      const bCodeMatch = bCodeUpper.startsWith(upperTerm);
+      const aNameMatch = aNameUpper.startsWith(upperTerm);
+      const bNameMatch = bNameUpper.startsWith(upperTerm);
 
       // Prioritize: exact code match > code prefix > name prefix
       if (aCodeMatch && !bCodeMatch) return -1;
@@ -557,7 +585,6 @@ export const addBulkPost = mutation({
   },
 });
 
-
 export const splitPosts = query({
   handler: async (ctx) => {
     const posts = await ctx.db
@@ -656,7 +683,6 @@ export const bulkUpdateBlogs = mutation({
     return { success: true, updated: args.updates.length };
   },
 });
-
 
 export const getPostById = query({
   args: { id: v.id("posts") },

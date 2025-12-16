@@ -3,7 +3,7 @@
 import ArticleCard from '@/components/ArticleCard';
 import CircularLoader from '@/components/circularLoader';
 import { api } from '@/convex/_generated/api';
-import { usePaginatedQuery } from 'convex/react';
+import { usePaginatedQuery, useQuery } from 'convex/react';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -17,7 +17,22 @@ const Page = () => {
         { initialNumItems: 20 }
     );
 
-    const { results: posts, status, loadMore } = searchQuery;
+    const authorPost = useQuery(api.functions.substackBlogs.searchPostsByAuthor, {
+        author: searchTerm
+    })
+
+    const { results: companyPost, status, loadMore } = searchQuery;
+
+    const posts = useMemo(() => {
+        const base = companyPost ?? [];
+
+        if (!authorPost) return base;
+
+        return Array.isArray(authorPost)
+            ? [...authorPost, ...base]
+            : [authorPost, ...base];
+    }, [companyPost, authorPost]);
+
 
     const uniquePosts = useMemo(() => {
         if (!posts) return [];

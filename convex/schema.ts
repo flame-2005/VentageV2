@@ -19,6 +19,7 @@ export default defineSchema({
     description: v.optional(v.string()),
     link: v.string(),
     author: v.optional(v.string()),
+    authorLower: v.optional(v.string()), // 👈 NEW
     pubDate: v.string(),
     image: v.optional(v.string()),
     content: v.optional(v.string()),
@@ -52,6 +53,7 @@ export default defineSchema({
     .index("by_link", ["link"])
     .index("by_author", ["author"])
     .index("by_author_pubDate", ["author", "pubDate"])
+    .index("by_authorLower_pubDate", ["authorLower", "pubDate"])
     .index("by_company", ["companyName"])
     .index("by_pubDate", ["pubDate"])
     .index("by_classification_pubDate", ["classification", "pubDate"])

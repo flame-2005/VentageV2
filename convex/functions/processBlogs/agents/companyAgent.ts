@@ -65,17 +65,26 @@ A company is PRIVATE only if ALL of the following are true:
 • No normalized or fuzzy variant matches any listed company.
 
 ---------------------------------------------------------------
-EXCLUDE COMPLETELY (NOT companies)
+EXCLUDE COMPLETELY (ONLY IF CLEARLY NOT A COMPANY)
 ---------------------------------------------------------------
-Do NOT classify these (omit them entirely):
-• IIT / IIM / universities
-• Research institutes
-• Indian Navy / Army / Air Force
-• Ministries / Government departments
-• ISRO, DRDO, RBI, SEBI
-• NGOs, Trusts, Non-profits
-• Educational bodies
-• Political groups
+Omit an entity ONLY if it is UNAMBIGUOUSLY one of the following
+and is NOT a registered company of any kind:
+
+• Universities / colleges (IIT, IIM, AIIMS, etc.)
+• Research institutes (pure academic or government research bodies)
+• Armed forces or defense units (Indian Army, Navy, Air Force, etc.)
+• Government ministries or departments
+• Statutory regulators or authorities (RBI, SEBI, IRDAI, etc.)
+• Government space or defense orgs (ISRO, DRDO, etc.)
+• NGOs, Trusts, Non-profits (explicitly charitable or non-commercial)
+• Political parties or political organizations
+
+IMPORTANT:
+• If the name COULD plausibly be a company, DO NOT exclude it.
+• Acronyms, short names, or ambiguous entities MUST be classified
+  as PUBLIC or PRIVATE — never omitted.
+• SME-listed companies, fintechs, IT services, and startups
+  must NOT be excluded.
 
 ---------------------------------------------------------------
 OUTPUT FORMAT (STRICT)
@@ -86,7 +95,7 @@ OUTPUT FORMAT (STRICT)
 }
 
 No other text. No explanation.
-`;
+  `;
 
     const userPrompt = `
 These are the raw company names extracted by Agent 1:
@@ -95,6 +104,16 @@ ${JSON.stringify(agent1Companies)}
 Identify:
 1. PUBLIC companies → appear in FROM NSE/BSE website/company list
 2. PRIVATE companies → real companies but NOT in the NSE/BSE website company list
+
+Some entities may include exchange hints or symbols.
+If an entity has:
+• NSE SME / NSE Emerge listing
+• OR a known trading symbol
+• Companies listed on NSE SME / NSE Emerge are also PUBLIC.
+If an acronym is provided AND it matches a known NSE/BSE/SME symbol,
+classify it as PUBLIC even if the full name is uncommon.
+
+→ TREAT IT AS PUBLIC
 
 Exclude universities, government orgs, armed forces, NGOs, political groups, etc.
 
