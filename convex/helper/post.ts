@@ -1,10 +1,14 @@
-import { action, internalMutation, mutation, query } from "../_generated/server";
+import {
+  action,
+  internalMutation,
+  mutation,
+  query,
+} from "../_generated/server";
 import Papa from "papaparse";
 import { hasCompanyData } from "./blogs";
 import { api } from "../_generated/api";
 import { IncomingPost, RSSItem } from "../constant/posts";
 import { v } from "convex/values";
-
 
 // 2️⃣ Generate CSV for both
 export const exportCsv = action({
@@ -158,7 +162,6 @@ export const deleteNewsBlogs = mutation({
       "https://shows.ivmpodcasts.com",
     ];
 
-
     // Fetch all blogs
     const blogs = await ctx.db.query("blogs").collect();
 
@@ -182,17 +185,17 @@ export const migrateCompanyPosts = internalMutation({
   },
   handler: async (ctx, args) => {
     const batchSize = args.batchSize || 100;
-    
+
     // Get all posts
     const posts = await ctx.db.query("posts").collect();
-    
+
     let totalCreated = 0;
     let postsProcessed = 0;
     const errors: Array<{ postId: string; error: string }> = [];
 
     for (const post of posts) {
       postsProcessed++;
-      
+
       try {
         // Check if post has companyDetails array
         if (post.companyDetails && post.companyDetails.length > 0) {
@@ -224,7 +227,9 @@ export const migrateCompanyPosts = internalMutation({
 
         // Process in batches to avoid timeouts
         if (postsProcessed % batchSize === 0) {
-          console.log(`Processed ${postsProcessed}/${posts.length} posts, created ${totalCreated} company posts`);
+          console.log(
+            `Processed ${postsProcessed}/${posts.length} posts, created ${totalCreated} company posts`
+          );
         }
       } catch (error) {
         errors.push({
@@ -243,8 +248,99 @@ export const migrateCompanyPosts = internalMutation({
   },
 });
 
+export const migrateCompanyPostsForPost = internalMutation({
+  args: {
+    postId: v.id("posts"),
+  },
 
+  handler: async (ctx, { postId }) => {
+    const post = await ctx.db.get(postId);
 
+    if (!post) {
+      return {
+        success: false,
+        error: "Post not found",
+      };
+    }
 
+    let totalCreated = 0;
+    const created: string[] = [];
 
+    try {
+      // Case 1: post has companyDetails array
+      if (post.companyDetails && post.companyDetails.length > 0) {
+        for (const company of post.companyDetails) {
+          await ctx.db.insert("companyPosts", {
+            postId: post._id,
+            companyName: company.company_name,
+            bseCode: company.bse_code,
+            nseCode: company.nse_code,
+            pubDate: post.pubDate,
+            marketCap: company.market_cap,
+          });
+
+          totalCreated++;
+          created.push(company.company_name);
+        }
+      }
+      // Case 2: fallback to top-level company fields
+      else if (post.companyName) {
+        await ctx.db.insert("companyPosts", {
+          postId: post._id,
+          companyName: post.companyName,
+          bseCode: post.bseCode,
+          nseCode: post.nseCode,
+          pubDate: post.pubDate,
+          marketCap: undefined,
+        });
+
+        totalCreated++;
+        created.push(post.companyName);
+      } else {
+        return {
+          success: true,
+          message: "No company data found on post",
+          totalCompanyPostsCreated: 0,
+        };
+      }
+
+      return {
+        success: true,
+        postId,
+        totalCompanyPostsCreated: totalCreated,
+        companiesCreated: created,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        postId,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  },
+});
+
+export const backfillAuthorLower = internalMutation({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, { limit = 2000 }) => {
+    const posts = await ctx.db
+      .query("posts")
+      .withIndex("by_authorLower_pubDate", (q) =>
+        q.eq("authorLower", "")
+      )
+      .take(limit);
+
+    for (const post of posts) {
+      if (post.author) {
+        await ctx.db.patch(post._id, {
+          authorLower: post.author.toLowerCase(),
+        });
+      }
+    }
+
+    return posts.length;
+  },
+});
 

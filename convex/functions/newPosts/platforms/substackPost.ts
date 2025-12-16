@@ -1,13 +1,13 @@
-"use node"
+"use node";
 
 import { IncomingPost } from "../../../constant/posts";
+import { XMLParser } from "fast-xml-parser";
 
-export async function fetchSubstackRSS(substackUrl: string): Promise<IncomingPost[] | null> {
+export async function fetchSubstackRSS(
+  substackUrl: string
+): Promise<IncomingPost[] | null> {
   try {
-    const rssFeedUrl = substackUrl
-      // substackUrl.endsWith("/feed")
-      //   ? `${substackUrl}`
-      //   : `${substackUrl}/feed`;
+    const rssFeedUrl = substackUrl;
 
     console.log(`📡 Fetching RSS feed: ${rssFeedUrl}`);
 
@@ -25,56 +25,79 @@ export async function fetchSubstackRSS(substackUrl: string): Promise<IncomingPos
 
     const xml = await response.text();
 
-    // Helper to extract tag content
-    const extract = (block: string, tag: string): string | null => {
-      const reg = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`);
-      const match = block.match(reg);
-      return match ? match[1].trim() : null;
-    };
+    // ✅ Proper XML parser (namespace + CDATA safe)
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "",
+      removeNSPrefix: true, // dc:creator → creator
+      parseTagValue: true,
+      trimValues: true,
+    });
 
-    // Helper to strip CDATA wrappers
-    const stripCDATA = (text: string | null): string => {
-      if (!text) return "";
-      return text.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim();
-    };
+    const parsed = parser.parse(xml);
 
-    const items: IncomingPost[] = [];
-    const matches = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
+    const rawItems =
+      parsed?.rss?.channel?.item ||
+      parsed?.feed?.entry ||
+      [];
 
-    for (const match of matches) {
-      const item = match[1];
+    const itemsArray = Array.isArray(rawItems)
+      ? rawItems
+      : [rawItems];
 
-      const link = extract(item, "link") ?? "";
+    const posts: IncomingPost[] = [];
 
-      const rawTitle = extract(item, "title");
-      const title = stripCDATA(rawTitle) || "Untitled";
+    for (const item of itemsArray) {
+      const title =
+        item.title?.["#text"] ||
+        item.title ||
+        "Untitled";
 
-      const enclosureMatch = item.match(/<enclosure[^>]+url=["']([^"']+)["']/i);
-      const enclosureUrl = enclosureMatch ? enclosureMatch[1] : null;
+      const link =
+        typeof item.link === "string"
+          ? item.link
+          : item.link?.href || "";
 
-      const contentEncoded = extract(item, "content:encoded");
-      const contentEncodedImg = contentEncoded?.match(/<img[^>]+src="([^">]+)"/)?.[1] ?? null;
+      const published =
+        item.pubDate ||
+        item.published ||
+        "";
 
-      const image = enclosureUrl ?? contentEncodedImg ?? undefined;
+      const author =
+        item.creator ||
+        item.author?.name ||
+        undefined;
 
+      // Image priority:
+      // 1. enclosure
+      // 2. first <img> from content
+      let image: string | undefined;
 
-      const rawAuthor = extract(item, "dc:creator");
-      const author = stripCDATA(rawAuthor) || undefined;
+      if (item.enclosure?.url) {
+        image = item.enclosure.url;
+      } else if (item["content:encoded"] || item.content) {
+        const html =
+          item["content:encoded"] ||
+          item.content ||
+          "";
+        const imgMatch = html.match(
+          /<img[^>]+src=["']([^"']+)["']/i
+        );
+        image = imgMatch?.[1];
+      }
 
-      const pubDate = extract(item, "pubDate") ?? "";
-
-      items.push({
+      posts.push({
         title,
         link,
-        published: pubDate,
+        published,
         author,
         image,
         source: "substack",
       });
     }
 
-    console.log(`✅ Parsed ${items.length} Substack posts`);
-    return items;
+    console.log(`✅ Parsed ${posts.length} Substack posts`);
+    return posts;
   } catch (err) {
     console.error("❌ Error fetching Substack RSS:", err);
     return null;
