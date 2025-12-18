@@ -32,6 +32,10 @@ export async function fetchSubstackRSS(
       removeNSPrefix: true, // dc:creator → creator
       parseTagValue: true,
       trimValues: true,
+      isArray: (name, jpath, isLeafNode, isAttribute) => {
+        // Ensure items are always treated as arrays
+        return name === 'item' || name === 'entry';
+      }
     });
 
     const parsed = parser.parse(xml);
@@ -63,9 +67,13 @@ export async function fetchSubstackRSS(
         item.published ||
         "";
 
+      // FIX: Check multiple possible author field structures
       const author =
-        item.creator ||
-        item.author?.name ||
+        item.creator?.["#text"] || // If creator is an object with #text
+        item.creator ||            // If creator is a direct string
+        item.author?.name ||       // Atom feed format
+        item.author?.["#text"] ||  // If author is an object
+        item.author ||             // If author is a direct string
         undefined;
 
       // Image priority:
