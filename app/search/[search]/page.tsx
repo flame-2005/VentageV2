@@ -11,19 +11,39 @@ const Page = () => {
     const params = useParams();
     const searchTerm = decodeURIComponent(params.search as string);
 
+    // Check if search-everywhere mode is enabled
+    const isSearchEverywhere = searchTerm.startsWith('search-everywhere=');
+    const actualSearchTerm = isSearchEverywhere 
+        ? searchTerm.replace('search-everywhere=', '') 
+        : searchTerm;
+
+    // Use searchEverywhere query when flag is present
+    const everywhereResults = useQuery(
+        api.functions.substackBlogs.searchEverywhere,
+        isSearchEverywhere ? { searchTerm: actualSearchTerm } : "skip"
+    );
+
+    // Use regular search queries when flag is NOT present
     const searchQuery = usePaginatedQuery(
         api.functions.substackBlogs.searchPosts,
-        { searchTerm },
+        !isSearchEverywhere ? { searchTerm: actualSearchTerm } : "skip",
         { initialNumItems: 20 }
     );
 
-    const authorPost = useQuery(api.functions.substackBlogs.searchPostsByAuthor, {
-        author: searchTerm
-    })
+    const authorPost = useQuery(
+        api.functions.substackBlogs.searchPostsByAuthor,
+        !isSearchEverywhere ? { author: actualSearchTerm } : "skip"
+    );
 
     const { results: companyPost, status, loadMore } = searchQuery;
 
     const posts = useMemo(() => {
+        // If search everywhere mode, use those results
+        if (isSearchEverywhere) {
+            return everywhereResults ?? [];
+        }
+
+        // Otherwise use combined company + author results
         const base = companyPost ?? [];
 
         if (!authorPost) return base;
@@ -31,8 +51,7 @@ const Page = () => {
         return Array.isArray(authorPost)
             ? [...authorPost, ...base]
             : [authorPost, ...base];
-    }, [companyPost, authorPost]);
-
+    }, [companyPost, authorPost, everywhereResults, isSearchEverywhere]);
 
     const uniquePosts = useMemo(() => {
         if (!posts) return [];
@@ -50,9 +69,11 @@ const Page = () => {
         return output;
     }, [posts]);
 
-    const isLoading = status === "LoadingFirstPage";
-    const isLoadingMore = status === "LoadingMore";
-    const canLoadMore = status === "CanLoadMore";
+    const isLoading = isSearchEverywhere 
+        ? everywhereResults === undefined 
+        : status === "LoadingFirstPage";
+    const isLoadingMore = !isSearchEverywhere && status === "LoadingMore";
+    const canLoadMore = !isSearchEverywhere && status === "CanLoadMore";
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -75,7 +96,7 @@ const Page = () => {
             },
             {
                 threshold: 0.1,
-                rootMargin: "200px", // Increased for better triggering
+                rootMargin: "200px",
             }
         );
 
@@ -106,9 +127,11 @@ const Page = () => {
                     <CircularLoader />
                 ) : (
                     <>
-                        <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6">
-                            Latest Articles
-                        </h1>
+                        <div className="mb-6">
+                            <h1 className="text-3xl md:text-4xl font-semibold text-slate-900">
+                                {isSearchEverywhere ? 'Search Results' : 'Latest Articles'}
+                            </h1>
+                        </div>
                         <div className="space-y-6">
                             {uniquePosts && uniquePosts.length > 0 ? (
                                 uniquePosts.map((post) => (
@@ -124,7 +147,7 @@ const Page = () => {
                                         No articles found
                                     </h3>
                                     <p className="text-slate-500 mb-4">
-                                        No articles available at the moment
+                                        No articles available for {actualSearchTerm}
                                     </p>
                                 </div>
                             )}
@@ -146,7 +169,7 @@ const Page = () => {
                         )}
 
                         {/* End of results message */}
-                        {status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
+                        {!isSearchEverywhere && status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
                             <div className="text-center py-8">
                                 <p className="text-slate-500 font-medium">
                                     You&apos;ve reached the end! No more articles to load.

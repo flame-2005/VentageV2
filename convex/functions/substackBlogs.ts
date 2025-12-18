@@ -69,13 +69,7 @@ export const getPostsByAuthor = query({
     const validPosts = posts.filter(hasCompanyData);
 
     // Filter to only include posts where companyName is defined and not 'null'
-    return validPosts.filter(
-      (post) =>
-        post.companyName &&
-        (post.bseCode || post.nseCode) &&
-        post.companyName !== "null" &&
-        post.companyName.trim() !== ""
-    );
+    return validPosts.filter((post) => post.companyDetails);
   },
 });
 
@@ -102,6 +96,66 @@ export const searchPostsByAuthor = query({
   },
 });
 
+export const searchEverywhere = query({
+  args: {
+    searchTerm: v.string(),
+    classification: v.optional(v.string()),
+    blogId: v.optional(v.id("blogs")),
+  },
+  handler: async (ctx, { searchTerm, classification, blogId }) => {
+    if (!searchTerm || !searchTerm.trim()) {
+      return [];
+    }
+
+    const term = searchTerm.trim();
+
+    // Build filter function for common filtering
+
+    // 1️⃣ Search by author
+    const authorResults = await ctx.db
+      .query("posts")
+      .withSearchIndex("search_author_summary", (q) => q.search("author", term))
+      .take(50);
+
+    // 2️⃣ Search by summary
+    const summaryResults = await ctx.db
+      .query("posts")
+      .withSearchIndex("search_summary", (q) => q.search("summary", term))
+      .take(50);
+
+    // 3️⃣ Search by company
+    const companyResults = await ctx.db
+      .query("posts")
+      .withSearchIndex("search_company", (q) => q.search("companyName", term))
+      .take(50);
+
+    // 4️⃣ Merge & dedupe
+    const seenIds = new Set<string>();
+    const allResults = [
+      ...authorResults,
+      ...companyResults,
+      ...summaryResults,
+    ].filter((post) => {
+      if (seenIds.has(post._id)) return false;
+      seenIds.add(post._id);
+      return true;
+    });
+
+    return allResults
+      .filter(
+        (post): post is NonNullable<typeof post> =>
+          post !== null &&
+          !!post.author &&
+          post.author !== "null" &&
+          post.author.trim() !== "" &&
+          !!post.companyDetails &&
+          (post.classification === "Company_Analusys" ||
+            post.classification === "Multiple_company_analysis" ||
+            post.classification === "Sector_analysis")
+      )
+      .sort((a, b) => b.pubDate.localeCompare(a.pubDate));
+  },
+});
 
 export const getBlogs = query({
   handler: async (ctx) => {
@@ -406,7 +460,11 @@ export const searchPosts = query({
           post !== null &&
           !!post.author &&
           post.author !== "null" &&
-          post.author.trim() !== ""
+          post.author.trim() !== "" &&
+          !!post.companyDetails &&
+          (post.classification === "Company_Analusys" ||
+            post.classification === "Multiple_company_analysis" ||
+            post.classification === "Sector_analysis")
         );
       }
     );
@@ -425,70 +483,61 @@ export const getCompanySuggestions = query({
     searchTerm: v.string(),
   },
   handler: async (ctx, { searchTerm }) => {
-    // Return empty if search term too short
-    if (!searchTerm || searchTerm.trim().length < 1) {
+    if (!searchTerm || !searchTerm.trim()) {
       return [];
     }
 
-    const upperTerm = searchTerm.trim().toUpperCase();
+    const term = searchTerm.trim();
+    const upperTerm = term.toUpperCase();
 
-    // Use index range queries with LIMITS to avoid full scans
-    const matchingByName = await ctx.db
+    // 1️⃣ Fuzzy name search (typo-tolerant)
+    const nameResults = await ctx.db
       .query("master_company_list")
-      .withIndex("name", (q) =>
-        q.gte("name", upperTerm).lt("name", upperTerm + "\uffff")
-      )
-      .take(20);
+      .withSearchIndex("company_name_search", (q) => q.search("name", term))
+      .take(8);
 
-    const matchingByCode = await ctx.db
+    // 2️⃣ Exact NSE code match
+    const nseResults = await ctx.db
       .query("master_company_list")
-      .withIndex("nse_code", (q) =>
-        q.gte("nse_code", upperTerm).lt("nse_code", upperTerm + "\uffff")
-      )
-      .take(20);
+      .withIndex("nse_code", (q) => q.eq("nse_code", upperTerm))
+      .take(1);
 
-    // Deduplicate using Map
-    const uniqueCompanies = new Map();
+    // 3️⃣ Exact BSE code match
+    const bseResults = await ctx.db
+      .query("master_company_list")
+      .withIndex("bse_code", (q) => q.eq("bse_code", upperTerm))
+      .take(1);
 
-    for (const company of [...matchingByName, ...matchingByCode]) {
-      if (!uniqueCompanies.has(company._id)) {
-        uniqueCompanies.set(company._id, company);
+    // 4️⃣ Merge & dedupe using Set (no any)
+    const seenIds = new Set<string>();
+    const merged = [...nseResults, ...bseResults, ...nameResults].filter(
+      (company) => {
+        if (seenIds.has(company._id)) return false;
+        seenIds.add(company._id);
+        return true;
       }
-    }
+    );
 
-    // Filter for exact prefix matches only
-    const filtered = Array.from(uniqueCompanies.values()).filter((company) => {
-      const companyNameUpper = company.name.toUpperCase();
-      const nseCodeUpper = company.nse_code.toUpperCase();
+    // 5️⃣ Relevance sorting
+    const sorted = merged.sort((a, b) => {
+      const aName = a.name.toUpperCase();
+      const bName = b.name.toUpperCase();
 
-      return (
-        companyNameUpper.startsWith(upperTerm) ||
-        nseCodeUpper.startsWith(upperTerm)
-      );
-    });
+      const aExact = aName === upperTerm;
+      const bExact = bName === upperTerm;
 
-    // Sort by relevance (cache uppercase values to avoid repeated conversions)
-    const sorted = filtered.sort((a, b) => {
-      const aCodeUpper = a.nse_code.toUpperCase();
-      const bCodeUpper = b.nse_code.toUpperCase();
-      const aNameUpper = a.name.toUpperCase();
-      const bNameUpper = b.name.toUpperCase();
+      const aStarts = aName.startsWith(upperTerm);
+      const bStarts = bName.startsWith(upperTerm);
 
-      const aCodeMatch = aCodeUpper.startsWith(upperTerm);
-      const bCodeMatch = bCodeUpper.startsWith(upperTerm);
-      const aNameMatch = aNameUpper.startsWith(upperTerm);
-      const bNameMatch = bNameUpper.startsWith(upperTerm);
-
-      // Prioritize: exact code match > code prefix > name prefix
-      if (aCodeMatch && !bCodeMatch) return -1;
-      if (!aCodeMatch && bCodeMatch) return 1;
-      if (aNameMatch && !bNameMatch) return -1;
-      if (!aNameMatch && bNameMatch) return 1;
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
 
       return a.name.localeCompare(b.name);
     });
 
-    // Return top 10
+    // 6️⃣ Final response
     return sorted.slice(0, 10).map((company) => ({
       companyName: company.name,
       nseCode: company.nse_code,
@@ -498,6 +547,74 @@ export const getCompanySuggestions = query({
     }));
   },
 });
+
+export const getAuthorSuggestions = query({
+  args: {
+    searchTerm: v.string(),
+  },
+  handler: async (ctx, { searchTerm }) => {
+    if (!searchTerm || !searchTerm.trim()) {
+      return [];
+    }
+
+    const term = searchTerm.trim();
+    const lowerTerm = term.toLowerCase();
+
+    // 1️⃣ Fuzzy author search (typo-tolerant)
+    const authorResults = await ctx.db
+      .query("posts")
+      .withSearchIndex("search_author_summary", (q) => q.search("author", term))
+      .take(8);
+
+    // 2️⃣ Exact match on author index
+    const exactResults = await ctx.db
+      .query("posts")
+      .withIndex("by_authorLower_pubDate", (q) =>
+        q.eq("authorLower", lowerTerm)
+      )
+      .take(5);
+
+    // 3️⃣ Merge & dedupe by author name
+    const seenAuthors = new Set<string>();
+    const uniqueAuthors = [...exactResults, ...authorResults]
+      .filter((post) => {
+        if (!post.author) return false;
+        const authorKey = post.author.toLowerCase();
+        if (seenAuthors.has(authorKey)) return false;
+        seenAuthors.add(authorKey);
+        return true;
+      })
+      .map((post) => ({
+        author: post.author!,
+        authorLower: post.author!.toLowerCase(),
+      }));
+
+    // 4️⃣ Relevance sorting
+    const sorted = uniqueAuthors.sort((a, b) => {
+      const aLower = a.authorLower;
+      const bLower = b.authorLower;
+
+      const aExact = aLower === lowerTerm;
+      const bExact = bLower === lowerTerm;
+
+      const aStarts = aLower.startsWith(lowerTerm);
+      const bStarts = bLower.startsWith(lowerTerm);
+
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+
+      return a.author.localeCompare(b.author);
+    });
+
+    // 5️⃣ Final response
+    return sorted.slice(0, 10).map((author) => ({
+      author: author.author,
+    }));
+  },
+});
+
 export const addBulkPost = mutation({
   args: {
     posts: v.array(

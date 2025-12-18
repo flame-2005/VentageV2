@@ -57,6 +57,18 @@ export default defineSchema({
     .index("by_company", ["companyName"])
     .index("by_pubDate", ["pubDate"])
     .index("by_classification_pubDate", ["classification", "pubDate"])
+    .searchIndex("search_author_summary", {
+      searchField: "author",
+      filterFields: ["classification", "blogId"],
+    })
+    .searchIndex("search_summary", {
+      searchField: "summary",
+      filterFields: ["classification", "blogId"],
+    })
+    .searchIndex("search_company", {
+      searchField: "companyName",
+      filterFields: ["classification", "blogId"],
+    })
     .index("by_classification", ["classification"]),
 
   master_company_list: defineTable({
@@ -71,10 +83,17 @@ export default defineSchema({
     checked_market_cap: v.optional(v.boolean()),
     created_at: v.string(),
     updated_at: v.string(),
+    search_tokens: v.optional(v.array(v.string())),
   })
     .index("nse_code", ["nse_code"])
     .index("record_hash", ["record_hash"])
     .index("name", ["name"])
+    .index("search_tokens", ["search_tokens"])
+    .index("marketCap", ["market_cap"])
+    .searchIndex("company_name_search", {
+      searchField: "name",
+      staged: false,
+    })
     .index("bse_code", ["bse_code"]),
 
   users: defineTable({

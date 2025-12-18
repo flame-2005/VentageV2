@@ -169,14 +169,14 @@ export function hasCompanyData(post: Doc<"posts">): boolean {
 
   const { bseCode, nseCode, companyDetails } = post;
 
-  const hasBse = typeof bseCode === "string" && bseCode.trim().length > 0;
+  // const hasBse = typeof bseCode === "string" && bseCode.trim().length > 0;
 
   const hasNse = typeof nseCode === "string" && nseCode.trim().length > 0;
 
   const hasCompanyDetails =
     Array.isArray(companyDetails) && companyDetails.length > 0;
 
-  return hasBse || hasNse || hasCompanyDetails;
+  return hasCompanyDetails || hasNse;
 }
 
 export function normalizeUrl(url: string): string {

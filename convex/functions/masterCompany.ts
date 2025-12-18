@@ -1,6 +1,6 @@
-
 import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
+import { generateSearchTokens } from "../helper/masterCompanies";
 
 // Mutation to replace all companies (delete old, insert new)
 export const replaceAllCompanies = mutation({
@@ -22,8 +22,10 @@ export const replaceAllCompanies = mutation({
   },
   handler: async (ctx, args) => {
     // Step 1: Delete all existing records
-    const existingCompanies = await ctx.db.query("master_company_list").collect();
-    
+    const existingCompanies = await ctx.db
+      .query("master_company_list")
+      .collect();
+
     for (const company of existingCompanies) {
       await ctx.db.delete(company._id);
     }
@@ -34,6 +36,8 @@ export const replaceAllCompanies = mutation({
     let inserted = 0;
     for (const company of args.companies) {
       // Convert null to undefined for optional fields
+
+      const search_tokens = generateSearchTokens(company.name);
       await ctx.db.insert("master_company_list", {
         bse_code: company.bse_code ?? undefined,
         nse_code: company.nse_code,
@@ -45,12 +49,13 @@ export const replaceAllCompanies = mutation({
         created_at: company.created_at,
         updated_at: company.updated_at,
         market_cap: company.market_cap ?? undefined,
+        search_tokens,
       });
       inserted++;
     }
 
     console.log(`Inserted ${inserted} new records`);
-    
+
     return {
       deleted: existingCompanies.length,
       inserted: inserted,
@@ -82,7 +87,7 @@ export const searchCompaniesByName = query({
   args: { searchTerm: v.string() },
   handler: async (ctx, args) => {
     const allCompanies = await ctx.db.query("master_company_list").collect();
-    
+
     return allCompanies.filter((company) =>
       company.name.toLowerCase().includes(args.searchTerm.toLowerCase())
     );
@@ -106,19 +111,19 @@ export const getCompaniesNeedingEnrichment = query({
   },
   handler: async (ctx, args) => {
     const offset = args.offset ?? 0;
-    
+
     // Get all companies (since we can't filter on undefined in Convex directly)
-    const allCompanies = await ctx.db
-      .query("master_company_list")
-      .collect();
-    
+    const allCompanies = await ctx.db.query("master_company_list").collect();
+
     // Filter in memory for undefined/null market_cap
     const needsEnrichment = allCompanies.filter(
-      (c) => (c.market_cap == null  || c.market_cap === undefined) && c.checked_market_cap === undefined
+      (c) =>
+        (c.market_cap == null || c.market_cap === undefined) &&
+        c.checked_market_cap === undefined
     );
-    
+
     // Apply pagination
-    return needsEnrichment
+    return needsEnrichment;
   },
 });
 
@@ -138,7 +143,6 @@ export const updateCompanyEnrichment = mutation({
     return { success: true };
   },
 });
-
 
 export const bulkUpdateCompanyEnrichment = mutation({
   args: {
@@ -161,5 +165,108 @@ export const bulkUpdateCompanyEnrichment = mutation({
     }
 
     return { success: true, updated: updates.length };
+  },
+});
+
+export const bulkUpdateSearchTokens = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        id: v.id("master_company_list"),
+        search_tokens: v.array(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, { updates }) => {
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const update of updates) {
+      try {
+        await ctx.db.patch(update.id, {
+          search_tokens: update.search_tokens,
+        });
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to update company ${update.id}:`, error);
+        errorCount++;
+      }
+    }
+
+    return {
+      success: successCount,
+      errors: errorCount,
+      total: updates.length,
+    };
+  },
+});
+
+export const bulkUpdateCompanies = mutation({
+  args: {
+    updates: v.array(
+      v.object({
+        id: v.id("master_company_list"),
+        fields: v.object({
+          bse_code: v.optional(v.string()),
+          nse_code: v.optional(v.string()),
+          name: v.optional(v.string()),
+          instrument_token: v.optional(v.number()),
+          isin: v.optional(v.string()),
+          exchange: v.optional(v.string()),
+          market_cap: v.optional(v.number()),
+          record_hash: v.optional(v.string()),
+          checked_market_cap: v.optional(v.boolean()),
+          updated_at: v.optional(v.string()),
+          search_tokens: v.optional(v.array(v.string())),
+        }),
+      })
+    ),
+  },
+  handler: async (ctx, { updates }) => {
+    let successCount = 0;
+    let errorCount = 0;
+    const errors: Array<{ id: string; error: string }> = [];
+
+    for (const update of updates) {
+      try {
+        const fieldsToUpdate = Object.fromEntries(
+          Object.entries(update.fields).filter(([_, value]) => value !== undefined)
+        );
+
+        fieldsToUpdate.updated_at = new Date().toISOString();
+
+        await ctx.db.patch(update.id, fieldsToUpdate);
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to update company ${update.id}:`, error);
+        errorCount++;
+        errors.push({
+          id: update.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
+
+    return {
+      success: successCount,
+      errors: errorCount,
+      total: updates.length,
+      failedUpdates: errors,
+    };
+  },
+});
+
+
+export const companiesWithoutMarketCap = query({
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("master_company_list")
+      .filter((q) =>
+        q.or(
+          q.eq(q.field("market_cap"), null),
+          q.eq(q.field("market_cap"), undefined)
+        )
+      )
+      .collect();
   },
 });

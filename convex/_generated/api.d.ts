@@ -41,6 +41,7 @@ import type * as helper_agents_extractImage from "../helper/agents/extractImage.
 import type * as helper_blogs from "../helper/blogs.js";
 import type * as helper_classifyBlog from "../helper/classifyBlog.js";
 import type * as helper_feedParser from "../helper/feedParser.js";
+import type * as helper_masterCompanies from "../helper/masterCompanies.js";
 import type * as helper_post from "../helper/post.js";
 import type * as posts from "../posts.js";
 
@@ -92,6 +93,7 @@ declare const fullApi: ApiFromModules<{
   "helper/blogs": typeof helper_blogs;
   "helper/classifyBlog": typeof helper_classifyBlog;
   "helper/feedParser": typeof helper_feedParser;
+  "helper/masterCompanies": typeof helper_masterCompanies;
   "helper/post": typeof helper_post;
   posts: typeof posts;
 }>;
