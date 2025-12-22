@@ -6,3 +6,4 @@ timestamp,url,error
 "2025-12-18T17:40:39.558Z","https://www.goindiastocks.com/blogs","request to https://www.goindiastocks.com/blogs failed, reason: getaddrinfo ENOTFOUND www.goindiastocks.com"
 "2025-12-18T17:40:39.562Z","https://empor.top","request to https://empor.top/ failed, reason: getaddrinfo ENOTFOUND empor.top"
 "2025-12-18T17:40:39.568Z","https://greenedgewealth.com/memo/index.html#","request to https://greenedgewealth.com/memo/index.html# failed, reason: getaddrinfo ENOTFOUND greenedgewealth.com"
+"2025-12-22T13:55:51.028Z","https://eduinvesting.in/feed/","No scraper could extract posts from this URL"
