@@ -34,6 +34,7 @@ import type * as functions_processBlogs_agents_companyAgent from "../functions/p
 import type * as functions_processBlogs_processBlogs from "../functions/processBlogs/processBlogs.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
 import type * as functions_users from "../functions/users.js";
+import type * as functions_usersLink from "../functions/usersLink.js";
 import type * as helper_addBlogImage from "../helper/addBlogImage.js";
 import type * as helper_addBulkBlogs from "../helper/addBulkBlogs.js";
 import type * as helper_addImage from "../helper/addImage.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   "functions/processBlogs/processBlogs": typeof functions_processBlogs_processBlogs;
   "functions/substackBlogs": typeof functions_substackBlogs;
   "functions/users": typeof functions_users;
+  "functions/usersLink": typeof functions_usersLink;
   "helper/addBlogImage": typeof helper_addBlogImage;
   "helper/addBulkBlogs": typeof helper_addBulkBlogs;
   "helper/addImage": typeof helper_addImage;

@@ -1,0 +1,8 @@
+timestamp,url,error
+"2025-12-18T16:09:27.129Z","https://www.surgecapital.in/knowledge-base","No scraper could extract posts from this URL"
+"2025-12-18T17:40:39.529Z","https://www.abhayjain.com/writings","request to https://www.abhayjain.com/writings failed, reason: getaddrinfo ENOTFOUND www.abhayjain.com"
+"2025-12-18T17:40:39.547Z","https://www.plindia.com/blogs","request to https://www.plindia.com/blogs failed, reason: getaddrinfo ENOTFOUND www.plindia.com"
+"2025-12-18T17:40:39.553Z","https://www.motilaloswal.com/learning-centre/stock-market","request to https://www.motilaloswal.com/learning-centre/stock-market failed, reason: getaddrinfo ENOTFOUND www.motilaloswal.com"
+"2025-12-18T17:40:39.558Z","https://www.goindiastocks.com/blogs","request to https://www.goindiastocks.com/blogs failed, reason: getaddrinfo ENOTFOUND www.goindiastocks.com"
+"2025-12-18T17:40:39.562Z","https://empor.top","request to https://empor.top/ failed, reason: getaddrinfo ENOTFOUND empor.top"
+"2025-12-18T17:40:39.568Z","https://greenedgewealth.com/memo/index.html#","request to https://greenedgewealth.com/memo/index.html# failed, reason: getaddrinfo ENOTFOUND greenedgewealth.com"

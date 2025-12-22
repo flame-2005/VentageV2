@@ -51,15 +51,15 @@ export default function InvestmentDashboard() {
     }, [canLoadMore, isLoadingMore, loadMore]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-            <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="min-h-screen w-full flex ">
+            <div className="flex-1 w-6xl px-4 py-8 h-full">
                 {isLoading ? (
                     <CircularLoader />
                 ) : (
-                    <>
-                        <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6">
+                    <div className="px-4">
+                        {/* <h1 className="text-3xl md:text-4xl font-semibold text-slate-900 mb-6">
                             Latest Articles
-                        </h1>
+                        </h1> */}
                         {/* Articles */}
                         <div className="space-y-6">
                             {posts && posts.length > 0 ? (
@@ -105,7 +105,7 @@ export default function InvestmentDashboard() {
                                 </p>
                             </div>
                         )}
-                    </>
+                    </div>
                 )}
             </div>
         </div>
