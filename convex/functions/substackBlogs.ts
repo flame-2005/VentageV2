@@ -244,6 +244,34 @@ export const getAllPosts = query({
   },
 });
 
+export const getPostsWithPagination5000 = query({
+  args: {
+    paginationOpts: v.optional(
+      v.object({
+        numItems: v.number(),
+        cursor: v.union(v.string(), v.null()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const numItems = args.paginationOpts?.numItems ?? 5000;
+    const cursor = args.paginationOpts?.cursor ?? null;
+
+    const result = await ctx.db
+      .query("posts")
+      .paginate({
+        numItems,
+        cursor,
+      });
+
+    return {
+      page: result.page,
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+    };
+  },
+});
+
 export const getAllPosts50 = query({
   args: {},
   handler: async (ctx) => {
@@ -430,6 +458,7 @@ export const searchPosts = query({
 
   handler: async (ctx, { searchTerm, paginationOpts }) => {
     const term = searchTerm.toUpperCase();
+    console.log(term)
 
     // Step 1: get companyPost entries (already sorted by pubDate via index)
     const result = await ctx.db
@@ -462,7 +491,7 @@ export const searchPosts = query({
           post.author !== "null" &&
           post.author.trim() !== "" &&
           !!post.companyDetails &&
-          (post.classification === "Company_Analusys" ||
+          (post.classification === "Company_analysis" ||
             post.classification === "Multiple_company_analysis" ||
             post.classification === "Sector_analysis")
         );

@@ -33,7 +33,7 @@ const Dropdown: React.FC<DropdownProps> = ({ title, titleAction, options }) => {
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setShowAllOptions(!showAllOptions)}
-                className="flex items-center gap-1 hover:text-blue-600 transition-colors font-medium text-blue-900 text-xs md:text-sm"
+                className="flex items-center gap-1 hover:text-blue-600 transition-colors font-medium  text-xs md:text-sm"
             >
                 <div
                     onClick={(e) => {
@@ -41,7 +41,7 @@ const Dropdown: React.FC<DropdownProps> = ({ title, titleAction, options }) => {
                         titleAction();
                     }}
 
-                    className="hover:text-blue-600"
+                    className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded text-xs font-bold uppercase tracking-tight hover:bg-blue-100 transition-colors"
                 >
                     {title}
                 </div>
@@ -57,7 +57,7 @@ const Dropdown: React.FC<DropdownProps> = ({ title, titleAction, options }) => {
                         <Link
                             key={idx}
                             href={company.link}
-                            className="block px-4 py-2 text-xs md:text-sm text-blue-900 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            className="block px-4 py-2 text-xs md:text-sm  hover:bg-blue-50 hover:text-blue-600 transition-colors"
                             onClick={() => {
                                 setShowAllOptions(false)
                             }}

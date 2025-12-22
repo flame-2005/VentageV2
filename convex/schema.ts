@@ -140,4 +140,18 @@ export default defineSchema({
     .index("by_company", ["companyName"])
     .index("by_bse", ["bseCode"])
     .index("by_nse", ["nseCode"]),
+  usersLink: defineTable({
+    url: v.string(),
+    email: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    userId: v.optional(v.string()),
+    createdAt: v.number(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected")
+    ),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"]),
 });

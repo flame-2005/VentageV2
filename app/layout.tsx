@@ -47,8 +47,11 @@ export default function RootLayout({
           <UserProvider>
             <ToastProvider>
               <SearchProvider>
-                <Navbar />
-                {children}
+                <div className="flex">
+
+                  <Navbar />
+                  {children}
+                </div>
               </SearchProvider>
             </ToastProvider>
           </UserProvider>
