@@ -109,21 +109,22 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
         >
             {/* Image - Full width on mobile, compact on desktop */}
             <div className="flex-shrink-0 w-full sm:w-44">
-                <div className="w-full h-48 sm:h-32 bg-slate-100 rounded-lg overflow-hidden">
+                <div className="w-full sm:h-32 bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center">
                     {!imageError ? (
                         <img
                             src={post.image || post.imageUrl}
                             alt={post.companyName || "Company logo"}
-                            className="w-full h-full object-cover"
+                            className="w-full h-48 sm:h-32 object-cover"
                             onError={() => setImageError(true)}
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xl font-bold text-slate-400">
+                        <div className="px-3 py-2 text-center text-sm font-semibold text-slate-500 break-words">
                             {firstCompany || "N/A"}
                         </div>
                     )}
                 </div>
             </div>
+
 
             {/* Content Area */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -165,7 +166,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                     </div>
 
                     {/* Date */}
-                    <div className="flex items-center gap-1 text-slate-900">
+                    <div className="flex items-center gap-1 text-slate-500">
                         <Calendar className="w-3 h-3" />
                         <span className="text-[10px] sm:text-xs font-medium">
                             {new Date(post.pubDate).toLocaleDateString("en-US", {
@@ -189,7 +190,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                             {post.title}
                         </h4>
                     </a>
-                    <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 sm:line-clamp-2 leading-relaxed mb-3">
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-3">
                         {post.summary}
                     </p>
                 </div>
@@ -210,7 +211,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                     )}
 
                     {/* Stats */}
-                    <div className="flex items-center gap-3 sm:gap-4 text-slate-900">
+                    <div className="flex items-center gap-3 sm:gap-4 text-slate-500">
                         <button
                             onClick={() => likePost()}
                             className={`flex items-center gap-1 transition-colors cursor-pointer ${isLiked ? "text-rose-500" : "hover:text-rose-500"
@@ -248,7 +249,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
 
                         <div className="flex items-center gap-1">
                             <MousePointerClick className="w-4 h-4" />
-                            <span className="text-[10px] sm:text-xs">{clickedCount}</span>
+                            <span className="text-[10px] sm:text-xs font-bold">{clickedCount}</span>
                         </div>
                     </div>
                 </div>

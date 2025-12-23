@@ -344,3 +344,40 @@ export const backfillAuthorLower = internalMutation({
   },
 });
 
+export function isValidAuthor(author: unknown): boolean {
+  return (
+    typeof author === "string" &&
+    author !== "null" &&
+    author.trim() !== "" &&
+    author  !== "Eduinvesting Team"
+  );
+}
+
+// export const getPostsWithACC = query({
+//   args: {
+//     limit: v.optional(v.number()),
+//     cursor: v.optional(v.any()),
+//   },
+//   handler: async (ctx, { limit = 100, cursor }) => {
+//     const q = ctx.db
+//       .query("posts")
+//       .order("desc");
+
+//     const page = cursor
+//       ? await q.paginate({ numItems: limit, cursor })
+//       : await q.paginate({ numItems: limit });
+
+//     const filtered = page.page.filter(
+//       p =>
+//         typeof p.companyName === "string" &&
+//         p.companyName.toUpperCase().includes("ACC")
+//     );
+
+//     return {
+//       posts: filtered,
+//       cursor: page.continueCursor,
+//     };
+//   },
+// });
+
+

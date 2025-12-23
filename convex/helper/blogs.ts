@@ -171,10 +171,10 @@ export function hasCompanyData(post: Doc<"posts">): boolean {
 
   // const hasBse = typeof bseCode === "string" && bseCode.trim().length > 0;
 
-  const hasNse = typeof nseCode === "string" && nseCode.trim().length > 0;
+  const hasNse = typeof nseCode === "string" && nseCode.trim().length > 0 && post.author  !== "Eduinvesting Team";
 
   const hasCompanyDetails =
-    Array.isArray(companyDetails) && companyDetails.length > 0;
+    Array.isArray(companyDetails) && companyDetails.length > 0 && post.author  !== "Eduinvesting Team";
 
   return hasCompanyDetails || hasNse;
 }

@@ -5,6 +5,7 @@ import { api } from "../_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { hasCompanyData } from "../helper/blogs";
 import { Id } from "../_generated/dataModel";
+import { isValidAuthor } from "../helper/post";
 
 export const addBlogs = mutation({
   args: {
@@ -46,12 +47,7 @@ export const getPostsByCompany = query({
     // Step 3: Filter and return
     return posts
       .filter((post): post is NonNullable<typeof post> => {
-        return (
-          post !== null &&
-          !!post.author &&
-          post.author !== "null" &&
-          post.author.trim() !== ""
-        );
+        return post !== null && isValidAuthor(post.author);
       })
       .slice(0, limit);
   },
@@ -144,12 +140,9 @@ export const searchEverywhere = query({
     return allResults
       .filter(
         (post): post is NonNullable<typeof post> =>
-          post !== null &&
-          !!post.author &&
-          post.author !== "null" &&
-          post.author.trim() !== "" &&
+          isValidAuthor(post.author) &&
           !!post.companyDetails &&
-          (post.classification === "Company_Analusys" ||
+          (post.classification === "Company_analysis" ||
             post.classification === "Multiple_company_analysis" ||
             post.classification === "Sector_analysis")
       )
@@ -257,12 +250,10 @@ export const getPostsWithPagination5000 = query({
     const numItems = args.paginationOpts?.numItems ?? 5000;
     const cursor = args.paginationOpts?.cursor ?? null;
 
-    const result = await ctx.db
-      .query("posts")
-      .paginate({
-        numItems,
-        cursor,
-      });
+    const result = await ctx.db.query("posts").paginate({
+      numItems,
+      cursor,
+    });
 
     return {
       page: result.page,
@@ -330,7 +321,8 @@ export const getPaginatedPosts = query({
           q.and(
             q.neq(q.field("author"), undefined),
             q.neq(q.field("author"), null),
-            q.neq(q.field("author"), "")
+            q.neq(q.field("author"), ""),
+            q.neq(q.field("author"), "Eduinvesting Team")
           )
         )
       )
@@ -458,7 +450,7 @@ export const searchPosts = query({
 
   handler: async (ctx, { searchTerm, paginationOpts }) => {
     const term = searchTerm.toUpperCase();
-    console.log(term)
+    console.log(term);
 
     // Step 1: get companyPost entries (already sorted by pubDate via index)
     const result = await ctx.db
@@ -487,9 +479,7 @@ export const searchPosts = query({
       (post): post is NonNullable<typeof post> => {
         return (
           post !== null &&
-          !!post.author &&
-          post.author !== "null" &&
-          post.author.trim() !== "" &&
+          isValidAuthor(post.author) &&
           !!post.companyDetails &&
           (post.classification === "Company_analysis" ||
             post.classification === "Multiple_company_analysis" ||
