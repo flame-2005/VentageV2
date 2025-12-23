@@ -18,7 +18,7 @@ const Navbar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex sticky left-0 top-0 h-screen w-96 bg-white border-r border-slate-200 p-6 flex-col z-50">
+      <aside className="hidden lg:flex sticky left-0 top-0 h-screen w-84 bg-white border-r border-slate-200 p-6 flex-col z-50">
         <Sidebar isOpen ={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
       </aside>
 

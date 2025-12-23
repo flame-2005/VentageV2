@@ -105,12 +105,11 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ delay: index * 0.05 }}
-            className="group bg-white rounded-2xl p-4 hover:shadow-xl hover:shadow-slate-200/50 hover:border-blue-200 transition-all flex gap-5 items-stretch"
+            className="group bg-white rounded-2xl p-3 sm:p-4 hover:shadow-xl hover:shadow-slate-200/50 hover:border-blue-200 transition-all flex flex-col sm:flex-row gap-3 sm:gap-5 items-stretch"
         >
-            {/* Compact Image */}
-            {/* Left: Image */}
-            <div className="flex-shrink-0">
-                <div className="w-44 h-32 bg-slate-100 rounded-lg overflow-hidden">
+            {/* Image - Full width on mobile, compact on desktop */}
+            <div className="flex-shrink-0 w-full sm:w-44">
+                <div className="w-full h-48 sm:h-32 bg-slate-100 rounded-lg overflow-hidden">
                     {!imageError ? (
                         <img
                             src={post.image || post.imageUrl}
@@ -126,12 +125,11 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                 </div>
             </div>
 
-
             {/* Content Area */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
-                {/* Top Meta Row (Tighter) */}
-                <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
+                {/* Top Meta Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-2 sm:mb-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                         {/* Company Tag */}
                         {fullCapsCompanies.length > 0 && firstCompany && (
                             <div className="relative">
@@ -152,7 +150,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                                         className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-100 rounded text-xs font-bold uppercase tracking-tight hover:bg-blue-100 transition-colors"
                                     >
                                         <Building2 className="w-2.5 h-2.5" />
-                                        {firstCompany}
+                                        <span className="truncate max-w-[120px] sm:max-w-none">{firstCompany}</span>
                                     </Link>
                                 )}
                             </div>
@@ -160,16 +158,16 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
 
                         {/* Sentiment Tag */}
                         {mainTag && (
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${getToneStyles(mainTag)}`}>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase whitespace-nowrap ${getToneStyles(mainTag)}`}>
                                 {getToneDisplay(mainTag)}
                             </span>
                         )}
                     </div>
 
                     {/* Date */}
-                    <div className="flex items-center gap-1 text-slate-400">
+                    <div className="flex items-center gap-1 text-slate-900">
                         <Calendar className="w-3 h-3" />
-                        <span className="text-[10px] font-medium">
+                        <span className="text-[10px] sm:text-xs font-medium">
                             {new Date(post.pubDate).toLocaleDateString("en-US", {
                                 month: "short",
                                 day: "numeric",
@@ -179,7 +177,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                     </div>
                 </div>
 
-                {/* Title & Summary (Tighter Typography) */}
+                {/* Title & Summary */}
                 <div>
                     <a
                         onClick={() => handlePostClick()}
@@ -187,39 +185,39 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <h4 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1 mb-1 leading-tight">
+                        <h4 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 sm:line-clamp-1 mb-1 sm:mb-1 leading-tight">
                             {post.title}
                         </h4>
                     </a>
-                    <p className="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-3">
+                    <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 sm:line-clamp-2 leading-relaxed mb-3">
                         {post.summary}
                     </p>
                 </div>
 
-                {/* Footer Row (More Compact) */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                {/* Footer Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pt-2 border-t border-slate-50">
                     {/* Author */}
                     {post.author && post.author !== 'null' && (
                         <Link
                             href={`/author/${encodeURIComponent(post.author)}`}
                             className="flex items-center gap-2 hover:text-blue-600 transition-colors"
                         >
-                            <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+                            <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">
                                 <User className="w-3 h-3 text-slate-500" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-700">{post.author}</span>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-700 truncate">{post.author}</span>
                         </Link>
                     )}
 
                     {/* Stats */}
-                    <div className="flex items-center gap-4 text-slate-400">
+                    <div className="flex items-center gap-3 sm:gap-4 text-slate-900">
                         <button
                             onClick={() => likePost()}
                             className={`flex items-center gap-1 transition-colors cursor-pointer ${isLiked ? "text-rose-500" : "hover:text-rose-500"
                                 }`}
                         >
                             <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
-                            <span className="text-[10px] font-bold">{likeCount}</span>
+                            <span className="text-[10px] sm:text-xs font-bold">{likeCount}</span>
                         </button>
 
                         <button
@@ -245,15 +243,13 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                             className="flex items-center gap-1 hover:text-blue-500 transition-colors cursor-pointer"
                         >
                             <Share2 className="w-4 h-4" />
-                            <span className="text-[10px] font-bold">{shareCount}</span>
+                            <span className="text-[10px] sm:text-xs font-bold">{shareCount}</span>
                         </button>
 
                         <div className="flex items-center gap-1">
                             <MousePointerClick className="w-4 h-4" />
-                            <span className="text-[10px]">{clickedCount}</span>
+                            <span className="text-[10px] sm:text-xs">{clickedCount}</span>
                         </div>
-
-    
                     </div>
                 </div>
             </div>
