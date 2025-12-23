@@ -301,13 +301,13 @@ const Sidebar: React.FC<SidebarInterface> = ({
 
       {/* Main Heading */}
       <div className="mb-8">
-        <h2 className="text-3xl font-bold text-slate-900 leading-tight">
+        <h2 className="text-2xl font-bold text-slate-900 leading-tight">
           Find <span className="text-blue-600">blogs</span> on
         </h2>
-        <h2 className="text-3xl font-bold text-slate-900 leading-tight">
+        <h2 className="text-2xl font-bold text-slate-900 leading-tight">
           companies you are
         </h2>
-        <h2 className="text-3xl font-bold leading-tight">
+        <h2 className="text-2xl font-bold leading-tight">
           <span className="text-blue-600">tracking.</span>
         </h2>
       </div>
