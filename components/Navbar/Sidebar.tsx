@@ -167,7 +167,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
   return (
     <>
       {/* Logo */}
-      <Link href={'/home'} className="flex items-center gap-3 py-8">
+      <Link href={'/home'} className="hidden lg:flex items-center gap-3 py-8">
         <div className="flex items-center gap-3 mb-4 ">
           <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
             <Zap className="w-6 h-6 text-white" fill="currentColor" />

@@ -52,7 +52,7 @@ export default function InvestmentDashboard() {
 
     return (
         <div className="min-h-screen w-full flex ">
-            <div className="flex-1 w-6xl md:px-4 py-8 h-full">
+            <div className="flex-1 w-6xl md:px-4 md:py-8 h-full">
                 {isLoading ? (
                     <CircularLoader />
                 ) : (

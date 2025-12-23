@@ -149,7 +149,7 @@ export const searchEverywhere = query({
           post.author !== "null" &&
           post.author.trim() !== "" &&
           !!post.companyDetails &&
-          (post.classification === "Company_Analusys" ||
+          (post.classification === "Company_analysis" ||
             post.classification === "Multiple_company_analysis" ||
             post.classification === "Sector_analysis")
       )

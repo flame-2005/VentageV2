@@ -165,7 +165,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                     </div>
 
                     {/* Date */}
-                    <div className="flex items-center gap-1 text-slate-900">
+                    <div className="flex items-center gap-1 text-slate-500">
                         <Calendar className="w-3 h-3" />
                         <span className="text-[10px] sm:text-xs font-medium">
                             {new Date(post.pubDate).toLocaleDateString("en-US", {
@@ -189,7 +189,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                             {post.title}
                         </h4>
                     </a>
-                    <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 sm:line-clamp-2 leading-relaxed mb-3">
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mb-3">
                         {post.summary}
                     </p>
                 </div>
@@ -210,7 +210,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                     )}
 
                     {/* Stats */}
-                    <div className="flex items-center gap-3 sm:gap-4 text-slate-900">
+                    <div className="flex items-center gap-3 sm:gap-4 text-slate-500">
                         <button
                             onClick={() => likePost()}
                             className={`flex items-center gap-1 transition-colors cursor-pointer ${isLiked ? "text-rose-500" : "hover:text-rose-500"
@@ -248,7 +248,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
 
                         <div className="flex items-center gap-1">
                             <MousePointerClick className="w-4 h-4" />
-                            <span className="text-[10px] sm:text-xs">{clickedCount}</span>
+                            <span className="text-[10px] sm:text-xs font-bold">{clickedCount}</span>
                         </div>
                     </div>
                 </div>

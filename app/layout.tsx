@@ -47,7 +47,7 @@ export default function RootLayout({
           <UserProvider>
             <ToastProvider>
               <SearchProvider>
-                <div className="md:flex">
+                <div className="lg:flex">
 
                   <Navbar />
                   {children}
