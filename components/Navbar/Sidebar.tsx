@@ -173,7 +173,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
             <Zap className="w-6 h-6 text-white" fill="currentColor" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900 leading-none italic">The VantEdge</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">The VantEdge</h1>
             <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">Intelligence OS</span>
           </div>
         </div>
@@ -301,13 +301,13 @@ const Sidebar: React.FC<SidebarInterface> = ({
 
       {/* Main Heading */}
       <div className="mb-8">
-        <h2 className="text-4xl font-bold text-slate-900 leading-tight">
+        <h2 className="text-3xl font-bold text-slate-900 leading-tight">
           Find <span className="text-blue-600">blogs</span> on
         </h2>
-        <h2 className="text-4xl font-bold text-slate-900 leading-tight">
+        <h2 className="text-3xl font-bold text-slate-900 leading-tight">
           companies you are
         </h2>
-        <h2 className="text-4xl font-bold leading-tight">
+        <h2 className="text-3xl font-bold leading-tight">
           <span className="text-blue-600">tracking.</span>
         </h2>
       </div>
