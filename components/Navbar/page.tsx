@@ -75,13 +75,12 @@ const Navbar = () => {
       </header>
 
       {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
         <>
-          <div
-            className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <aside className="lg:hidden fixed left-0 top-0 h-screen w-80 bg-white border-r border-slate-200 p-6 flex flex-col z-50 transform transition-transform">
+          <aside 
+            className={`lg:hidden fixed left-0 top-0 h-screen w-80 bg-white border-r border-slate-200 p-6 flex flex-col z-50 transition-transform duration-300 ease-in-out ${
+              isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
             <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="top-4 right-4 p-2 hover:bg-slate-100 rounded-lg transition-colors h-8 w-full flex justify-end"
@@ -91,7 +90,6 @@ const Navbar = () => {
             <Sidebar isOpen ={isMobileMenuOpen} setIsOpen={setIsMobileMenuOpen} />
           </aside>
         </>
-      )}
     </>
   );
 };
