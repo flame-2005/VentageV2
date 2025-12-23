@@ -109,21 +109,22 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
         >
             {/* Image - Full width on mobile, compact on desktop */}
             <div className="flex-shrink-0 w-full sm:w-44">
-                <div className="w-full h-48 sm:h-32 bg-slate-100 rounded-lg overflow-hidden">
+                <div className="w-full sm:h-32 bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center">
                     {!imageError ? (
                         <img
                             src={post.image || post.imageUrl}
                             alt={post.companyName || "Company logo"}
-                            className="w-full h-full object-cover"
+                            className="w-full h-48 sm:h-32 object-cover"
                             onError={() => setImageError(true)}
                         />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xl font-bold text-slate-400">
+                        <div className="px-3 py-2 text-center text-sm font-semibold text-slate-500 break-words">
                             {firstCompany || "N/A"}
                         </div>
                     )}
                 </div>
             </div>
+
 
             {/* Content Area */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
