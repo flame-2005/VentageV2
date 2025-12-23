@@ -195,7 +195,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                 </div>
 
                 {/* Footer Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pt-2 border-t border-slate-50">
+                <div className="flex flex-row items-center justify-between gap-3 sm:gap-0 pt-2 border-t border-slate-50">
                     {/* Author */}
                     {post.author && post.author !== 'null' && (
                         <Link
