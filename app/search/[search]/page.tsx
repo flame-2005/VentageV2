@@ -13,8 +13,8 @@ const Page = () => {
 
     // Check if search-everywhere mode is enabled
     const isSearchEverywhere = searchTerm.startsWith('search-everywhere=');
-    const actualSearchTerm = isSearchEverywhere 
-        ? searchTerm.replace('search-everywhere=', '') 
+    const actualSearchTerm = isSearchEverywhere
+        ? searchTerm.replace('search-everywhere=', '')
         : searchTerm;
 
     // Use searchEverywhere query when flag is present
@@ -69,8 +69,8 @@ const Page = () => {
         return output;
     }, [posts]);
 
-    const isLoading = isSearchEverywhere 
-        ? everywhereResults === undefined 
+    const isLoading = isSearchEverywhere
+        ? everywhereResults === undefined
         : status === "LoadingFirstPage";
     const isLoadingMore = !isSearchEverywhere && status === "LoadingMore";
     const canLoadMore = !isSearchEverywhere && status === "CanLoadMore";
@@ -121,7 +121,7 @@ const Page = () => {
     }, [status]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 ">
+        <div className="min-h-screen  ">
             <div className="flex-1 w-6xl px-4 py-8 h-full">
                 {isLoading ? (
                     <CircularLoader />
