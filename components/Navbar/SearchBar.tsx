@@ -5,13 +5,26 @@ import { api } from '@/convex/_generated/api';
 import { useQuery } from 'convex/react';
 import Link from 'next/link';
 
-const SearchBar = () => {
+interface SearchBarProps {
+    shouldFocus: boolean;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const [inputValue, setInputValue] = useState<string>()
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const [debouncedInputValue, setDebouncedInputValue] = useState<string>('');
+
+    useEffect(() => {
+        if (shouldFocus && inputRef.current) {
+            // Small delay for smooth transition
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 350); // Match your transition duration
+        }
+    }, [shouldFocus]);
 
     const router = useRouter()
 
@@ -145,7 +158,7 @@ const SearchBar = () => {
                     type="text"
                     placeholder="Search ticker or company..."
                     value={inputValue}
-                    autoFocus
+
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     onKeyDown={handleKeyDown}
