@@ -145,6 +145,7 @@ const SearchBar = () => {
                     type="text"
                     placeholder="Search ticker or company..."
                     value={inputValue}
+                    autoFocus
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     onKeyDown={handleKeyDown}
