@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       {/* Search Bar */}
       <div className='hidden lg:block mb-8'>
 
-      <SearchBar/>
+      <SearchBar />
       </div>
 
       {/* Main Heading */}
