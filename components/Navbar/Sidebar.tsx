@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       </div>
 
       {/* Submit Sources Button */}
-      <button className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors mb-auto text-sm"
+      <button className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors text-sm"
         onClick={() => {router.push("/track-link")
           setIsOpen(false)
         }}
