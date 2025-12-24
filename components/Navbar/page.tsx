@@ -65,7 +65,7 @@ const Navbar = () => {
       {/* Mobile Menu Overlay */}
       <>
         <aside
-          className={`lg:hidden fixed left-0 top-0 h-screen w-80 bg-white border-r border-slate-200 p-6 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          className={`lg:hidden h-screen flex flex-col fixed left-0 top-0 h-screen w-80 bg-white border-r border-slate-200 p-6 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
         >
           <button
