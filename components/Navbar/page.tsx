@@ -65,12 +65,12 @@ const Navbar = () => {
       {/* Mobile Menu Overlay */}
       <>
         <aside
-          className={`lg:hidden h-screen flex flex-col fixed left-0 top-0 h-screen w-80 bg-white border-r border-slate-200 p-6 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-            }`}
+          className={`lg:hidden fixed left-0 top-0 h-[100dvh] w-80 bg-white border-r border-slate-200 p-6 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            } overflow-y-auto`}
         >
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="top-4 right-4 p-2 hover:bg-slate-100 rounded-lg transition-colors h-8 w-full flex justify-end"
+            className="self-end p-2 hover:bg-slate-100 rounded-lg transition-colors mb-4"
           >
             <X className="w-5 h-5 text-slate-700" />
           </button>
