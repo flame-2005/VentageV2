@@ -6,7 +6,7 @@ import { useQuery } from 'convex/react';
 import Link from 'next/link';
 
 interface SearchBarProps {
-    shouldFocus: boolean;
+    shouldFocus?: boolean;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
