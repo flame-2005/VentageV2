@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
 import SearchBar from './SearchBar';
+import { setOptions } from 'yahoo-finance2/lib/options';
 
 export interface SidebarInterface {
   isOpen: boolean;
@@ -22,149 +23,14 @@ const Sidebar: React.FC<SidebarInterface> = ({
 
 
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
-  const [debouncedInputValue, setDebouncedInputValue] = useState<string>('');
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-
   const { user, isLoading, signOut } = useUser();
   const router = useRouter();
-
-  const { searchTerm, inputValue, setInputValue, clearSearch } = useSearch();
-
   const [imgError, setImgError] = useState(false);
 
   const displayName = user ? (user.fullName || user.username) : "";
   const fallbackLetter = displayName ? displayName.charAt(0).toUpperCase() : "";
 
-  // Debounce logic
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedInputValue(inputValue);
-    }, 300);
 
-    return () => clearTimeout(timer);
-  }, [inputValue]);
-
-  // Get company suggestions based on DEBOUNCED input
-  const companySuggestions = useQuery(
-    api.functions.substackBlogs.getCompanySuggestions,
-    debouncedInputValue.length >= 2 ? { searchTerm: debouncedInputValue } : "skip"
-  );
-
-  const authorSuggestions = useQuery(
-    api.functions.substackBlogs.getAuthorSuggestions,
-    debouncedInputValue.length >= 2 ? { searchTerm: debouncedInputValue } : "skip"
-  );
-
-  const closeSuggestions = () => {
-    setShowSuggestions(false);
-    setActiveIndex(0);
-  };
-
-  // Handle clicks outside suggestions dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        closeSuggestions();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const flatSuggestions = [
-    ...(companySuggestions?.map(s => ({
-      type: "company" as const,
-      label: s.companyName,
-      href: `/search/${encodeURIComponent(s.companyName)}`,
-    })) || []),
-    ...(authorSuggestions?.map(s => ({
-      type: "author" as const,
-      label: s.author,
-      href: `/search/${encodeURIComponent(s.author)}`,
-    })) || []),
-  ];
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') {
-      router.push(`/search/${encodeURIComponent(inputValue)}`);
-      closeSuggestions();
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setInputValue(value);
-
-    const shouldShow = value.length >= 2;
-    setShowSuggestions(shouldShow);
-
-    if (shouldShow) {
-      setActiveIndex(0);
-    }
-  };
-
-  const handleClearSearch = (): void => {
-    clearSearch();
-    closeSuggestions();
-    setDebouncedInputValue('');
-  };
-
-  const handleSearchEverywhere = () => {
-    router.push(`/search/search-everywhere=${encodeURIComponent(inputValue)}`);
-    closeSuggestions();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions || flatSuggestions.length === 0) {
-      if (e.key === "Enter") {
-        router.push(`/search/${encodeURIComponent(inputValue)}`);
-        closeSuggestions();
-      }
-      return;
-    }
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setActiveIndex((prev) =>
-          prev < flatSuggestions.length - 1 ? prev + 1 : 0
-        );
-        break;
-
-      case "ArrowUp":
-        e.preventDefault();
-        setActiveIndex((prev) =>
-          prev > 0 ? prev - 1 : flatSuggestions.length - 1
-        );
-        break;
-
-      case "Enter":
-        e.preventDefault();
-        const selected = flatSuggestions[activeIndex];
-        if (selected) {
-          router.push(selected.href);
-          setInputValue(selected.label);
-          closeSuggestions();
-        }
-        break;
-
-      case "Escape":
-        closeSuggestions();
-        break;
-    }
-  };
-
-  const isDebouncing = inputValue.length >= 2 && inputValue !== debouncedInputValue;
-  const authorOffset = companySuggestions?.length || 0;
   return (
     <>
       {/* Logo */}
@@ -181,7 +47,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       </Link>
 
       {/* Search Bar */}
-      <div className='hidden lg:block'>
+      <div className='hidden lg:block mb-8'>
 
       <SearchBar/>
       </div>
@@ -201,7 +67,9 @@ const Sidebar: React.FC<SidebarInterface> = ({
 
       {/* Submit Sources Button */}
       <button className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors mb-auto text-sm"
-        onClick={() => router.push("/track-link")}
+        onClick={() => {router.push("/track-link")
+          setIsOpen(false)
+        }}
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />

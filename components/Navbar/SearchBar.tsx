@@ -138,7 +138,7 @@ const SearchBar = () => {
     return (
         <div>
             {/* Search Bar */}
-            <div className="relative mb-8">
+            <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
                 <input
                     ref={inputRef}

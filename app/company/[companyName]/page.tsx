@@ -15,7 +15,7 @@ export default function CompanyPage() {
     if (posts === undefined) return <CircularLoader />;
 
     return (
-        <div className="max-w-6xl mx-auto py-10 px-4">
+        <div className="max-w-6xl mx-auto lg:py-10 py-4 px-4">
             <h1 className="text-3xl font-bold mb-6 text-blue-600">
                 Posts about {company}
             </h1>
