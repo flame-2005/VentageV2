@@ -122,7 +122,7 @@ const Page = () => {
 
     return (
         <div className="min-h-screen  ">
-            <div className="flex-1 w-6xl px-4 py-8 h-full">
+            <div className="flex-1 lg:w-6xl px-4 py-8 h-full">
                 {isLoading ? (
                     <CircularLoader />
                 ) : (
