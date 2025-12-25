@@ -13,6 +13,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const [inputValue, setInputValue] = useState<string>()
+    const [inputType, setInputType] = useState<string>()
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const [debouncedInputValue, setDebouncedInputValue] = useState<string>('');
@@ -83,12 +84,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
         ...(companySuggestions?.map(s => ({
             type: "company" as const,
             label: s.companyName,
-            href: `/search/${encodeURIComponent(s.companyName)}`,
+            href: `/search/company?${encodeURIComponent(s.companyName)}`,
         })) || []),
         ...(authorSuggestions?.map(s => ({
             type: "author" as const,
             label: s.author,
-            href: `/search/${encodeURIComponent(s.author)}`,
+            href: `/search/author?${encodeURIComponent(s.author)}`,
         })) || []),
     ];
 
@@ -140,7 +141,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
 
     const handleSearchEverywhere = () => {
         if (inputValue) {
-            router.push(`/search/search-everywhere=${encodeURIComponent(inputValue)}`);
+            router.push(`/search/search-everywhere?${encodeURIComponent(inputValue)}`);
             closeSuggestions();
         }
     };
@@ -205,7 +206,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
                                                         setInputValue(suggestion.companyName);
                                                         closeSuggestions();
                                                     }}
-                                                    href={`/search/${encodeURIComponent(suggestion.companyName)}`}
+                                                    href={`/search/company?${encodeURIComponent(suggestion.companyName)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
                                                         ? "bg-blue-50 text-blue-600"
                                                         : "hover:bg-blue-50"
@@ -236,7 +237,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
                                                         setInputValue(suggestion.author);
                                                         closeSuggestions();
                                                     }}
-                                                    href={`/search/${encodeURIComponent(suggestion.author)}`}
+                                                    href={`/search/author?${encodeURIComponent(suggestion.author)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
                                                         ? "bg-blue-50 text-blue-600"
                                                         : "hover:bg-blue-50"

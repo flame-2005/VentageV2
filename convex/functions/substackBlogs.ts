@@ -322,8 +322,12 @@ export const getPaginatedPosts = query({
             q.neq(q.field("author"), undefined),
             q.neq(q.field("author"), null),
             q.neq(q.field("author"), ""),
-            q.neq(q.field("author"), "Eduinvesting Team")
+            q.neq(q.field("author"), "Eduinvesting Team"),
+            q.neq(q.field("author"), "Lalitha Diwakarla"),
+            q.neq(q.field("author"), "Viceroy Research"),
+            
           )
+          
         )
       )
 
