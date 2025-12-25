@@ -161,23 +161,37 @@ export function parseMultiMatch(matched: {
 }
 
 export function hasCompanyData(post: Doc<"posts">): boolean {
+  // ❌ filter out all eduinvesting.in blogs
+  if (
+    typeof post.link === "string" &&
+    post.link.toLowerCase().includes("eduinvesting.in")
+  ) {
+    return false;
+  }
+
   // check enum match safely
   const validValues = Object.values(ValidClassification);
   if (!validValues.includes(post.classification as ValidClassification)) {
     return false;
   }
 
-  const { bseCode, nseCode, companyDetails } = post;
+  const { nseCode, companyDetails, author } = post;
 
-  // const hasBse = typeof bseCode === "string" && bseCode.trim().length > 0;
+  const isEduInvestingAuthor = author === "Eduinvesting Team" || author === "Viceroy Research";
 
-  const hasNse = typeof nseCode === "string" && nseCode.trim().length > 0 && post.author  !== "Eduinvesting Team";
+  const hasNse =
+    typeof nseCode === "string" &&
+    nseCode.trim().length > 0 &&
+    !isEduInvestingAuthor;
 
   const hasCompanyDetails =
-    Array.isArray(companyDetails) && companyDetails.length > 0 && post.author  !== "Eduinvesting Team";
+    Array.isArray(companyDetails) &&
+    companyDetails.length > 0 &&
+    !isEduInvestingAuthor;
 
-  return hasCompanyDetails || hasNse;
+  return hasCompanyDetails || hasNse ;
 }
+
 
 export function normalizeUrl(url: string): string {
   // Ensure protocol

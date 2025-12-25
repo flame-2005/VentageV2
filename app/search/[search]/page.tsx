@@ -4,18 +4,23 @@ import ArticleCard from '@/components/ArticleCard';
 import CircularLoader from '@/components/circularLoader';
 import { api } from '@/convex/_generated/api';
 import { usePaginatedQuery, useQuery } from 'convex/react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 const Page = () => {
     const params = useParams();
-    const searchTerm = decodeURIComponent(params.search as string);
+    const searchParams = useSearchParams();
+    const routeSegment = params.search as string;
 
-    // Check if search-everywhere mode is enabled
-    const isSearchEverywhere = searchTerm.startsWith('search-everywhere=');
-    const actualSearchTerm = isSearchEverywhere
-        ? searchTerm.replace('search-everywhere=', '')
-        : searchTerm;
+    // Determine search type based on route
+    const isCompanySearch = routeSegment === 'company';
+    const isAuthorSearch = routeSegment === 'author';
+    const isSearchEverywhere = routeSegment === 'search-everywhere';
+
+    // Get the actual search value
+    const actualSearchTerm = isCompanySearch || isAuthorSearch || isSearchEverywhere
+        ? Array.from(searchParams.keys())[0] || ''
+        : decodeURIComponent(routeSegment);
 
     // Use searchEverywhere query when flag is present
     const everywhereResults = useQuery(
@@ -23,17 +28,15 @@ const Page = () => {
         isSearchEverywhere ? { searchTerm: actualSearchTerm } : "skip"
     );
 
-    // Use regular search queries when flag is NOT present
+    // Use company search for company route or generic search
     const searchQuery = usePaginatedQuery(
         api.functions.substackBlogs.searchPosts,
-        !isSearchEverywhere ? { searchTerm: actualSearchTerm } : "skip",
+        (isCompanySearch || (!isAuthorSearch && !isSearchEverywhere)) ? { searchTerm: actualSearchTerm } : "skip",
         { initialNumItems: 20 }
     );
 
-    const authorPost = useQuery(
-        api.functions.substackBlogs.searchPostsByAuthor,
-        !isSearchEverywhere ? { author: actualSearchTerm } : "skip"
-    );
+    // Use author search for author route or generic search
+    const authorPost = useQuery(api.functions.substackBlogs.getPostsByAuthor, { author:actualSearchTerm })
 
     const { results: companyPost, status, loadMore } = searchQuery;
 
@@ -43,15 +46,32 @@ const Page = () => {
             return everywhereResults ?? [];
         }
 
-        // Otherwise use combined company + author results
-        const base = companyPost ?? [];
+        // If company-specific search, return only company results
+        if (isCompanySearch) {
+            return companyPost ?? [];
+        }
 
+        // If author-specific search, return only author results
+        if (isAuthorSearch) {
+            if (!authorPost) return [];
+            return Array.isArray(authorPost) ? authorPost : [authorPost];
+        }
+
+        // Generic search - combine both company and author results
+        const base = companyPost ?? [];
         if (!authorPost) return base;
 
         return Array.isArray(authorPost)
             ? [...authorPost, ...base]
             : [authorPost, ...base];
-    }, [companyPost, authorPost, everywhereResults, isSearchEverywhere]);
+    }, [
+        companyPost,
+        authorPost,
+        everywhereResults,
+        isSearchEverywhere,
+        isCompanySearch,
+        isAuthorSearch
+    ]);
 
     const uniquePosts = useMemo(() => {
         if (!posts) return [];
@@ -71,9 +91,10 @@ const Page = () => {
 
     const isLoading = isSearchEverywhere
         ? everywhereResults === undefined
-        : status === "LoadingFirstPage";
-    const isLoadingMore = !isSearchEverywhere && status === "LoadingMore";
-    const canLoadMore = !isSearchEverywhere && status === "CanLoadMore";
+        : (isCompanySearch ? (status === "LoadingFirstPage") : (isAuthorSearch ? authorPost === undefined : (status === "LoadingFirstPage" || authorPost === undefined)));
+    
+    const isLoadingMore = !isSearchEverywhere && !isAuthorSearch && status === "LoadingMore";
+    const canLoadMore = !isSearchEverywhere && !isAuthorSearch && status === "CanLoadMore";
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -120,6 +141,14 @@ const Page = () => {
         console.log(canLoadMore, isLoadingMore, status);
     }, [status]);
 
+    // Get display title based on search type
+    const getTitle = () => {
+        if (isSearchEverywhere) return 'Search Results';
+        if (isCompanySearch) return `Company: ${actualSearchTerm}`;
+        if (isAuthorSearch) return `Author: ${actualSearchTerm}`;
+        return 'Latest Articles';
+    };
+
     return (
         <div className="min-h-screen  ">
             <div className="flex-1 lg:w-6xl px-4 py-8 h-full">
@@ -129,8 +158,13 @@ const Page = () => {
                     <>
                         <div className="mb-6">
                             <h1 className="text-3xl md:text-4xl font-semibold text-slate-900">
-                                {isSearchEverywhere ? 'Search Results' : 'Latest Articles'}
+                                {getTitle()}
                             </h1>
+                            {(isCompanySearch || isAuthorSearch) && (
+                                <p className="text-slate-600 mt-2">
+                                    Showing {isCompanySearch ? 'company' : 'author'} specific results
+                                </p>
+                            )}
                         </div>
                         <div className="space-y-6">
                             {uniquePosts && uniquePosts.length > 0 ? (
@@ -148,6 +182,8 @@ const Page = () => {
                                     </h3>
                                     <p className="text-slate-500 mb-4">
                                         No articles available for {actualSearchTerm}
+                                        {isCompanySearch && ' (company search)'}
+                                        {isAuthorSearch && ' (author search)'}
                                     </p>
                                 </div>
                             )}
@@ -169,7 +205,7 @@ const Page = () => {
                         )}
 
                         {/* End of results message */}
-                        {!isSearchEverywhere && status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
+                        {!isSearchEverywhere && !isAuthorSearch && status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
                             <div className="text-center py-8">
                                 <p className="text-slate-500 font-medium">
                                     You&apos;ve reached the end! No more articles to load.
