@@ -74,6 +74,7 @@ const BugReporter = () => {
               {/* Email */}
               <input
                 type="email"
+                required
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -84,6 +85,7 @@ const BugReporter = () => {
               <textarea
                 placeholder="Describe the issue..."
                 rows={4}
+                required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full border rounded-lg px-3 py-2 text-sm mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-black"
