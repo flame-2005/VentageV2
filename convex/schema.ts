@@ -101,7 +101,8 @@ export default defineSchema({
     email: v.string(),
     userId: v.string(), // Supabase user ID
     lastUpdatedAt: v.number(),
-    companiesFollowing: v.array(v.string()), // Array of company names or IDs
+    companiesFollowing: v.array(v.string()),
+    authorsFollowing: v.optional(v.array(v.string())),
     blogWebsitesFollowing: v.array(v.string()), // Array of blog URLs or IDs
     likedPosts: v.optional(v.array(v.id("posts"))),
     sharedPosts: v.optional(v.array(v.id("posts"))),
@@ -154,4 +155,43 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
+
+  trackers: defineTable({
+    userId: v.id("users"),
+    targetType: v.union(v.literal("company"), v.literal("author")),
+    targetId: v.string(),
+    isMuted: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_target", ["targetType", "targetId"])
+    .index("by_user_target", ["userId", "targetType", "targetId"]),
+
+  notifications: defineTable({
+    userId: v.id("users"),
+    postId: v.id("posts"),
+    targetType: v.union(v.literal("company"), v.literal("author")),
+    targetId: v.string(),
+    isRead: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_isRead", ["userId", "isRead"])
+    .index("by_post", ["postId"]),
+
+  bugReports: defineTable({
+    email: v.string(),
+    pageLink: v.string(),
+    bugDescription: v.string(),
+    createdAt: v.number(),
+    status: v.optional(
+      v.union(
+        v.literal("open"),
+        v.literal("in_progress"),
+        v.literal("resolved")
+      )
+    ),
+  })
+    .index("by_email", ["email"])
+    .index("by_createdAt", ["createdAt"]),
 });

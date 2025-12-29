@@ -9,5 +9,6 @@ export interface user {
   avatarUrl?: string;
   createdAt: number;
   companiesFollowing: string[];
+  authorsFollowing: string[];
   blogWebsitesFollowing: string[];
 }

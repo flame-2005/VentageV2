@@ -2,7 +2,7 @@
 
 import { action } from "../../_generated/server";
 import { v } from "convex/values";
-import { api } from "../../_generated/api";
+import { api, internal } from "../../_generated/api";
 import {
   fetchArticleContent,
   matchCompaniesWithMasterList,
@@ -181,9 +181,24 @@ export const processAndSavePosts = action({
     const chunks = chunkArray<EnrichedPost>(enrichedPosts, 100);
     for (let i = 0; i < chunks.length; i++) {
       console.log(`📤 Saving batch ${i + 1}/${chunks.length}`);
-      await ctx.runMutation(api.functions.substackBlogs.addBulkPost, {
-        posts: chunks[i],
-      });
+      const insertedPosts = await ctx.runMutation(
+        api.functions.substackBlogs.addBulkPost,
+        {
+          posts: chunks[i],
+        }
+      );
+
+      for (const p of insertedPosts) {
+        await ctx.scheduler.runAfter(
+          0,
+          internal.functions.tracking.notification.notifyOnPostCreated,
+          {
+            postId: p.postId,
+            companyIds: p.companyNames,
+            authorId: p.author,
+          }
+        );
+      }
     }
 
     return {

@@ -3,10 +3,8 @@
 import { Blog } from "../../../../constant/blogs";
 import { IncomingPost } from "../../../../constant/posts";
 import { extractPostsFromHTML_AI } from "./extractPostsFromHTML";
-import { extractRSSLinks } from "./extractRss";
 import { fetchHtml } from "./fetchHTML";
 import { getPostsFromRSS } from "./getPostsFromRss";
-import { crawlHistoricalPosts } from "./paginatedCrawler";
 
 export async function getAllPosts(blog: Blog) {
   // Use domain as the base URL
