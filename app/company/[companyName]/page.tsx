@@ -7,11 +7,12 @@ import CircularLoader from "@/components/circularLoader";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useUser } from "@/context/userContext";
+import { useToast } from "@/context/toastContext";
 
 export default function CompanyPage() {
     const params = useParams();
     const company = decodeURIComponent(params.companyName as string);
-
+    const { addToast } = useToast()
     const { user } = useUser();
 
     const posts = useQuery(
@@ -37,7 +38,10 @@ export default function CompanyPage() {
         !!user?.companiesFollowing?.includes(company);
 
     const handleToggleTracking = async () => {
-        if (!user) return;
+        if (!user) {
+            addToast('error', 'Please login to track', "")
+            return
+        };
 
         setLoading(true);
         try {

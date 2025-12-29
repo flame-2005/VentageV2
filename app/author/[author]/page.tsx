@@ -7,13 +7,14 @@ import { useParams } from "next/navigation";
 import CircularLoader from "@/components/circularLoader";
 import { useState } from "react";
 import { useUser } from "@/context/userContext";
+import { useToast } from "@/context/toastContext";
 
 export default function AuthorPage() {
     const params = useParams();
     const author = decodeURIComponent(params.author as string);
 
     const { user } = useUser();
-
+    const { addToast } = useToast();
     // -----------------------------
     // Queries
     // -----------------------------
@@ -44,7 +45,10 @@ export default function AuthorPage() {
         !!user?.authorsFollowing?.includes(author);
 
     const handleToggleFollow = async () => {
-        if (!user) return;
+        if (!user) {
+            addToast('error', 'Please login to follow', "")
+            return
+        };
 
         setLoading(true);
         try {
