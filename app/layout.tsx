@@ -12,6 +12,7 @@ import { ToastProvider } from "@/context/toastContext";
 import { UserProvider } from "@/context/userContext";
 import { useRouter } from "next/router";
 import { usePathname } from "next/navigation";
+import BugReporter from "@/components/BugReporter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,6 +51,7 @@ export default function RootLayout({
                 <div className="lg:flex">
 
                   <Navbar />
+                  <BugReporter/>
                   {children}
                 </div>
               </SearchProvider>

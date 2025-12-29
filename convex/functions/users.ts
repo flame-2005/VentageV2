@@ -1,7 +1,7 @@
 // convex/users.ts
 import { v } from "convex/values";
-import { mutation,query } from "../_generated/server";
-import { Id,Doc } from "../_generated/dataModel";
+import { mutation, query } from "../_generated/server";
+import { Id, Doc } from "../_generated/dataModel";
 
 // Type for mutation response
 type MutationResponse = {
@@ -38,7 +38,7 @@ export const createOrUpdateUser = mutation({
 
     // Create new user
     const username = args.username ?? args.email.split("@")[0];
-    
+
     const userId = await ctx.db.insert("users", {
       userId: args.userId,
       email: args.email,
@@ -90,55 +90,120 @@ export const getUserByUsername = query({
 // Follow a company
 export const followCompany = mutation({
   args: {
-    userId: v.string(),
+    userId: v.id("users"),
     companyName: v.string(),
   },
   handler: async (ctx, args): Promise<MutationResponse> => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Check if already following
-    if (user.companiesFollowing.includes(args.companyName)) {
-      return { success: false, message: "Already following this company" };
+    const existing = new Set(user.companiesFollowing ?? []);
+
+    // Already following → idempotent success
+    if (existing.has(args.companyName)) {
+      return {
+        success: true,
+        message: "Already following this company",
+      };
     }
 
+    existing.add(args.companyName);
+
     await ctx.db.patch(user._id, {
-      companiesFollowing: [...user.companiesFollowing, args.companyName],
+      companiesFollowing: Array.from(existing),
     });
 
-    return { success: true, message: "Company followed successfully" };
+    return {
+      success: true,
+      message: "Company followed successfully",
+    };
+  },
+});
+export const followAuthor = mutation({
+  args: {
+    userId: v.id("users"),
+    authorName: v.string(),
+  },
+  handler: async (ctx, args): Promise<MutationResponse> => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const existing = new Set(user.authorsFollowing ?? []);
+
+    // Already following → idempotent success
+    if (existing.has(args.authorName)) {
+      return {
+        success: true,
+        message: "Already following this company",
+      };
+    }
+
+    existing.add(args.authorName);
+
+    await ctx.db.patch(user._id, {
+      authorsFollowing: Array.from(existing),
+    });
+
+    return {
+      success: true,
+      message: "Company followed successfully",
+    };
   },
 });
 
 // Unfollow a company
 export const unfollowCompany = mutation({
   args: {
-    userId: v.string(),
+    userId: v.id("users"),
     companyName: v.string(),
   },
   handler: async (ctx, args): Promise<MutationResponse> => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user) {
       throw new Error("User not found");
     }
 
     await ctx.db.patch(user._id, {
-      companiesFollowing: user.companiesFollowing.filter(
+      companiesFollowing: (user.companiesFollowing ?? []).filter(
         (company) => company !== args.companyName
       ),
     });
 
-    return { success: true, message: "Company unfollowed successfully" };
+    return {
+      success: true,
+      message: "Company unfollowed successfully",
+    };
+  },
+});
+export const unfollowAuthor = mutation({
+  args: {
+    userId: v.id("users"),
+    authorName: v.string(),
+  },
+  handler: async (ctx, args): Promise<MutationResponse> => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(user._id, {
+      authorsFollowing: (user.authorsFollowing ?? []).filter(
+        (company) => company !== args.authorName
+      ),
+    });
+
+    return {
+      success: true,
+      message: "Company unfollowed successfully",
+    };
   },
 });
 
@@ -360,12 +425,12 @@ export const sharePost = mutation({
     userId: v.optional(v.id("users")),
   },
   handler: async (ctx, { postId, userId }) => {
-    if(!userId){
+    if (!userId) {
       // Just increment share count if no userId provided
       const post = await ctx.db.get(postId);
       if (!post) throw new Error("Post not found");
-        await ctx.db.patch(postId, { shareCount: (post.shareCount ?? 0) + 1 });
-        return { status: "shared", newShareCount: (post.shareCount ?? 0) + 1 };
+      await ctx.db.patch(postId, { shareCount: (post.shareCount ?? 0) + 1 });
+      return { status: "shared", newShareCount: (post.shareCount ?? 0) + 1 };
     }
     const post = await ctx.db.get(postId);
     if (!post) throw new Error("Post not found");
@@ -389,5 +454,14 @@ export const sharePost = mutation({
     });
 
     return { status: "shared", newShareCount: (post.shareCount ?? 0) + 1 };
+  },
+});
+
+export const getUserEmail = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user?.email) return null;
+    return user.email;
   },
 });

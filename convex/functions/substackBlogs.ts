@@ -82,11 +82,8 @@ export const searchPostsByAuthor = query({
 
     const posts = await ctx.db
       .query("posts")
-      .withIndex("by_authorLower_pubDate", (q) =>
-        q.gte("authorLower", term).lt("authorLower", term + "\uffff")
-      )
-      .order("desc")
-      .take(limit);
+      .withSearchIndex("search_author_summary", (q) => q.search("author", term))
+      .take(50);
 
     return posts.filter(hasCompanyData);
   },
@@ -111,26 +108,26 @@ export const searchEverywhere = query({
     const authorResults = await ctx.db
       .query("posts")
       .withSearchIndex("search_author_summary", (q) => q.search("author", term))
-      .take(50);
+      .collect()
 
-    // 2️⃣ Search by summary
-    const summaryResults = await ctx.db
-      .query("posts")
-      .withSearchIndex("search_summary", (q) => q.search("summary", term))
-      .take(50);
+    // // 2️⃣ Search by summary
+    // const summaryResults = [await ctx.db
+    //   .query("posts")
+    //   .withSearchIndex("search_summary", (q) => q.search("summary", term))
+    //   .take(50);]
 
     // 3️⃣ Search by company
     const companyResults = await ctx.db
       .query("posts")
       .withSearchIndex("search_company", (q) => q.search("companyName", term))
-      .take(50);
+      .collect();
 
     // 4️⃣ Merge & dedupe
     const seenIds = new Set<string>();
     const allResults = [
       ...authorResults,
       ...companyResults,
-      ...summaryResults,
+      // ...summaryResults,
     ].filter((post) => {
       if (seenIds.has(post._id)) return false;
       seenIds.add(post._id);
@@ -678,32 +675,36 @@ export const addBulkPost = mutation({
   },
 
   handler: async (ctx, args) => {
+    const insertedPosts: {
+      postId: Id<"posts">;
+      companyNames: string[];
+      author?: string;
+    }[] = [];
+
     for (const post of args.posts) {
-      // Insert into posts table
+      // -----------------------------
+      // 1️⃣ Insert post
+      // -----------------------------
       const postId = await ctx.db.insert("posts", {
         ...post,
         lastCheckedAt: Date.now(),
       });
 
-      // --- Extract company names ---
+      // -----------------------------
+      // 2️⃣ Extract company names
+      // -----------------------------
       let companyNames: string[] = [];
 
-      // Case 1: companyDetails present → use them
       if (post.companyDetails && post.companyDetails.length > 0) {
-        companyNames = post.companyDetails.map((c) => c.company_name.trim());
+        companyNames = post.companyDetails.map((c) =>
+          c.company_name.trim()
+        );
       }
 
-      // Case 2: fallback to companyName
-      else if (post.companyName && post.companyName.trim() !== "") {
-        companyNames = [post.companyName.trim()];
-      }
-
-      // No company → skip
-      if (companyNames.length === 0) continue;
-
-      // Insert into companyPosts
+      // -----------------------------
+      // 3️⃣ Insert into companyPosts
+      // -----------------------------
       for (const companyName of companyNames) {
-        // Prevent duplicates (Convex-safe)
         const existing = await ctx.db
           .query("companyPosts")
           .withIndex("by_company_postId", (q) =>
@@ -719,11 +720,21 @@ export const addBulkPost = mutation({
           });
         }
       }
+
+      // -----------------------------
+      // 4️⃣ Collect return payload
+      // -----------------------------
+      insertedPosts.push({
+        postId,
+        companyNames,
+        author: post.author,
+      });
     }
 
-    return true;
+    return insertedPosts;
   },
 });
+
 
 export const splitPosts = query({
   handler: async (ctx) => {

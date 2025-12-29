@@ -14,6 +14,7 @@ import type * as constant_fetcher from "../constant/fetcher.js";
 import type * as constant_posts from "../constant/posts.js";
 import type * as crons from "../crons.js";
 import type * as functions_blogs from "../functions/blogs.js";
+import type * as functions_bugs from "../functions/bugs.js";
 import type * as functions_cleanUp from "../functions/cleanUp.js";
 import type * as functions_masterCompanies from "../functions/masterCompanies.js";
 import type * as functions_masterCompany from "../functions/masterCompany.js";
@@ -33,6 +34,8 @@ import type * as functions_processBlogs_agents_classifierAgent from "../function
 import type * as functions_processBlogs_agents_companyAgent from "../functions/processBlogs/agents/companyAgent.js";
 import type * as functions_processBlogs_processBlogs from "../functions/processBlogs/processBlogs.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
+import type * as functions_tracking_addTracking from "../functions/tracking/addTracking.js";
+import type * as functions_tracking_notification from "../functions/tracking/notification.js";
 import type * as functions_users from "../functions/users.js";
 import type * as functions_usersLink from "../functions/usersLink.js";
 import type * as helper_addBlogImage from "../helper/addBlogImage.js";
@@ -67,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   "constant/posts": typeof constant_posts;
   crons: typeof crons;
   "functions/blogs": typeof functions_blogs;
+  "functions/bugs": typeof functions_bugs;
   "functions/cleanUp": typeof functions_cleanUp;
   "functions/masterCompanies": typeof functions_masterCompanies;
   "functions/masterCompany": typeof functions_masterCompany;
@@ -86,6 +90,8 @@ declare const fullApi: ApiFromModules<{
   "functions/processBlogs/agents/companyAgent": typeof functions_processBlogs_agents_companyAgent;
   "functions/processBlogs/processBlogs": typeof functions_processBlogs_processBlogs;
   "functions/substackBlogs": typeof functions_substackBlogs;
+  "functions/tracking/addTracking": typeof functions_tracking_addTracking;
+  "functions/tracking/notification": typeof functions_tracking_notification;
   "functions/users": typeof functions_users;
   "functions/usersLink": typeof functions_usersLink;
   "helper/addBlogImage": typeof helper_addBlogImage;
