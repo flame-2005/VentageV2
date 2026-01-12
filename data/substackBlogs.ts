@@ -28,13 +28,13 @@ export const SubstackBlogs = [
   "interconnect.substack.com",
   "harshittoshniwal1993.substack.com",
   "soic.substack.com",
-  "themoneycarnival.substack.com"
+  "themoneycarnival.substack.com",
 ];
 
 export const blogspotBlogs = [
   "myweekendspot.blogspot.com",
   "valuationinmotion.blogspot.com",
-  "ananthindianmarkets.blogspot.com"
+  "ananthindianmarkets.blogspot.com",
 ];
 
 export const wordpressBlogs = [
@@ -43,16 +43,14 @@ export const wordpressBlogs = [
   "bigvisioninvesting.wordpress.com",
   "introspeckblog.wordpress.com",
   "fundooprofessor.wordpress.com",
-  "marshmallowcapital.files.wordpress.com"
+  "marshmallowcapital.files.wordpress.com",
 ];
-
 
 export const mediumBlogs = [
   "medium.com/@deepakabbot",
-"medium.com/@colinbaird_51123",
-"medium.com/@nitya_shah"
-]
-
+  "medium.com/@colinbaird_51123",
+  "medium.com/@nitya_shah",
+];
 
 export enum SubstackDomains {
   InvestKaroIndia = "investkaroindia.substack.com",
@@ -84,12 +82,11 @@ export enum SubstackDomains {
   Interconnect = "interconnect.substack.com",
   HarshitToshniwal1993 = "harshittoshniwal1993.substack.com",
   SOIC = "soic.substack.com",
-  TheMoneyCarnival = "themoneycarnival.substack.com"
+  TheMoneyCarnival = "themoneycarnival.substack.com",
 }
 
-
 export const otherUrls: string[] = [
-   "https://www.visualcapitalist.com",
+  "https://www.visualcapitalist.com",
   "https://www.drvijaymalik.com",
   "https://www.capitalmind.in",
   "https://thetycoonmindset.com",
@@ -124,37 +121,42 @@ export const otherUrls: string[] = [
   "https://www.grahamanddoddsville.net",
 ];
 
-  export const newUrls = [
-    "https://www.moneyworks4me.com/investmentshastra",
-    "mfgtechupdate.com",
-    "soic.in",
-    "www.fool.com",
-    "mjkinvestment.com",
-    "www.smartsyncservices.com",
-    "congruenceadvisers.com",
-    "tubepipeindia.com",
-    "perpetuity.co.in",
-    "katalystwealth.com",
-    "www.socinvest.app",
-    "www.surgecapital.in",
-    "mysuccessproject.in",
-    "alphastreet.com",
-    "pawealth.in",
-    "marcellus.in",
-    "www.investkaroindia.co.in",
-    "candorinvesting.com",
-    "www.abhayjain.com",
-    "www.solidarity.in",
-    "www.plindia.com",
-    "www.soic.in",
-    "smartsyncservices.com",
-    "www.motilaloswal.com",
-    "www.goindiastocks.com",
-    "premium.capitalmind.in",
-    "community.finvezto.com",
-    "www.valuewala.com",
-    "empor.top",
-    "greenedgewealth.com",
-    "manufacturing.economictimes.indiatimes.com",
-    "boringmoney.in",
-  ];
+export const newUrls = [
+  "https://www.moneyworks4me.com/investmentshastra",
+  "mfgtechupdate.com",
+  "soic.in",
+  "www.fool.com",
+  "mjkinvestment.com",
+  "www.smartsyncservices.com",
+  "congruenceadvisers.com",
+  "tubepipeindia.com",
+  "perpetuity.co.in",
+  "katalystwealth.com",
+  "www.socinvest.app",
+  "www.surgecapital.in",
+  "mysuccessproject.in",
+  "alphastreet.com",
+  "pawealth.in",
+  "marcellus.in",
+  "www.investkaroindia.co.in",
+  "candorinvesting.com",
+  "www.abhayjain.com",
+  "www.solidarity.in",
+  "www.plindia.com",
+  "www.soic.in",
+  "smartsyncservices.com",
+  "www.motilaloswal.com",
+  "www.goindiastocks.com",
+  "premium.capitalmind.in",
+  "community.finvezto.com",
+  "www.valuewala.com",
+  "empor.top",
+  "greenedgewealth.com",
+  "manufacturing.economictimes.indiatimes.com",
+  "boringmoney.in",
+];
+
+export const newSubstackSources = [
+  "https://abhisho7.substack.com/",
+  "https://folokdutta.substack.com/",
+];

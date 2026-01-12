@@ -108,7 +108,7 @@ export const searchEverywhere = query({
     const authorResults = await ctx.db
       .query("posts")
       .withSearchIndex("search_author_summary", (q) => q.search("author", term))
-      .collect()
+      .collect();
 
     // // 2️⃣ Search by summary
     // const summaryResults = [await ctx.db
@@ -217,6 +217,27 @@ export const checkExistingPost = query({
   },
 });
 
+export const checkExistingPostsBulk = query({
+  args: {
+    links: v.array(v.string()),
+  },
+
+  handler: async (ctx, { links }) => {
+    const existsMap: Record<string, boolean> = {};
+
+    for (const link of links) {
+      const existing = await ctx.db
+        .query("posts")
+        .withIndex("by_link", (q) => q.eq("link", link))
+        .first();
+
+      existsMap[link] = !!existing;
+    }
+
+    return existsMap;
+  },
+});
+
 // export const getByLink = query({
 //   args: { link: v.string() },
 //   handler: async (ctx, { link }) => {
@@ -321,10 +342,8 @@ export const getPaginatedPosts = query({
             q.neq(q.field("author"), ""),
             q.neq(q.field("author"), "Eduinvesting Team"),
             q.neq(q.field("author"), "Lalitha Diwakarla"),
-            q.neq(q.field("author"), "Viceroy Research"),
-            
+            q.neq(q.field("author"), "Viceroy Research")
           )
-          
         )
       )
 
@@ -532,7 +551,13 @@ export const getCompanySuggestions = query({
     const seenIds = new Set<string>();
     const merged = [...nseResults, ...bseResults, ...nameResults].filter(
       (company) => {
-        if (seenIds.has(company._id)) return false;
+        if (
+          seenIds.has(company._id) ||
+          company.market_cap === undefined ||
+          company.market_cap === null
+        ) {
+          return false;
+        }
         seenIds.add(company._id);
         return true;
       }
@@ -696,9 +721,7 @@ export const addBulkPost = mutation({
       let companyNames: string[] = [];
 
       if (post.companyDetails && post.companyDetails.length > 0) {
-        companyNames = post.companyDetails.map((c) =>
-          c.company_name.trim()
-        );
+        companyNames = post.companyDetails.map((c) => c.company_name.trim());
       }
 
       // -----------------------------
@@ -734,7 +757,6 @@ export const addBulkPost = mutation({
     return insertedPosts;
   },
 });
-
 
 export const splitPosts = query({
   handler: async (ctx) => {

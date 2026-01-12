@@ -109,14 +109,18 @@ export const fetchAllBlogsAction = action({
       if (blog.source === "others") {
         const posts = await getAllPosts(blog);
         if (!posts) continue;
+        // 1️⃣ Collect links
+        const links = posts.map((p) => p.link);
 
+        // 2️⃣ Bulk existence check
+        const existsMap = await ctx.runQuery(
+          api.functions.substackBlogs.checkExistingPostsBulk,
+          { links }
+        );
+
+        // 3️⃣ Filter & push new posts
         for (const post of posts) {
-          const exists = await ctx.runQuery(
-            api.functions.substackBlogs.checkExistingPost,
-            {
-              link: post.link,
-            }
-          );
+          const exists = existsMap[post.link];
 
           if (!exists && isValidIncomingPost(post)) {
             newPosts.push({
