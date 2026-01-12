@@ -23,7 +23,7 @@ export const fetchAllBlogsAction = action({
 
     // 1️⃣ SUBSTACK
     for (const blog of blogs) {
-      if (blog.source === "substack") {
+      if (blog.source?.toLowerCase() === "substack") {
         const posts = await fetchSubstackRSS(blog.feedUrl);
         if (!posts) continue;
 
@@ -44,7 +44,7 @@ export const fetchAllBlogsAction = action({
         }
       }
       // 2️⃣ WORDPRESS
-      if (blog.source === "wordpress") {
+      if (blog.source?.toLowerCase() === "wordpress") {
         const posts = await fetchWordPressRSS(blog.feedUrl);
         if (!posts) continue;
 
@@ -66,7 +66,7 @@ export const fetchAllBlogsAction = action({
       }
 
       // 3️⃣ BLOGSPOT
-      if (blog.source === "blogspot") {
+      if (blog.source?.toLowerCase() === "blogspot") {
         const posts = await fetchBlogspotRSS(blog.feedUrl);
         if (!posts) continue;
 
@@ -86,7 +86,7 @@ export const fetchAllBlogsAction = action({
           }
         }
       }
-      if (blog.source === "medium") {
+      if (blog.source?.toLowerCase() === "medium") {
         const posts = await fetchMediumPosts(blog.feedUrl);
         if (!posts) continue;
 
@@ -106,7 +106,7 @@ export const fetchAllBlogsAction = action({
           }
         }
       }
-      if (blog.source === "others") {
+      if (blog.source?.toLowerCase() === "others") {
         const posts = await getAllPosts(blog);
         if (!posts) continue;
         // 1️⃣ Collect links

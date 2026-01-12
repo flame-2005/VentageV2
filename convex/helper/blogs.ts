@@ -1,7 +1,10 @@
+"use node"
+
 import { Doc, Id } from "../_generated/dataModel";
-import { action, mutation } from "../_generated/server";
+import { action, mutation, query } from "../_generated/server";
 import { CompanyDetail, RSSItem, ValidClassification } from "../constant/posts";
 import { api } from "../_generated/api";
+import { v } from "convex/values";
 
 export async function fetchArticleContent(url: string): Promise<string | null> {
   try {
@@ -211,6 +214,20 @@ export function normalizeUrl(url: string): string {
   return normalized;
 }
 
+export const getBlog = query({
+  args: { 
+    blogId: v.id("blogs") 
+  },
+  handler: async (ctx, { blogId }) => {
+    const blog = await ctx.db.get(blogId);
+    
+    if (!blog) {
+      throw new Error(`Blog with ID ${blogId} not found`);
+    }
+
+    return blog;
+  },
+});
 
 
 export const assignBlogIdsToPosts = mutation({

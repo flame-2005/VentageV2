@@ -12,3 +12,8 @@ export interface user {
   authorsFollowing: string[];
   blogWebsitesFollowing: string[];
 }
+
+export const ALLOWED_EMAILS = [
+  "alamshadab9876543210@gmail.com",
+  "pkeday@gmail.com",
+];

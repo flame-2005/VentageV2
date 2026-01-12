@@ -6,6 +6,8 @@ import { paginationOptsValidator } from "convex/server";
 import { hasCompanyData } from "../helper/blogs";
 import { Id } from "../_generated/dataModel";
 import { isValidAuthor } from "../helper/post";
+import { classifyBlogs } from "../helper/classifyBlog";
+import { InsertedBlog } from "../helper/addBulkBlogs";
 
 export const addBlogs = mutation({
   args: {
@@ -14,16 +16,47 @@ export const addBlogs = mutation({
     feedUrl: v.string(),
     source: v.string(),
   },
+
   handler: async (ctx, { name, domain, feedUrl, source }) => {
-    await ctx.db.insert("blogs", {
+    // 1️⃣ Insert blog
+    const blogId = await ctx.db.insert("blogs", {
       name,
       domain,
       feedUrl,
       lastCheckedAt: Date.now(),
       source,
     });
+
+    // 2️⃣ Shape it like InsertedBlog
+    const insertedBlog: InsertedBlog = {
+      _id: blogId,
+      name,
+      domain,
+      feedUrl,
+      source,
+      _creationTime: Date.now(),
+      lastCheckedAt: Date.now(),
+    };
+
+    // 3️⃣ Run classification
+    const { updates } = await classifyBlogs([insertedBlog]);
+
+    // 4️⃣ Apply updates if any
+    if (updates.length > 0) {
+      await ctx.runMutation(api.functions.substackBlogs.bulkUpdateBlogs, {
+        updates,
+      });
+    }
+
+    // 5️⃣ Return useful response
+    return {
+      inserted: 1,
+      updated: updates.length,
+      updates,
+    };
   },
 });
+
 
 export const getPostsByCompany = query({
   args: {
