@@ -1,5 +1,3 @@
-"use node"
-
 import { Doc, Id } from "../_generated/dataModel";
 import { action, mutation, query } from "../_generated/server";
 import { CompanyDetail, RSSItem, ValidClassification } from "../constant/posts";
@@ -61,7 +59,7 @@ export function matchCompaniesWithMasterList(
     market_cap: number | null;
   }>
 ) {
-  if (extractedCompanies === null) {
+  if (!extractedCompanies) {
     return {
       company_name: null,
       bse_code: null,
@@ -69,11 +67,59 @@ export function matchCompaniesWithMasterList(
       market_cap: null,
     };
   }
+
+  function normalizeName(name: string) {
+    return (
+      name
+        .toLowerCase()
+
+        // 🔑 Handle possessives FIRST
+        .replace(/(\w+)'s\b/g, "$1s") // reddy's → reddys
+        .replace(/(\w+)\s+s\b/g, "$1s") // reddy s → reddys
+
+        // Remove common suffixes
+        .replace(/\b(ltd|limited|pvt|private|co|company|corp|inc)\b/g, "")
+
+        // Remove punctuation
+        .replace(/[^a-z0-9 ]/g, " ")
+
+        // Collapse spaces
+        .replace(/\s+/g, " ")
+        .trim()
+    );
+  }
+
+  function tokenSet(name: string) {
+    return new Set(name.split(" "));
+  }
+
+  function tokenOverlap(a: string, b: string) {
+    const A = tokenSet(a);
+    const B = tokenSet(b);
+    let common = 0;
+    A.forEach((t) => {
+      if (B.has(t)) common++;
+    });
+    return common / Math.min(A.size, B.size);
+  }
+
+  function isValidStructuralMatch(extracted: string, master: string) {
+    const extractedTokens = extracted.split(" ");
+    const masterTokens = master.split(" ");
+
+    // 🚫 Single-token extracted name cannot match multi-token master name
+    if (extractedTokens.length === 1 && masterTokens.length > 1) {
+      return false;
+    }
+
+    return true;
+  }
+
   const companyNames = extractedCompanies
     .split(",")
-    .map((name) => name.trim().toLowerCase())
+    .map((c) => normalizeName(c))
     .filter(Boolean);
-  console.log(companyNames);
+
   const matchedCompanies: Array<{
     name: string;
     bse_code: string | null;
@@ -81,61 +127,73 @@ export function matchCompaniesWithMasterList(
     market_cap: number | null;
   }> = [];
 
-  companyNames.forEach((companyName) => {
-    const match = masterCompanyList.find((masterCompany) => {
-      const masterName = masterCompany.company_name?.toLowerCase() || "";
-      const nseCode = masterCompany.nse_code?.toLowerCase() || "";
+  for (const companyName of companyNames) {
+    let bestMatch;
+    let bestScore = 0;
 
-      // 1️⃣ If extracted string matches NSE code → return this company immediately
-      if (companyName === nseCode) return true;
+    for (const master of masterCompanyList) {
+      const masterName = normalizeName(master.company_name);
+      const nseCode = master.nse_code?.toLowerCase() || "";
 
-      // 2️⃣ Exact company name match
-      if (masterName === companyName) return true;
+      // 1️⃣ Exact NSE code match (STRONGEST SIGNAL)
+      if (companyName === nseCode) {
+        bestMatch = master;
+        bestScore = 1;
+        break;
+      }
 
-      // 3️⃣ Prefix checks (dangerous for short names but keeping as per your logic)
-      if (masterName.startsWith(companyName)) return true;
-      if (companyName.startsWith(masterName)) return true;
+      // 2️⃣ Exact normalized name match
+      if (
+        companyName === masterName &&
+        isValidStructuralMatch(companyName, masterName)
+      ) {
+        console.log("masterName");
+        bestMatch = master;
+        bestScore = 1;
+        break;
+      }
 
-      // 4️⃣ Word-by-word match
-      if (masterName.split(" ").includes(companyName)) return true;
-      if (companyName.split(" ").includes(masterName)) return true;
+      // 3️⃣ High token overlap (≥70%)
+      const overlap = tokenOverlap(companyName, masterName);
+      if (overlap >= 0.7 && overlap > bestScore) {
+        console.log("overlap");
+        bestMatch = master;
+        bestScore = overlap;
+      }
+    }
 
-      // 5️⃣ First two words match
-      const masterTwo = masterName.split(" ").slice(0, 2).join(" ");
-      const companyTwo = companyName.split(" ").slice(0, 2).join(" ");
-      if (masterTwo === companyTwo) return true;
-
-      return false;
-    });
-
-    if (match && match.market_cap !== null && match.market_cap >= 30000000) {
-      // Matched → return matched company
+    // 4️⃣ Final acceptance rule
+    if (
+      bestMatch &&
+      bestMatch.market_cap !== null &&
+      bestMatch.market_cap >= 30_000_000
+    ) {
       matchedCompanies.push({
-        name: match.company_name,
-        bse_code: match.bse_code || null,
-        nse_code: match.nse_code || null,
-        market_cap: match.market_cap || null,
+        name: bestMatch.company_name,
+        bse_code: bestMatch.bse_code,
+        nse_code: bestMatch.nse_code,
+        market_cap: bestMatch.market_cap,
       });
 
-      console.log(`✅ Matched: "${companyName}" → ${match.company_name}`);
+      console.log(`✅ Matched: "${companyName}" → ${bestMatch.company_name}`);
     }
-  });
+  }
 
   return {
-    company_name: matchedCompanies.map((c) => c.name).join(", "),
+    company_name: matchedCompanies.map((c) => c.name).join(", ") || null,
     bse_code:
       matchedCompanies
-        .map((c) => c.bse_code || "")
+        .map((c) => c.bse_code)
         .filter(Boolean)
         .join(", ") || null,
     nse_code:
       matchedCompanies
-        .map((c) => c.nse_code || "")
+        .map((c) => c.nse_code)
         .filter(Boolean)
         .join(", ") || null,
     market_cap:
       matchedCompanies
-        .map((c) => (c.market_cap !== null ? c.market_cap.toString() : ""))
+        .map((c) => c.market_cap?.toString())
         .filter(Boolean)
         .join(", ") || null,
   };
@@ -180,7 +238,8 @@ export function hasCompanyData(post: Doc<"posts">): boolean {
 
   const { nseCode, companyDetails, author } = post;
 
-  const isEduInvestingAuthor = author === "Eduinvesting Team" || author === "Viceroy Research";
+  const isEduInvestingAuthor =
+    author === "Eduinvesting Team" || author === "Viceroy Research";
 
   const hasNse =
     typeof nseCode === "string" &&
@@ -192,15 +251,15 @@ export function hasCompanyData(post: Doc<"posts">): boolean {
     companyDetails.length > 0 &&
     !isEduInvestingAuthor;
 
-  return hasCompanyDetails || hasNse ;
+  return hasCompanyDetails || hasNse;
 }
-
 
 export function normalizeUrl(url: string): string {
   // Ensure protocol
-  let normalized = url.startsWith("http://") || url.startsWith("https://")
-    ? url
-    : `https://${url}`;
+  let normalized =
+    url.startsWith("http://") || url.startsWith("https://")
+      ? url
+      : `https://${url}`;
 
   // Remove trailing slashes
   normalized = normalized.replace(/\/+$/, "");
@@ -215,12 +274,12 @@ export function normalizeUrl(url: string): string {
 }
 
 export const getBlog = query({
-  args: { 
-    blogId: v.id("blogs") 
+  args: {
+    blogId: v.id("blogs"),
   },
   handler: async (ctx, { blogId }) => {
     const blog = await ctx.db.get(blogId);
-    
+
     if (!blog) {
       throw new Error(`Blog with ID ${blogId} not found`);
     }
@@ -228,7 +287,6 @@ export const getBlog = query({
     return blog;
   },
 });
-
 
 export const assignBlogIdsToPosts = mutation({
   handler: async (ctx) => {
@@ -266,4 +324,3 @@ export const assignBlogIdsToPosts = mutation({
     return { updated: updatedCount };
   },
 });
-

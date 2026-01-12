@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useToast } from "@/context/toastContext";
 import { Doc } from "@/convex/_generated/dataModel";
@@ -11,7 +11,7 @@ import { useUser } from "@/context/userContext";
 import { ALLOWED_EMAILS } from "@/constants/user";
 
 export default function AddBlogPage() {
-    const addBlogs = useMutation(api.functions.substackBlogs.addBlogs);
+    const addBlogs = useAction(api.helper.addBulkBlogs.addSingleBlog);
     const blogs = useQuery(api.functions.substackBlogs.getAllBlogs);
 
     const router = useRouter();
