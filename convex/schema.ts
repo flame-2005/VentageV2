@@ -113,13 +113,6 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_username", ["username"]),
 
-  companies: defineTable({
-    name: v.string(),
-    nseCode: v.optional(v.string()),
-    description: v.optional(v.string()),
-    followersCount: v.number(),
-  }).index("by_name", ["name"]),
-
   blogWebsites: defineTable({
     url: v.string(),
     name: v.string(),

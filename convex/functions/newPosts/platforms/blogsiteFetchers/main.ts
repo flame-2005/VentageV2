@@ -2,6 +2,7 @@
 
 import { Blog } from "../../../../constant/blogs";
 import { IncomingPost } from "../../../../constant/posts";
+import { scrapeBlog } from "../../nonRssScraper/scraper/mainScraper";
 import { extractPostsFromHTML_AI } from "./extractPostsFromHTML";
 import { fetchHtml } from "./fetchHTML";
 import { getPostsFromRSS } from "./getPostsFromRss";
@@ -41,7 +42,7 @@ export async function getAllPosts(blog: Blog) {
     const html = await fetchHtml(baseUrl);
 
     if (html) {
-      const homepagePosts = await extractPostsFromHTML_AI(html, baseUrl);
+      const homepagePosts = await scrapeBlog( baseUrl);
       posts.push(...homepagePosts);
     } else {
       console.log("❌ Failed to fetch HTML for:", baseUrl);

@@ -1,4 +1,4 @@
-"use node"
+"use node";
 
 import axios from "axios";
 import * as cheerio from "cheerio";
@@ -52,7 +52,8 @@ async function tryRSS(url: string) {
 
 function detectPlatform(html: string) {
   if (!html) return "custom";
-  if (html.includes("wp-content") || html.includes("WordPress")) return "wordpress";
+  if (html.includes("wp-content") || html.includes("WordPress"))
+    return "wordpress";
   if (html.includes("substack.com")) return "substack";
   if (html.includes('content="Ghost"')) return "ghost";
   if (html.includes("medium.com")) return "medium";
@@ -123,30 +124,37 @@ export async function classifyBlogs(blogs: Blog[]) {
   const updates: {
     id: Id<"blogs">;
     extractionMethod: string;
-    feedUrl: string ;
-    imageUrl: string ;
+    feedUrl: string;
+    imageUrl: string;
   }[] = [];
 
   for (const blog of blogs) {
     console.log(`\n🔍 Checking: ${blog.domain}`);
 
-    // Detect feed
-    const result = await detectFeedForBlog(blog.domain);
-
     let extractionMethod = "AI";
-    let finalFeedUrl = blog.feedUrl ?? null;
+    let finalFeedUrl = blog.feedUrl ?? "";
 
-    // CASE 1: RSS FOUND
-    if (result.status === "rss") {
+    // ✅ SUBSTACK OVERRIDE (must come first)
+    if (blog.domain.includes("substack.com")) {
       extractionMethod = "RSS";
-      finalFeedUrl = result.feedUrl!;
+      finalFeedUrl = `https://${blog.domain}/feed`;
 
-      console.log("✅ RSS FOUND →", finalFeedUrl);
+      console.log("✅ SUBSTACK RSS →", finalFeedUrl);
     } else {
-      console.log("⚠️ No RSS found → Using AI");
+      // Detect feed normally
+      const result = await detectFeedForBlog(blog.domain);
+
+      if (result.status === "rss") {
+        extractionMethod = "RSS";
+        finalFeedUrl = result.feedUrl!;
+
+        console.log("✅ RSS FOUND →", finalFeedUrl);
+      } else {
+        console.log("⚠️ No RSS found → Using AI");
+      }
     }
 
-    // ⭐ Extract image URL for this blog (your existing logic)
+    // ⭐ Extract image URL
     const imageUrl = await extractBlogImage({
       ...blog,
       feedUrl: finalFeedUrl,

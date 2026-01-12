@@ -52,16 +52,22 @@ export const sendNotificationEmail = internalAction({
     // 3️⃣ Send email via Resend
     const result = await resend.emails.send({
       to: email,
-      from: "VentEdge <onboarding@resend.dev>",
+      from: "VentEdge <no-reply@soapbox.co.in>",
       subject: "New post you’re tracking",
       html: `
-        <p>A new post was published.</p>
-        <p><strong>${post?.title}</strong></p>
-        <p><strong>${post?.summary}</strong></p>
-      `,
+    <p>A new post was published.</p>
+    <p><strong>${post?.title}</strong></p>
+    <p>${post?.summary}</p>
+    <p>
+      <a href="${post?.link}" target="_blank" rel="noopener noreferrer"
+         style="display:inline-block;margin-top:8px;color:#2563eb;">
+        Read full post →
+      </a>
+    </p>
+  `,
     });
 
-    return result
+    return result;
   },
 });
 
