@@ -51,8 +51,10 @@ export default function RootLayout({
                 <div className="lg:flex">
 
                   <Navbar />
-                  <BugReporter/>
-                  {children}
+                  <BugReporter />
+                  <main className="flex-1 w-full lg:w-auto">
+                    {children}
+                  </main>
                 </div>
               </SearchProvider>
             </ToastProvider>

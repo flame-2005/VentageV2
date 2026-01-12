@@ -108,7 +108,7 @@ Do NOT extract:
      "classification": "Sector_analysis",
      "company": ["Sun Pharma", "Cipla", "Lupin"],
      "sector": "Pharmaceuticals",
-     "tags": ["bullish_on_sector"],
+     "tags": ["bullish"],
      "category": "sector"
       "summary": "The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix."
    }
@@ -148,7 +148,7 @@ Do NOT extract:
      "classification": "General_investment_guide",
      "company": [],
      "sector": "",
-     "tags": ["educational"],
+     "tags": ["neutral"],
      "category": "general"
       "summary": "The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix."
    }
@@ -194,7 +194,7 @@ Where:
 
 - "sector" = detected sector name (empty if none applies)
 
-- "tags" = sentiment-style tags such as:
+- "tags" = sentiment-style tags are only from the following set:
     "bullish", "bearish", "neutral"
 
 - "category" = one of:

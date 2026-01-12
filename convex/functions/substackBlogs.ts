@@ -1,7 +1,6 @@
 // convex/blogs.ts
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "../_generated/server";
-import { api } from "../_generated/api";
+import { mutation, query } from "../_generated/server";
 import { paginationOptsValidator } from "convex/server";
 import { hasCompanyData } from "../helper/blogs";
 import { Id } from "../_generated/dataModel";
@@ -15,13 +14,30 @@ export const addBlogs = mutation({
     source: v.string(),
   },
   handler: async (ctx, { name, domain, feedUrl, source }) => {
-    await ctx.db.insert("blogs", {
+    const Id = await ctx.db.insert("blogs", {
       name,
       domain,
       feedUrl,
       lastCheckedAt: Date.now(),
       source,
     });
+
+    return Id;
+  },
+});
+
+export const getBlog = query({
+  args: { 
+    blogId: v.id("blogs") 
+  },
+  handler: async (ctx, { blogId }) => {
+    const blog = await ctx.db.get(blogId);
+    
+    if (!blog) {
+      throw new Error(`Blog with ID ${blogId} not found`);
+    }
+
+    return blog;
   },
 });
 

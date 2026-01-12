@@ -20,6 +20,6 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["./**/*", "../scripts/companyAgents/nonRssScraper"],
+  "include": ["./**/*", "../scripts/companyAgents/nonRssScraper", "../scripts/companyAgents/agent1.ts"],
   "exclude": ["./_generated"]
 }
