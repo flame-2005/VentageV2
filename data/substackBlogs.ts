@@ -156,7 +156,9 @@ export const newUrls = [
   "boringmoney.in",
 ];
 
-export const newSubstackSources = [
-  "https://abhisho7.substack.com/",
-  "https://folokdutta.substack.com/",
-];
+export const newSources = [
+  "https://www.rupeeting.com/blog",
+  "https://recipe.finology.in/discover/premium-stock-research",
+  "https://www.pocketful.in/blog/category/case-study/",
+  "https://www.investingstoics.com/my-blog"
+]

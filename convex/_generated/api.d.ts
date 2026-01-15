@@ -31,7 +31,11 @@ import type * as functions_newPosts_nonRssScraper_scraper_index from "../functio
 import type * as functions_newPosts_nonRssScraper_scraper_mainScraper from "../functions/newPosts/nonRssScraper/scraper/mainScraper.js";
 import type * as functions_newPosts_nonRssScraper_scraper_types from "../functions/newPosts/nonRssScraper/scraper/types.js";
 import type * as functions_newPosts_nonRssScraper_scrapers_companyDirectory from "../functions/newPosts/nonRssScraper/scrapers/companyDirectory.js";
+import type * as functions_newPosts_nonRssScraper_scrapers_investingStoticScraper from "../functions/newPosts/nonRssScraper/scrapers/investingStoticScraper.js";
 import type * as functions_newPosts_nonRssScraper_scrapers_perpetuityBlog from "../functions/newPosts/nonRssScraper/scrapers/perpetuityBlog.js";
+import type * as functions_newPosts_nonRssScraper_scrapers_poocketFullScraper from "../functions/newPosts/nonRssScraper/scrapers/poocketFullScraper.js";
+import type * as functions_newPosts_nonRssScraper_scrapers_recipScraper from "../functions/newPosts/nonRssScraper/scrapers/recipScraper.js";
+import type * as functions_newPosts_nonRssScraper_scrapers_rupeetingBlogs from "../functions/newPosts/nonRssScraper/scrapers/rupeetingBlogs.js";
 import type * as functions_newPosts_nonRssScraper_scrapers_scrapeAlphaStreetTranscripts from "../functions/newPosts/nonRssScraper/scrapers/scrapeAlphaStreetTranscripts.js";
 import type * as functions_newPosts_nonRssScraper_scrapers_scrapeLoadMore from "../functions/newPosts/nonRssScraper/scrapers/scrapeLoadMore.js";
 import type * as functions_newPosts_nonRssScraper_scrapers_scrapeMJK from "../functions/newPosts/nonRssScraper/scrapers/scrapeMJK.js";
@@ -111,7 +115,11 @@ declare const fullApi: ApiFromModules<{
   "functions/newPosts/nonRssScraper/scraper/mainScraper": typeof functions_newPosts_nonRssScraper_scraper_mainScraper;
   "functions/newPosts/nonRssScraper/scraper/types": typeof functions_newPosts_nonRssScraper_scraper_types;
   "functions/newPosts/nonRssScraper/scrapers/companyDirectory": typeof functions_newPosts_nonRssScraper_scrapers_companyDirectory;
+  "functions/newPosts/nonRssScraper/scrapers/investingStoticScraper": typeof functions_newPosts_nonRssScraper_scrapers_investingStoticScraper;
   "functions/newPosts/nonRssScraper/scrapers/perpetuityBlog": typeof functions_newPosts_nonRssScraper_scrapers_perpetuityBlog;
+  "functions/newPosts/nonRssScraper/scrapers/poocketFullScraper": typeof functions_newPosts_nonRssScraper_scrapers_poocketFullScraper;
+  "functions/newPosts/nonRssScraper/scrapers/recipScraper": typeof functions_newPosts_nonRssScraper_scrapers_recipScraper;
+  "functions/newPosts/nonRssScraper/scrapers/rupeetingBlogs": typeof functions_newPosts_nonRssScraper_scrapers_rupeetingBlogs;
   "functions/newPosts/nonRssScraper/scrapers/scrapeAlphaStreetTranscripts": typeof functions_newPosts_nonRssScraper_scrapers_scrapeAlphaStreetTranscripts;
   "functions/newPosts/nonRssScraper/scrapers/scrapeLoadMore": typeof functions_newPosts_nonRssScraper_scrapers_scrapeLoadMore;
   "functions/newPosts/nonRssScraper/scrapers/scrapeMJK": typeof functions_newPosts_nonRssScraper_scrapers_scrapeMJK;

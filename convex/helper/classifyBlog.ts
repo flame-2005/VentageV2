@@ -5,7 +5,7 @@ import * as cheerio from "cheerio";
 import Parser from "rss-parser";
 import { extractBlogImage } from "./addBlogImage";
 import { Id } from "../_generated/dataModel";
-import { Blog } from "../constant/blogs";
+import { Blog, ExtractionMethod } from "../constant/blogs";
 
 const parser = new Parser();
 
@@ -131,12 +131,12 @@ export async function classifyBlogs(blogs: Blog[]) {
   for (const blog of blogs) {
     console.log(`\n🔍 Checking: ${blog.domain}`);
 
-    let extractionMethod = "AI";
+    let extractionMethod = ExtractionMethod.Others;
     let finalFeedUrl = blog.feedUrl ?? "";
 
     // ✅ SUBSTACK OVERRIDE (must come first)
     if (blog.domain.includes("substack.com")) {
-      extractionMethod = "RSS";
+      extractionMethod = ExtractionMethod.RSS;
       finalFeedUrl = `https://${blog.domain}/feed`;
 
       console.log("✅ SUBSTACK RSS →", finalFeedUrl);
@@ -145,7 +145,7 @@ export async function classifyBlogs(blogs: Blog[]) {
       const result = await detectFeedForBlog(blog.domain);
 
       if (result.status === "rss") {
-        extractionMethod = "RSS";
+        extractionMethod = ExtractionMethod.RSS;
         finalFeedUrl = result.feedUrl!;
 
         console.log("✅ RSS FOUND →", finalFeedUrl);

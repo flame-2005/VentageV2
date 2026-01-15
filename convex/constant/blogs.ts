@@ -13,3 +13,9 @@ export interface Blog {
   imageUrl?: string;
   extractionMethod?: string;
 }
+
+
+export enum ExtractionMethod {
+  Others = "Others",
+  RSS = "RSS",
+}

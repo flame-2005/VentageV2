@@ -1,4 +1,4 @@
-"use node"
+"use node";
 
 import { Scraper } from "./types";
 import { scrapeCompanyDirectory } from "../scrapers/companyDirectory";
@@ -12,6 +12,10 @@ import { scrapeSocInvestBlog } from "../scrapers/scrapeSocInvestBlog";
 import { scrapePerpetuityBlog } from "../scrapers/perpetuityBlog";
 import { scrapeMJKInvestmentBlog } from "../scrapers/scrapeMJK";
 import { scrapeWordpressListing } from "../scrapers/wordpress";
+import { scrapeRupeetingBlog } from "../scrapers/rupeetingBlogs";
+import { scrapeFinologyPremiumResearch } from "../scrapers/recipScraper";
+import { scrapeInvestingStoicsBlog } from "../scrapers/investingStoticScraper";
+import { scrapePocketfulCaseStudy } from "../scrapers/poocketFullScraper";
 
 export const SCRAPERS: Scraper[] = [
   {
@@ -19,6 +23,35 @@ export const SCRAPERS: Scraper[] = [
     canHandle: (url: string) => url.includes("socinvest.app/blog"),
     scrape: async (url: string) => {
       return scrapeSocInvestBlog(url);
+    },
+  },
+
+  {
+    name: "rupeeting-blog",
+    canHandle: (url: string) => url.includes("rupeeting.com/blog"),
+    scrape: async (url: string) => {
+      return scrapeRupeetingBlog({ BaseUrl: url });
+    },
+  },
+  {
+    name: "recipe-blog",
+    canHandle: (url: string) => url.includes("recipe.finology.in"),
+    scrape: async (url: string) => {
+      return scrapeFinologyPremiumResearch({ BaseUrl: url });
+    },
+  },
+  {
+    name: "investing-stoics-blog",
+    canHandle: (url: string) => url.includes("investingstoics.com"),
+    scrape: async (url: string) => {
+      return scrapeInvestingStoicsBlog({ startUrl: url });
+    },
+  }, 
+  {
+    name: "pocketFul-blog",
+    canHandle: (url: string) => url.includes("pocketful"),
+    scrape: async (url: string) => {
+      return scrapePocketfulCaseStudy({ BaseUrl: url });
     },
   },
 

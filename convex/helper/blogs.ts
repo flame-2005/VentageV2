@@ -324,3 +324,10 @@ export const assignBlogIdsToPosts = mutation({
     return { updated: updatedCount };
   },
 });
+
+export const exportBlogs = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("blogs").collect();
+  },
+});
