@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import ArticleCard from "@/components/ArticleCard";
+import ArticleCard from "@/components/ArticleCard/ArticleCard";
 import CircularLoader from "@/components/circularLoader";
 import { useParams } from "next/navigation";
 import { useState } from "react";
