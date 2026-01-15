@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import ArticleCard from "@/components/ArticleCard";
+import ArticleCard from "@/components/ArticleCard/ArticleCard";
 import CircularLoader from "@/components/circularLoader";
 import { useSearch } from "@/context/searchContext";
 
@@ -88,7 +88,7 @@ export default function InvestmentDashboard() {
                                 ref={loadMoreRef}
                                 className="flex justify-center items-center py-8"
                             >
-                                {isLoadingMore &&  (
+                                {isLoadingMore && (
                                     <div className="flex items-center gap-3 text-blue-500">
                                         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                                         <span className="font-medium">Loading more articles...</span>

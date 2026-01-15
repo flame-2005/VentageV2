@@ -1,6 +1,6 @@
 "use client";
 
-import ArticleCard from '@/components/ArticleCard';
+import ArticleCard from '@/components/ArticleCard/ArticleCard';
 import CircularLoader from '@/components/circularLoader';
 import { api } from '@/convex/_generated/api';
 import { usePaginatedQuery, useQuery } from 'convex/react';
@@ -36,7 +36,7 @@ const Page = () => {
     );
 
     // Use author search for author route or generic search
-    const authorPost = useQuery(api.functions.substackBlogs.getPostsByAuthor, { author:actualSearchTerm })
+    const authorPost = useQuery(api.functions.substackBlogs.getPostsByAuthor, { author: actualSearchTerm })
 
     const { results: companyPost, status, loadMore } = searchQuery;
 
@@ -92,7 +92,7 @@ const Page = () => {
     const isLoading = isSearchEverywhere
         ? everywhereResults === undefined
         : (isCompanySearch ? (status === "LoadingFirstPage") : (isAuthorSearch ? authorPost === undefined : (status === "LoadingFirstPage" || authorPost === undefined)));
-    
+
     const isLoadingMore = !isSearchEverywhere && !isAuthorSearch && status === "LoadingMore";
     const canLoadMore = !isSearchEverywhere && !isAuthorSearch && status === "CanLoadMore";
 
