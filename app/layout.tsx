@@ -60,7 +60,7 @@ export default function RootLayout({
             </ToastProvider>
           </UserProvider>
         </ConvexProvider>
-        <GoogleAnalytics gaId="G-ZBZ37BJDVL" />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID!} />
       </body>
     </html>
   );
