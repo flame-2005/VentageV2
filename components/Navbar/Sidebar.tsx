@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
 import SearchBar from './SearchBar';
-import { setOptions } from 'yahoo-finance2/lib/options';
+import { trackEvent, GA_EVENT } from '@/lib/analytics/ga';
 
 export interface SidebarInterface {
   isOpen: boolean;
@@ -29,6 +29,12 @@ const Sidebar: React.FC<SidebarInterface> = ({
 
   const displayName = user ? (user.fullName || user.username) : "";
   const fallbackLetter = displayName ? displayName.charAt(0).toUpperCase() : "";
+
+
+  const handleSignIn = () => {
+    trackEvent(GA_EVENT.SIGN_IN_CLICK);
+    signInWithGoogle();
+  }
 
 
   return (
@@ -127,7 +133,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
           </div>
         ) : (
           <button
-            onClick={signInWithGoogle}
+            onClick={handleSignIn}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all shadow-sm font-medium text-slate-700 w-full justify-center text-sm"
           >
             <GoogleLogo />
