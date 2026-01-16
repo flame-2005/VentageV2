@@ -5,6 +5,7 @@ import { useUser } from "@/context/userContext";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useToast } from "@/context/toastContext";
+import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
 
 export default function LinkSubmissionForm() {
     const { user, isLoading } = useUser();
@@ -20,6 +21,7 @@ export default function LinkSubmissionForm() {
     const { addToast } = useToast();
 
     const handleSubmit = async (e: React.FormEvent) => {
+        trackEvent(GA_EVENT.SUBMIT_BLOG_CLICKED,{blogUrl: url})
         e.preventDefault();
 
         try {
