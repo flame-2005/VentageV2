@@ -10,6 +10,7 @@ import { useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { useUser } from '@/context/userContext'
 import { ArticleBugReporter } from './ArticleBugReport'
+import { trackEvent,GA_EVENT } from '@/lib/analytics/ga'
 
 type ArticleCardProps = {
     post: Doc<'posts'>
@@ -48,6 +49,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
     const router = useRouter()
 
     const handlePostClick = async () => {
+        trackEvent(GA_EVENT.ARTICLE_CARD_CLICK, { postId: post._id })
         setClickedCount(clickedCount + 1)
         try {
             await incrementClickCount({ postId: post._id })
@@ -60,6 +62,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
     const shareMutation = useMutation(api.functions.users.sharePost)
 
     const likePost = async () => {
+        trackEvent(GA_EVENT.LIKE_CLICKED, { postId: post._id })
         if (!user) {
             addToast('error', 'Login Required', 'Please log in to like posts.')
             return
@@ -73,6 +76,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
     }
 
     const sharePost = async () => {
+        trackEvent(GA_EVENT.SHARE_CLICKED, { postId: post._id })
         setShareCount(shareCount + 1)
         await shareMutation({
             postId: post._id,

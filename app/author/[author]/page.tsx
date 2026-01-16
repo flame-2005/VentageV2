@@ -8,6 +8,7 @@ import CircularLoader from "@/components/circularLoader";
 import { useState } from "react";
 import { useUser } from "@/context/userContext";
 import { useToast } from "@/context/toastContext";
+import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
 
 export default function AuthorPage() {
     const params = useParams();
@@ -45,6 +46,7 @@ export default function AuthorPage() {
         !!user?.authorsFollowing?.includes(author);
 
     const handleToggleFollow = async () => {
+        trackEvent(GA_EVENT.FOLLOW_AUTHOR_CLICKED, { author: author })
         if (!user) {
             addToast('error', 'Please login to follow', "")
             return

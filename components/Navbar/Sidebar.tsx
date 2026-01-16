@@ -35,6 +35,10 @@ const Sidebar: React.FC<SidebarInterface> = ({
     trackEvent(GA_EVENT.SIGN_IN_CLICK);
     signInWithGoogle();
   }
+  const handleSignOut = () => {
+    trackEvent(GA_EVENT.SIGN_OUT_CLICK);
+    signOut();
+  }
 
 
   return (
@@ -73,7 +77,9 @@ const Sidebar: React.FC<SidebarInterface> = ({
 
       {/* Submit Sources Button */}
       <button className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors text-sm"
-        onClick={() => {router.push("/track-link")
+        onClick={() => {
+          trackEvent(GA_EVENT.TRACK_BLOG_CLICKED)
+          router.push("/track-link")
           setIsOpen(false)
         }}
       >
@@ -122,7 +128,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
             {showDropdown && (
               <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg shadow-lg border border-slate-200 py-1">
                 <button
-                  onClick={signOut}
+                  onClick={handleSignOut}
                   className="w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2 text-sm"
                 >
                   <LogOut className="w-4 h-4" />

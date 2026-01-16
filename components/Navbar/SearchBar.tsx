@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/convex/_generated/api';
 import { useQuery } from 'convex/react';
 import Link from 'next/link';
+import { GA_EVENT, trackEvent } from '@/lib/analytics/ga';
 
 interface SearchBarProps {
     shouldFocus?: boolean;
@@ -140,6 +141,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
     };
 
     const handleSearchEverywhere = () => {
+        trackEvent(GA_EVENT.SEARCH_PERFORMED, { category: "search_everywhere", label: inputValue || "" });
         if (inputValue) {
             router.push(`/search/search-everywhere?${encodeURIComponent(inputValue)}`);
             closeSuggestions();
@@ -203,6 +205,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
                                                 <Link
                                                     key={`company-${index}`}
                                                     onClick={() => {
+                                                        trackEvent(GA_EVENT.SEARCH_PERFORMED, { category: "company", label: suggestion.companyName });
                                                         setInputValue(suggestion.companyName);
                                                         closeSuggestions();
                                                     }}
@@ -234,6 +237,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
                                                 <Link
                                                     key={`author-${index}`}
                                                     onClick={() => {
+                                                        trackEvent(GA_EVENT.SEARCH_PERFORMED, { category: "author", label: suggestion.author });
                                                         setInputValue(suggestion.author);
                                                         closeSuggestions();
                                                     }}

@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useUser } from "@/context/userContext";
 import { useToast } from "@/context/toastContext";
+import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
 
 export default function CompanyPage() {
     const params = useParams();
@@ -38,6 +39,7 @@ export default function CompanyPage() {
         !!user?.companiesFollowing?.includes(company);
 
     const handleToggleTracking = async () => {
+        trackEvent(GA_EVENT.TRACK_COMPANY_CLICKED, { company: company })
         if (!user) {
             addToast('error', 'Please login to track', "")
             return
