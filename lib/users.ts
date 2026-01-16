@@ -10,7 +10,9 @@ export const signInWithGoogle = async (): Promise<void> => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+          window.location.pathname + window.location.search
+        )}`,
       },
     });
     if (error) throw error;
