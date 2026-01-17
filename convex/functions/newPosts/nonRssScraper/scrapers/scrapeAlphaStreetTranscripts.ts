@@ -7,7 +7,6 @@ export interface ScrapedPost {
   link: string;
   published: string;
   author: string;
-  excerpt: string;
   image: string | null;
 }
 
@@ -56,7 +55,6 @@ export async function scrapeAlphaStreetLatest(
       .replace("●", "")
       .trim();
 
-    const excerpt = card.find(".excerpt").text().trim();
     const image = card.find("img.wp-post-image").attr("src") || null;
 
     posts.push({
@@ -64,7 +62,6 @@ export async function scrapeAlphaStreetLatest(
       link: absoluteLink,
       published,
       author: "AlphaStreet",
-      excerpt,
       image,
     });
   });

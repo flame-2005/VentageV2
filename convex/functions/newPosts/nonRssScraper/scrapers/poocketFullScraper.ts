@@ -14,7 +14,6 @@ export interface ScrapedPost {
   link: string;
   published: string;
   author: string;
-  excerpt: string;
   image: string | null;
 }
 
@@ -182,7 +181,6 @@ export async function scrapePocketfulCaseStudy(
       link,
       published,
       author,
-      excerpt: "",
       image,
     });
 

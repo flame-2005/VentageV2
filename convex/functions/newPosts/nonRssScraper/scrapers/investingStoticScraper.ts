@@ -55,7 +55,6 @@ export async function scrapeInvestingStoicsBlog(
       image,
       published,
       author: "InvestingStoics",
-      excerpt: "",
     });
   });
 
