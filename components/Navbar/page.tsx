@@ -59,7 +59,7 @@ const Navbar = () => {
           </div>
 
         </div>
-        <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase text-center w-full flex justify-center">PKEDAY</span>
+        <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase text-center w-full flex justify-center">powered by Pkeday</span>
       </header>
 
       {/* Mobile Menu Overlay */}
