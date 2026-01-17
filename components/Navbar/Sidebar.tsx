@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
           </div>
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">The VantEdge</h1>
-            <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">PKEDAY</span>
+            <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">powered by Pkeday</span>
           </div>
         </div>
       </Link>
@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       {/* Search Bar */}
       <div className='hidden lg:block mb-8'>
 
-      <SearchBar />
+        <SearchBar />
       </div>
 
       {/* Main Heading */}
