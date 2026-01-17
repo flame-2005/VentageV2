@@ -110,7 +110,6 @@ export async function scrapeRupeetingBlog(
         link,
         published,
         author: author || "",
-        excerpt,
         image,
       });
     }

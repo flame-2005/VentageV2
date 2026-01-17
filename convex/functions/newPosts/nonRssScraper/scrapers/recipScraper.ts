@@ -13,7 +13,6 @@ export interface ScrapedPost {
   link: string;
   published: string;
   author: string;
-  excerpt: string;
   image: string | null;
 }
 
@@ -121,8 +120,6 @@ for (const el of cards) {
 
   console.log("[card] link:", link);
 
-  const excerpt = "";
-
   const image = await resolveImage(link, BASE_URL);
   const author = (await extractAuthorSmart({ link })) || "";
 
@@ -131,7 +128,6 @@ for (const el of cards) {
     link,
     published,
     author,
-    excerpt,
     image,
   });
 
@@ -141,7 +137,6 @@ for (const el of cards) {
     link,
     published,
     author,
-    excerpt,
     image,
   })
 }
