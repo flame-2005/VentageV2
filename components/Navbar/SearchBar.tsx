@@ -152,9 +152,9 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
     const authorOffset = companySuggestions?.length || 0;
 
     return (
-        <div>
+        <div className='w-full'>
             {/* Search Bar */}
-            <div className="relative">
+            <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4 z-10" />
                 <input
                     ref={inputRef}
