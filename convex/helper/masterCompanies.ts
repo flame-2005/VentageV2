@@ -2,6 +2,31 @@
 import { internalMutation, mutation, query } from "../_generated/server";
 import { v } from "convex/values";
 
+const INVALID_TOKEN_SUFFIXES = new Set([
+  "MRO",
+  "INDIA",
+  "RE2",
+  "RE",
+  "RR",
+  "IV",
+  "IT",
+  "GS",
+  "E1",
+  "P1",
+  "W1",
+  "TB",
+  "SZ",
+]);
+
+const INVALID_NAME_KEYWORDS = [
+  "FUND",
+  "BOND",
+  "BONDS",
+  "DEBENTURE",
+  "GILT",
+  "SECURITY",
+];
+
 export const migrateBatch = mutation({
   args: {
     cursor: v.optional(v.id("master_company_list")),
@@ -92,12 +117,12 @@ export const getCompaniesWithoutBseCode = query({
           q.or(
             q.eq(q.field("bse_code"), null),
             q.eq(q.field("bse_code"), undefined),
-            q.eq(q.field("bse_code"), "")
+            q.eq(q.field("bse_code"), ""),
           ),
           q.neq(q.field("nse_code"), null),
           q.neq(q.field("nse_code"), undefined),
-          q.neq(q.field("nse_code"), "")
-        )
+          q.neq(q.field("nse_code"), ""),
+        ),
       )
       .take(limit);
 
@@ -125,3 +150,61 @@ export const downloadCompaniesMissingMarketCap = query({
     return page;
   },
 });
+
+export const bulkCheckCompaniesByName = query({
+  args: {
+    names: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Normalize input → ALL CAPS + trim + dedupe
+    const normalizedNames = [
+      ...new Set(args.names.map((name) => name.trim().toUpperCase())),
+    ];
+
+    // Query DB
+    const existingCompanies = await Promise.all(
+      normalizedNames.map((name) =>
+        ctx.db
+          .query("master_company_list")
+          .withIndex("name", (q) => q.eq("name", name))
+          .first(),
+      ),
+    );
+
+    const existingSet = new Set(
+      existingCompanies.filter(Boolean).map((company) => company!.name),
+    );
+
+    return normalizedNames.map((name) => ({
+      name,
+      exists: existingSet.has(name),
+    }));
+  },
+});
+export function hasInvalidToken(exchangeToken?: string): boolean {
+  if (!exchangeToken) return false;
+
+  // Rule 6: starts with number
+  if (/^\d/.test(exchangeToken)) return true;
+
+  // Rule 5: invalid suffix after "-"
+  if (exchangeToken.includes("-")) {
+    const suffix = exchangeToken.split("-").pop();
+    if (suffix && INVALID_TOKEN_SUFFIXES.has(suffix)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function isInvalidGS(name: string, symbol: string): boolean {
+  return (
+    (name.startsWith("GS") || symbol.startsWith("GS")) && /\d/.test(symbol)
+  );
+}
+
+export function hasInvalidNameKeywords(name: string): boolean {
+  const upper = name.toUpperCase();
+  return INVALID_NAME_KEYWORDS.some((kw) => upper.includes(kw));
+}

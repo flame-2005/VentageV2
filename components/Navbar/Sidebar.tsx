@@ -4,7 +4,7 @@ import { useUser } from '@/context/userContext';
 import { api } from '@/convex/_generated/api';
 import { signInWithGoogle } from '@/lib/users';
 import { useQuery } from 'convex/react';
-import { LogOut, Search, X, Zap } from 'lucide-react';
+import { LogOut, Radar, Search, X, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       <Link href={'/home'} className="hidden lg:flex items-center gap-3 py-8">
         <div className="flex items-center gap-3 mb-4 ">
           <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
-            <Zap className="w-6 h-6 text-white" fill="currentColor" />
+            <Radar className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">The VantEdge</h1>

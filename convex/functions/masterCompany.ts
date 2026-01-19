@@ -21,47 +21,87 @@ export const replaceAllCompanies = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    // Step 1: Delete all existing records
+    // 1️⃣ Normalize incoming data
+    const incoming = args.companies.map((c) => ({
+      ...c,
+      name: c.name.trim().toUpperCase(),
+    }));
+
+    // 2️⃣ Load existing companies once
     const existingCompanies = await ctx.db
       .query("master_company_list")
       .collect();
 
-    for (const company of existingCompanies) {
-      await ctx.db.delete(company._id);
-    }
+    const existingMap = new Map(
+      existingCompanies.map((c) => [c.name, c])
+    );
 
-    console.log(`Deleted ${existingCompanies.length} existing records`);
-
-    // Step 2: Insert new records in batches
     let inserted = 0;
-    for (const company of args.companies) {
-      // Convert null to undefined for optional fields
+    let updated = 0;
+    let skipped = 0;
 
+    for (const company of incoming) {
+      const existing = existingMap.get(company.name);
       const search_tokens = generateSearchTokens(company.name);
-      await ctx.db.insert("master_company_list", {
+
+      // 🆕 Insert
+      if (!existing) {
+        await ctx.db.insert("master_company_list", {
+          bse_code: company.bse_code ?? undefined,
+          nse_code: company.nse_code,
+          name: company.name,
+          instrument_token: company.instrument_token,
+          isin: company.isin ?? undefined,
+          exchange: company.exchange,
+          record_hash: company.record_hash,
+          created_at: company.created_at,
+          updated_at: company.updated_at,
+          market_cap: company.market_cap ?? undefined,
+          search_tokens,
+        });
+        inserted++;
+        continue;
+      }
+
+      // 🔍 Detect changes (IMPORTANT)
+      const hasChanges =
+        existing.record_hash !== company.record_hash ||
+        existing.nse_code !== company.nse_code ||
+        (existing.bse_code ?? null) !== company.bse_code ||
+        existing.instrument_token !== company.instrument_token ||
+        existing.exchange !== company.exchange ||
+        (existing.market_cap ?? null) !== company.market_cap;
+
+      if (!hasChanges) {
+        skipped++;
+        continue;
+      }
+
+      // 🔁 Patch changed fields
+      await ctx.db.patch(existing._id, {
         bse_code: company.bse_code ?? undefined,
         nse_code: company.nse_code,
-        name: company.name,
         instrument_token: company.instrument_token,
         isin: company.isin ?? undefined,
         exchange: company.exchange,
         record_hash: company.record_hash,
-        created_at: company.created_at,
         updated_at: company.updated_at,
-        market_cap: company.market_cap ?? undefined,
         search_tokens,
       });
-      inserted++;
+
+      updated++;
     }
 
-    console.log(`Inserted ${inserted} new records`);
-
     return {
-      deleted: existingCompanies.length,
-      inserted: inserted,
+      totalIncoming: incoming.length,
+      inserted,
+      updated,
+      skipped,
+      existing: existingCompanies.length,
     };
   },
 });
+
 
 // Query to get all companies
 export const getAllCompanies = query({

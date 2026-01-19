@@ -1,4 +1,4 @@
-import { X, Menu, Zap, SearchCheckIcon, SearchCode, SearchIcon, Search } from 'lucide-react';
+import { X, Menu, Zap, SearchCheckIcon, SearchCode, SearchIcon, Search, Radar } from 'lucide-react';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { signInWithGoogle } from '@/lib/users';
@@ -29,8 +29,8 @@ const Navbar = () => {
           <div>
 
             <Link href={'/home'} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Zap className="w-6 h-6 text-white" fill="currentColor" />
+              <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
+                <Radar className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-none italic">The VantEdge</h1>
