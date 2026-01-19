@@ -4,7 +4,7 @@ import { useUser } from '@/context/userContext';
 import { api } from '@/convex/_generated/api';
 import { signInWithGoogle } from '@/lib/users';
 import { useQuery } from 'convex/react';
-import { LogOut, Radar, Search, X, Zap } from 'lucide-react';
+import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
@@ -49,10 +49,16 @@ const Sidebar: React.FC<SidebarInterface> = ({
           <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
             <Radar className="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">The VantEdge</h1>
-            <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">powered by Pkeday</span>
+          <div className="relative inline-block">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">
+              The VantEdge
+            </h1>
+
+            <span className="absolute mt-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
+              powered by Pkeday
+            </span>
           </div>
+
         </div>
       </Link>
 
@@ -76,17 +82,31 @@ const Sidebar: React.FC<SidebarInterface> = ({
       </div>
 
       {/* Submit Sources Button */}
-      <button className="flex items-center gap-2 text-slate-500 hover:text-slate-700 transition-colors text-sm"
+      <button
+        className="group relative flex items-center gap-3 text-slate-800 bg-gradient-to-r from-slate-50 to-white border-2 border-slate-400 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 cursor-pointer text-sm font-medium px-5 py-3 rounded-xl mb-2 w-full overflow-hidden"
         onClick={() => {
           trackEvent(GA_EVENT.TRACK_BLOG_CLICKED)
           router.push("/track-link")
           setIsOpen(false)
         }}
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-        SUBMIT SOURCES
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+        <MessageCircleMore className="w-5 h-5 text-slate-700 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300 relative z-10" />
+        <span className="relative z-10 group-hover:text-blue-600 transition-colors duration-300">SUBMIT SOURCES</span>
+      </button>
+
+      {/* Home Button - Enhanced (Mobile only) */}
+      <button
+        className="lg:hidden group relative flex items-center gap-3 text-slate-800 bg-gradient-to-r from-slate-50 to-white border-2 border-slate-400 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 cursor-pointer text-sm font-medium px-5 py-3 rounded-xl mb-2 w-full overflow-hidden"
+        onClick={() => {
+          trackEvent(GA_EVENT.HOME_CLICKED)
+          router.push("/home")
+          setIsOpen(false)
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+        <Home className="w-5 h-5 text-slate-700 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300 relative z-10" />
+        <span className="relative z-10 group-hover:text-blue-600 transition-colors duration-300">Home</span>
       </button>
 
       {/* User Section at Bottom */}

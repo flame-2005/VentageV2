@@ -13,6 +13,7 @@ export const GA_EVENT = {
   TRACK_COMPANY_CLICKED: 'track_company_clicked',
   FOLLOW_AUTHOR_CLICKED: 'follow_author_clicked',
   SEARCH_PERFORMED: 'search_performed',
+  HOME_CLICKED: 'home_clicked',
 } as const;
 
 type GAEventParams = {
