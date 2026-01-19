@@ -169,8 +169,13 @@ const Sidebar: React.FC<SidebarInterface> = ({
       </div>
 
       {/* Version Footer */}
-      <div className="mt-6 text-xs text-slate-400 text-center">
-        THE VANTEDGE • V1.0
+      <div className="mt-6 text-xs text-slate-400 text-center flex space-x-2">
+        <div>
+          THE VANTEDGE • V1.0
+          </div>
+          <div>
+            <Link href = {'/privacy-policy'} onClick={() => setIsOpen(false)}>Privacy Policy</Link>
+          </div>
       </div>
     </>
   )
