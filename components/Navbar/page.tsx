@@ -1,4 +1,4 @@
-import { X, Menu, Zap, SearchCheckIcon, SearchCode, SearchIcon, Search, Radar } from 'lucide-react';
+import { X, Menu, Zap, SearchCheckIcon, SearchCode, SearchIcon, Search, Radar, ChevronRight } from 'lucide-react';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { signInWithGoogle } from '@/lib/users';
@@ -18,7 +18,7 @@ const Navbar = () => {
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden bg-white border-b border-slate-200 sticky top-0 z-50 px-4 py-3">
+      <header className="lg:hidden bg-white border-b border-slate-200 sticky top-0 z-50 px-4 pt-3 pb-4">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -37,7 +37,7 @@ const Navbar = () => {
               The VantEdge
             </h1>
 
-            <span className="absolute mt-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
+            <span className="absolute my-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
               powered by Pkeday
             </span>
           </div>
@@ -45,7 +45,7 @@ const Navbar = () => {
           </div>
 
           <div>
-            <button className='lg:hidden' onClick={() => setIsSearchBarOpen(true)}>
+            <button className='lg:hidden items-center justify-center flex' onClick={() => setIsSearchBarOpen(true)}>
               <Search />
             </button>
 
@@ -59,7 +59,7 @@ const Navbar = () => {
                 onClick={() => setIsSearchBarOpen(false)}
                 className="hover:bg-gray-100 rounded p-2 transition-colors"
               >
-                <X />
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
           </div>

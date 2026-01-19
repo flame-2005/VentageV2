@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
               The VantEdge
             </h1>
 
-            <span className="absolute mt-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
+            <span className="absolute my-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
               powered by Pkeday
             </span>
           </div>
