@@ -1,5 +1,5 @@
 import { Doc, Id } from '@/convex/_generated/dataModel'
-import { Calendar, Heart, MousePointerClick, Share2, User, Building2, Flag, X ,AlertCircle} from 'lucide-react'
+import { Calendar, Heart, MousePointerClick, Share2, User, Building2, Flag, X, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
@@ -10,7 +10,7 @@ import { useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { useUser } from '@/context/userContext'
 import { ArticleBugReporter } from './ArticleBugReport'
-import { trackEvent,GA_EVENT } from '@/lib/analytics/ga'
+import { trackEvent, GA_EVENT } from '@/lib/analytics/ga'
 
 type ArticleCardProps = {
     post: Doc<'posts'>
@@ -116,13 +116,29 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                 className="group bg-white rounded-2xl p-3 sm:p-4 hover:shadow-xl hover:shadow-slate-200/50 hover:border-blue-200 transition-all flex flex-col sm:flex-row gap-3 sm:gap-5 items-stretch relative"
             >
                 {/* Report Button - Top Right */}
-                <button
-                    onClick={() => setShowReportModal(true)}
-                    className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors z-10"
-                    title="Report wrong tagging"
-                >
-                    <AlertCircle className="w-3.5 h-3.5" />
-                </button>
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+                    <div className="relative inline-flex">
+                        <button
+                            onClick={() => setShowReportModal(true)}
+                            className="peer p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100
+                 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                            <AlertCircle className="w-3.5 h-3.5" />
+                        </button>
+                        {/* Tooltip */}
+                        <span
+                            className="pointer-events-none absolute right-0 bottom-full mb-1
+                 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1
+                 text-xs text-white opacity-0 scale-95
+                 transition-all duration-150
+                 peer-hover:opacity-100 peer-hover:scale-100"
+                        >
+                            Report Post
+                        </span>
+                    </div>
+                </div>
+
+
 
                 {/* Image - Full width on mobile, compact on desktop */}
                 <div className="flex-shrink-0 w-full sm:w-44">
@@ -274,12 +290,12 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
             </motion.article>
 
             <ArticleBugReporter
-            firstCompany={firstCompany}
-            showReportModal={showReportModal}
-            setShowReportModal={setShowReportModal}
-            post={post}
-            reportEmail={reportEmail}
-            setReportEmail={setReportEmail}
+                firstCompany={firstCompany}
+                showReportModal={showReportModal}
+                setShowReportModal={setShowReportModal}
+                post={post}
+                reportEmail={reportEmail}
+                setReportEmail={setReportEmail}
             />
         </>
     )

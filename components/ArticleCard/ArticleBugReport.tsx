@@ -18,6 +18,7 @@ type ArticleBugReportProps = {
 export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, reportEmail, setReportEmail, firstCompany }: ArticleBugReportProps) => {
 
     const [reportDescription, setReportDescription] = useState('')
+    const [selectedIssue, setSelectedIssue] = useState('')
 
     const { addToast } = useToast()
 
@@ -28,8 +29,8 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
             addToast('error', 'Email Required', 'Please provide your email address.')
             return
         }
-        if (!reportDescription.trim()) {
-            addToast('error', 'Description Required', 'Please describe the tagging issue.')
+        if (!selectedIssue) {
+            addToast('error', 'Issue Required', 'Please select an issue type.')
             return
         }
 
@@ -37,11 +38,12 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
             await submitBugReport({
                 email: reportEmail,
                 pageLink: post.link || window.location.href,
-                bugDescription: `Wrong Tagging Report for "${post.title}"\n\nCurrent Tags: ${post.tags?.join(', ') || 'None'}\n\nCompany: ${firstCompany || 'N/A'}\n\nIssue: ${reportDescription}`,
+                bugDescription: `Wrong Tagging Report for "${post.title}"\n\nCurrent Tags: ${post.tags?.join(', ') || 'None'}\n\nCompany: ${firstCompany || 'N/A'}\n\nIssue Type: ${selectedIssue}\n\nAdditional Details: ${reportDescription || 'None provided'}`,
             })
             addToast('success', 'Report Submitted', 'Thank you for helping us improve our tagging!')
             setShowReportModal(false)
             setReportDescription('')
+            setSelectedIssue('')
         } catch (error) {
             console.error('Failed to submit report:', error)
             addToast('error', 'Submission Failed', 'Unable to submit report. Please try again.')
@@ -128,13 +130,44 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
                                 </div>
 
                                 <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                        Issue Type
+                                    </label>
+                                    <div className="space-y-2">
+                                        {[
+                                            { value: 'A - Blog quality is poor', label: 'A - Blog quality is poor' },
+                                            { value: 'B - Wrong company tag', label: 'B - Wrong company tag' },
+                                            { value: 'C - Link is broken / Domain expired', label: 'C - Link is broken / Domain expired' },
+                                            { value: 'D - Others', label: 'D - Others' }
+                                        ].map((option) => (
+                                            <label
+                                                key={option.value}
+                                                className="flex items-center gap-2 cursor-pointer group"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="issueType"
+                                                    value={option.value}
+                                                    checked={selectedIssue === option.value}
+                                                    onChange={(e) => setSelectedIssue(e.target.value)}
+                                                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <span className="text-sm text-slate-700 group-hover:text-slate-900">
+                                                    {option.label}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1">
-                                        Describe the Issue
+                                        Additional Details <span className="text-slate-400 font-normal">(Optional)</span>
                                     </label>
                                     <textarea
                                         value={reportDescription}
                                         onChange={(e) => setReportDescription(e.target.value)}
-                                        placeholder="E.g., The sentiment should be bearish, not bullish..."
+                                        placeholder="Add any additional information..."
                                         rows={4}
                                         className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
                                     />

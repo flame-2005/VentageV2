@@ -32,9 +32,15 @@ const Navbar = () => {
               <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
                 <Radar className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-none italic">The VantEdge</h1>
-              </div>
+             <div className="relative inline-block">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">
+              The VantEdge
+            </h1>
+
+            <span className="absolute mt-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
+              powered by Pkeday
+            </span>
+          </div>
             </Link>
           </div>
 
@@ -59,7 +65,6 @@ const Navbar = () => {
           </div>
 
         </div>
-        <span className="text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase text-center w-full flex justify-center">powered by Pkeday</span>
       </header>
 
       {/* Mobile Menu Overlay */}

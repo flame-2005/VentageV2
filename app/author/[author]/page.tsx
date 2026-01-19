@@ -111,8 +111,8 @@ export default function AuthorPage() {
                     {loading
                         ? "Please wait..."
                         : isFollowing
-                            ? "Unfollow"
-                            : "Follow"}
+                            ? "Untrack"
+                            : "Track"}
                 </button>
             </div>
 

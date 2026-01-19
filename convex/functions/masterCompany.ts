@@ -69,8 +69,7 @@ export const replaceAllCompanies = mutation({
         existing.nse_code !== company.nse_code ||
         (existing.bse_code ?? null) !== company.bse_code ||
         existing.instrument_token !== company.instrument_token ||
-        existing.exchange !== company.exchange ||
-        (existing.market_cap ?? null) !== company.market_cap;
+        existing.exchange !== company.exchange
 
       if (!hasChanges) {
         skipped++;
