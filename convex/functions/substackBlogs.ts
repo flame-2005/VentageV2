@@ -110,15 +110,18 @@ export const searchEverywhere = query({
     searchTerm: v.string(),
     classification: v.optional(v.string()),
     blogId: v.optional(v.id("blogs")),
+    paginationOpts: paginationOptsValidator, // Use Convex's built-in validator
   },
-  handler: async (ctx, { searchTerm, classification, blogId }) => {
+  handler: async (ctx, { searchTerm, classification, blogId, paginationOpts }) => {
     if (!searchTerm || !searchTerm.trim()) {
-      return [];
+      return {
+        page: [],
+        isDone: true,
+        continueCursor: "",
+      };
     }
 
     const term = searchTerm.trim();
-
-    // Build filter function for common filtering
 
     // 1️⃣ Search by author
     const authorResults = await ctx.db
@@ -126,31 +129,25 @@ export const searchEverywhere = query({
       .withSearchIndex("search_author_summary", (q) => q.search("author", term))
       .collect();
 
-    // // 2️⃣ Search by summary
-    // const summaryResults = [await ctx.db
-    //   .query("posts")
-    //   .withSearchIndex("search_summary", (q) => q.search("summary", term))
-    //   .take(50);]
-
-    // 3️⃣ Search by company
+    // 2️⃣ Search by company
     const companyResults = await ctx.db
       .query("posts")
       .withSearchIndex("search_company", (q) => q.search("companyName", term))
       .collect();
 
-    // 4️⃣ Merge & dedupe
+    // 3️⃣ Merge & dedupe
     const seenIds = new Set<string>();
     const allResults = [
       ...authorResults,
       ...companyResults,
-      // ...summaryResults,
     ].filter((post) => {
       if (seenIds.has(post._id)) return false;
       seenIds.add(post._id);
       return true;
     });
 
-    return allResults
+    // 4️⃣ Filter and sort by date
+    const filteredAndSorted = allResults
       .filter(
         (post): post is NonNullable<typeof post> =>
           isValidAuthor(post.author) &&
@@ -160,9 +157,39 @@ export const searchEverywhere = query({
             post.classification === "Sector_analysis")
       )
       .sort((a, b) => b.pubDate.localeCompare(a.pubDate));
+
+    // 5️⃣ Pagination logic using Convex's pattern
+    const numItems = paginationOpts.numItems;
+    let startIndex = 0;
+    
+    if (paginationOpts.cursor) {
+      // Find the index of the item after the cursor
+      const [cursorDate, cursorId] = paginationOpts.cursor.split('|');
+      const cursorIndex = filteredAndSorted.findIndex(
+        (post) => post.pubDate === cursorDate && post._id === cursorId
+      );
+      
+      if (cursorIndex !== -1) {
+        startIndex = cursorIndex + 1;
+      }
+    }
+
+    const endIndex = startIndex + numItems;
+    const page = filteredAndSorted.slice(startIndex, endIndex);
+    const isDone = endIndex >= filteredAndSorted.length;
+    
+    // Generate continuation cursor
+    const continueCursor = !isDone && page.length > 0
+      ? `${page[page.length - 1].pubDate}|${page[page.length - 1]._id}`
+      : "";
+
+    return {
+      page,
+      isDone,
+      continueCursor,
+    };
   },
 });
-
 export const getBlogs = query({
   handler: async (ctx) => {
     return await ctx.db.query("blogs").collect();

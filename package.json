@@ -32,6 +32,7 @@
     "fetch:nonRssHistoricalPosts": "tsx scripts/nonRssScraper/index.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@next/third-parties": "^16.1.2",
     "@supabase/supabase-js": "^2.81.1",
     "axios": "^1.13.2",
@@ -54,7 +55,9 @@
     "rss-parser": "^3.13.0",
     "supabase": "^2.58.5",
     "yahoo-finance2": "^3.10.2",
-    "yfinance": "^0.0.6"
+    "yfinance": "^0.0.6",
+    "youtube-transcript": "^1.2.1",
+    "yt-search": "^2.13.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
