@@ -1,6 +1,10 @@
 import { action } from "../_generated/server";
 import { api } from "../_generated/api";
-import { hasInvalidNameKeywords, hasInvalidToken, isInvalidGS } from "../helper/masterCompanies";
+import {
+  hasInvalidNameKeywords,
+  hasInvalidToken,
+  isInvalidGS,
+} from "../helper/masterCompanies";
 
 // Type definitions
 interface ZerodhaInstrument {
@@ -20,13 +24,13 @@ interface ZerodhaInstrument {
 
 interface NSERecord {
   SYMBOL: string;
-  'NAME OF COMPANY': string;
+  "NAME OF COMPANY": string;
   SERIES: string;
-  'DATE OF LISTING': string;
-  'PAID UP VALUE': string;
-  'MARKET LOT': string;
-  'ISIN NUMBER': string;
-  'FACE VALUE': string;
+  "DATE OF LISTING": string;
+  "PAID UP VALUE": string;
+  "MARKET LOT": string;
+  "ISIN NUMBER": string;
+  "FACE VALUE": string;
 }
 
 interface ProcessedCompany {
@@ -47,62 +51,72 @@ export const refreshMasterCompanyDetails = action({
   args: {},
   handler: async (ctx) => {
     try {
-      console.log('Starting master company details refresh...');
+      console.log("Starting master company details refresh...");
 
       // Step 1: Fetch data from Zerodha API
-      console.log('Fetching data from Zerodha API...');
-      const zerodhaResponse = await fetch('https://api.kite.trade/instruments');
-      
+      console.log("Fetching data from Zerodha API...");
+      const zerodhaResponse = await fetch("https://api.kite.trade/instruments");
+
       if (!zerodhaResponse.ok) {
-        throw new Error(`Failed to fetch Zerodha data: ${zerodhaResponse.status}`);
+        throw new Error(
+          `Failed to fetch Zerodha data: ${zerodhaResponse.status}`,
+        );
       }
-      
+
       const zerodhaCsv = await zerodhaResponse.text();
       const zerodhaData = parseCSV<ZerodhaInstrument>(zerodhaCsv);
 
       // Step 2: Fetch ISIN data from NSE
-      console.log('Fetching ISIN data from NSE...');
-      const nseResponse = await fetch('https://archives.nseindia.com/content/equities/EQUITY_L.csv');
+      console.log("Fetching ISIN data from NSE...");
+      const nseResponse = await fetch(
+        "https://archives.nseindia.com/content/equities/EQUITY_L.csv",
+      );
       let nseData: NSERecord[] = [];
-      
+
       if (nseResponse.ok) {
         const nseCsv = await nseResponse.text();
         nseData = parseCSV<NSERecord>(nseCsv);
       } else {
-        console.warn('Failed to fetch NSE ISIN data, proceeding without ISIN values');
+        console.warn(
+          "Failed to fetch NSE ISIN data, proceeding without ISIN values",
+        );
       }
 
       // Step 3: Process and merge data
-      console.log('Processing and merging data...');
+      console.log("Processing and merging data...");
       const processedData = processInstrumentData(zerodhaData, nseData);
 
       if (processedData.length === 0) {
-        throw new Error('No valid records to insert after processing');
+        throw new Error("No valid records to insert after processing");
       }
 
       // Step 4: Delete all existing records and insert new ones
-      console.log(`Deleting old records and inserting ${processedData.length} new records...`);
-      
+      console.log(
+        `Deleting old records and inserting ${processedData.length} new records...`,
+      );
+
       await ctx.runMutation(api.functions.masterCompany.replaceAllCompanies, {
-        companies: processedData
+        companies: processedData,
       });
 
-      console.log('Successfully completed refresh');
+      console.log("Successfully completed refresh");
+
+      await ctx.runAction(api.functions.enrichCompanies.enrichCompaniesChunk, {});
 
       return {
         success: true,
-        message: 'Successfully refreshed master company details',
+        message: "Successfully refreshed master company details",
         total_count: processedData.length,
-        sample: processedData.slice(0, 5)
+        sample: processedData.slice(0, 5),
       };
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Processing error:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("Processing error:", error);
       return {
         success: false,
         message: `Data processing failed: ${errorMessage}`,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   },
@@ -110,31 +124,31 @@ export const refreshMasterCompanyDetails = action({
 
 // Helper function to parse CSV data
 function parseCSV<T>(csvText: string): T[] {
-  const lines = csvText.split('\n');
+  const lines = csvText.split("\n");
   if (lines.length < 2) return [];
 
   const headerLine = lines[0];
-  const headers = headerLine.split(',').map((h) => {
+  const headers = headerLine.split(",").map((h) => {
     const trimmed = h.trim();
-    return trimmed.replace(/^"|"$/g, '');
+    return trimmed.replace(/^"|"$/g, "");
   });
 
   const data: T[] = [];
-  
+
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
     const values: string[] = [];
-    let currentValue = '';
+    let currentValue = "";
     let inQuotes = false;
 
     for (const char of line) {
       if (char === '"') {
         inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
+      } else if (char === "," && !inQuotes) {
         values.push(currentValue.trim());
-        currentValue = '';
+        currentValue = "";
       } else {
         currentValue += char;
       }
@@ -148,8 +162,8 @@ function parseCSV<T>(csvText: string): T[] {
     const row: Record<string, string | null> = {};
     headers.forEach((header, index) => {
       const value = values[index] || null;
-      if (value && typeof value === 'string') {
-        row[header] = value.replace(/^"|"$/g, '');
+      if (value && typeof value === "string") {
+        row[header] = value.replace(/^"|"$/g, "");
       } else {
         row[header] = value;
       }
@@ -163,23 +177,27 @@ function parseCSV<T>(csvText: string): T[] {
 // Helper function to process instrument data
 function processInstrumentData(
   zerodhaData: ZerodhaInstrument[],
-  nseData: NSERecord[]
+  nseData: NSERecord[],
 ): ProcessedCompany[] {
   console.log(
-    `Processing ${zerodhaData.length} zerodha records and ${nseData.length} NSE records`
+    `Processing ${zerodhaData.length} zerodha records and ${nseData.length} NSE records`,
+  );
+
+  const equityZerodhaData = zerodhaData.filter(
+    (r) =>
+      r.instrument_type === "EQ" &&
+      (r.exchange === "NSE" || r.exchange === "BSE")
   );
 
   // 1️⃣ Apply Zerodha filters
-  const equities = zerodhaData.filter((row) => {
-    if (!["NSE", "BSE"].includes(row.exchange)) return false; // (1)
-    if (row.instrument_type !== "EQ") return false; // (2)
+  const equities = equityZerodhaData.filter((row) => {
     if (!row.name) return false; // (3)
 
     const name = row.name.trim();
     const symbol = row.tradingsymbol ?? "";
 
     if (name.includes("%")) return false; // (4)
-    if (hasInvalidToken(row.exchange_token)) return false; // (5 & 6)
+    if (hasInvalidToken(row.tradingsymbol)) return false; // (5 & 6)
     if (isInvalidGS(name, symbol)) return false; // (7)
     if (hasInvalidNameKeywords(name)) return false; // (8)
 
@@ -250,7 +268,7 @@ function processInstrumentData(
   }
 
   console.log(
-    `Processed ${processedRecords.length} valid records with ${isinMatches} ISIN matches`
+    `Processed ${processedRecords.length} valid records with ${isinMatches} ISIN matches`,
   );
 
   return processedRecords;

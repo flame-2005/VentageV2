@@ -73,9 +73,11 @@ export function isValidIncomingPost(post: unknown): post is IncomingPost {
     p.title.trim().length > 0 &&
     typeof p.link === "string" &&
     p.link.trim().length > 0 &&
+    typeof p.author === "string" &&
+    p.author.trim().length > 0 &&
     isValidUrl(p.link) &&
     typeof p.published === "string" &&
-    typeof p.source === "string"
+    typeof p.source === "string" 
   );
 }
 

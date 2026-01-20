@@ -25,6 +25,16 @@ const INVALID_NAME_KEYWORDS = [
   "DEBENTURE",
   "GILT",
   "SECURITY",
+  "NIFTY",
+  "BSE",
+  "ETF",
+  "INDEX",
+  "SCHEME",
+  "TRUST",
+  "NIFTY50",
+  "NIFTY100",
+  "NIFTY200",
+  "NIFTY500",
 ];
 
 export const migrateBatch = mutation({
@@ -184,19 +194,23 @@ export const bulkCheckCompaniesByName = query({
 export function hasInvalidToken(exchangeToken?: string): boolean {
   if (!exchangeToken) return false;
 
-  // Rule 6: starts with number
-  if (/^\d/.test(exchangeToken)) return true;
+  //  ❌ starts with a number
+   if (/^\d/.test(exchangeToken)) {
+     return true;
+   }
 
-  // Rule 5: invalid suffix after "-"
-  if (exchangeToken.includes("-")) {
-    const suffix = exchangeToken.split("-").pop();
-    if (suffix && INVALID_TOKEN_SUFFIXES.has(suffix)) {
+  // ❌ contains invalid suffix after "-"
+  const parts = exchangeToken.split("-");
+  if (parts.length > 1) {
+    const suffix = parts[parts.length - 1];
+    if (INVALID_TOKEN_SUFFIXES.has(suffix)) {
       return true;
     }
   }
 
   return false;
 }
+
 
 export function isInvalidGS(name: string, symbol: string): boolean {
   return (

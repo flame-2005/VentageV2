@@ -16,6 +16,7 @@ import type * as crons from "../crons.js";
 import type * as functions_blogs from "../functions/blogs.js";
 import type * as functions_bugs from "../functions/bugs.js";
 import type * as functions_cleanUp from "../functions/cleanUp.js";
+import type * as functions_enrichCompanies from "../functions/enrichCompanies.js";
 import type * as functions_fetch_agents_agent1 from "../functions/fetch/agents/agent1.js";
 import type * as functions_fetch_agents_agent2 from "../functions/fetch/agents/agent2.js";
 import type * as functions_fetch_getAllRssPosts from "../functions/fetch/getAllRssPosts.js";
@@ -26,7 +27,6 @@ import type * as functions_masterCompanyList from "../functions/masterCompanyLis
 import type * as functions_newPosts_checkNewPosts from "../functions/newPosts/checkNewPosts.js";
 import type * as functions_newPosts_nonRssScraper_images_extractAuthorSmart from "../functions/newPosts/nonRssScraper/images/extractAuthorSmart.js";
 import type * as functions_newPosts_nonRssScraper_images_smartPubDate from "../functions/newPosts/nonRssScraper/images/smartPubDate.js";
-import type * as functions_newPosts_nonRssScraper_index from "../functions/newPosts/nonRssScraper/index.js";
 import type * as functions_newPosts_nonRssScraper_scraper_index from "../functions/newPosts/nonRssScraper/scraper/index.js";
 import type * as functions_newPosts_nonRssScraper_scraper_mainScraper from "../functions/newPosts/nonRssScraper/scraper/mainScraper.js";
 import type * as functions_newPosts_nonRssScraper_scraper_types from "../functions/newPosts/nonRssScraper/scraper/types.js";
@@ -101,6 +101,7 @@ declare const fullApi: ApiFromModules<{
   "functions/blogs": typeof functions_blogs;
   "functions/bugs": typeof functions_bugs;
   "functions/cleanUp": typeof functions_cleanUp;
+  "functions/enrichCompanies": typeof functions_enrichCompanies;
   "functions/fetch/agents/agent1": typeof functions_fetch_agents_agent1;
   "functions/fetch/agents/agent2": typeof functions_fetch_agents_agent2;
   "functions/fetch/getAllRssPosts": typeof functions_fetch_getAllRssPosts;
@@ -111,7 +112,6 @@ declare const fullApi: ApiFromModules<{
   "functions/newPosts/checkNewPosts": typeof functions_newPosts_checkNewPosts;
   "functions/newPosts/nonRssScraper/images/extractAuthorSmart": typeof functions_newPosts_nonRssScraper_images_extractAuthorSmart;
   "functions/newPosts/nonRssScraper/images/smartPubDate": typeof functions_newPosts_nonRssScraper_images_smartPubDate;
-  "functions/newPosts/nonRssScraper/index": typeof functions_newPosts_nonRssScraper_index;
   "functions/newPosts/nonRssScraper/scraper/index": typeof functions_newPosts_nonRssScraper_scraper_index;
   "functions/newPosts/nonRssScraper/scraper/mainScraper": typeof functions_newPosts_nonRssScraper_scraper_mainScraper;
   "functions/newPosts/nonRssScraper/scraper/types": typeof functions_newPosts_nonRssScraper_scraper_types;

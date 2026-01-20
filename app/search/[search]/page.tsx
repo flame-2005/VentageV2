@@ -22,10 +22,11 @@ const Page = () => {
         ? Array.from(searchParams.keys())[0] || ''
         : decodeURIComponent(routeSegment);
 
-    // Use searchEverywhere query when flag is present
-    const everywhereResults = useQuery(
+    // Use searchEverywhere query with pagination when flag is present
+    const everywhereQuery = usePaginatedQuery(
         api.functions.substackBlogs.searchEverywhere,
-        isSearchEverywhere ? { searchTerm: actualSearchTerm } : "skip"
+        isSearchEverywhere ? { searchTerm: actualSearchTerm } : "skip",
+        { initialNumItems: 20 }
     );
 
     // Use company search for company route or generic search
@@ -38,7 +39,8 @@ const Page = () => {
     // Use author search for author route or generic search
     const authorPost = useQuery(api.functions.substackBlogs.getPostsByAuthor, { author: actualSearchTerm })
 
-    const { results: companyPost, status, loadMore } = searchQuery;
+    const { results: companyPost, status: companyStatus, loadMore: loadMoreCompany } = searchQuery;
+    const { results: everywhereResults, status: everywhereStatus, loadMore: loadMoreEverywhere } = everywhereQuery;
 
     const posts = useMemo(() => {
         // If search everywhere mode, use those results
@@ -89,12 +91,16 @@ const Page = () => {
         return output;
     }, [posts]);
 
-    const isLoading = isSearchEverywhere
-        ? everywhereResults === undefined
-        : (isCompanySearch ? (status === "LoadingFirstPage") : (isAuthorSearch ? authorPost === undefined : (status === "LoadingFirstPage" || authorPost === undefined)));
+    // Determine loading states based on search type
+    const status = isSearchEverywhere ? everywhereStatus : companyStatus;
+    const loadMore = isSearchEverywhere ? loadMoreEverywhere : loadMoreCompany;
 
-    const isLoadingMore = !isSearchEverywhere && !isAuthorSearch && status === "LoadingMore";
-    const canLoadMore = !isSearchEverywhere && !isAuthorSearch && status === "CanLoadMore";
+    const isLoading = isSearchEverywhere
+        ? (everywhereStatus === "LoadingFirstPage")
+        : (isCompanySearch ? (companyStatus === "LoadingFirstPage") : (isAuthorSearch ? authorPost === undefined : (companyStatus === "LoadingFirstPage" || authorPost === undefined)));
+
+    const isLoadingMore = !isAuthorSearch && status === "LoadingMore";
+    const canLoadMore = !isAuthorSearch && status === "CanLoadMore";
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -137,10 +143,6 @@ const Page = () => {
         };
     }, []);
 
-    useEffect(() => {
-        console.log(canLoadMore, isLoadingMore, status);
-    }, [status]);
-
     // Get display title based on search type
     const getTitle = () => {
         if (isSearchEverywhere) return 'Search Results';
@@ -160,11 +162,6 @@ const Page = () => {
                             <h1 className="text-3xl md:text-4xl font-semibold text-slate-900">
                                 {getTitle()}
                             </h1>
-                            {(isCompanySearch || isAuthorSearch) && (
-                                <p className="text-slate-600 mt-2">
-                                    Showing {isCompanySearch ? 'company' : 'author'} specific results
-                                </p>
-                            )}
                         </div>
                         <div className="space-y-6">
                             {uniquePosts && uniquePosts.length > 0 ? (
@@ -205,7 +202,7 @@ const Page = () => {
                         )}
 
                         {/* End of results message */}
-                        {!isSearchEverywhere && !isAuthorSearch && status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
+                        {!isAuthorSearch && status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
                             <div className="text-center py-8">
                                 <p className="text-slate-500 font-medium">
                                     You&apos;ve reached the end! No more articles to load.

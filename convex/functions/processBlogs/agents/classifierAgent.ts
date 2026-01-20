@@ -60,12 +60,36 @@ Do NOT extract:
 📌 CATEGORY DEFINITIONS (VERY STRICT)
 ────────────────────────────────────────
 
-1. Multiple_company_update
-   - The blog contains brief updates on several companies.
-   - Typically 1–2 sentences per company.
-   - Focus is on short-term events or factual updates.
-   - No narrative, no deep reasoning, no structured analysis.
-   - Example topics: results date reminders, board meeting notes, short operational updates.
+   1. Multiple_company_update
+   - The blog contains brief, observational updates on SEVERAL companies.
+   - Each company mention is limited to factual, descriptive, or market-tape information.
+   
+   INCLUDES (VERY IMPORTANT):
+   - Market breadth commentary using multiple stocks as examples
+   - Lists of stocks rising, falling, or underperforming
+   - Price action, technical levels, relative strength, or momentum
+   - Short notes on recent events WITHOUT future business impact
+   - Commentary that does NOT explain why a company will win or lose long term
+   
+   CHARACTERISTICS:
+   - Typically 1–3 short sentences per company (length alone does NOT imply analysis)
+   - No forward-looking earnings, margin, demand, or valuation reasoning
+   - No causal chain (X → Y → Z) affecting future performance
+   - No investment decision can be made for any individual company
+   
+   MANDATORY RULE:
+   If companies are mentioned primarily to illustrate:
+   - Market conditions
+   - Sector weakness/strength
+   - Breadth, sentiment, or trend
+   
+   → The classification MUST be Multiple_company_update.
+   
+   DEFAULT RULE:
+   If the post discusses multiple companies and NONE have
+   decision-grade, forward-looking analysis,
+   classification MUST be Multiple_company_update.
+
 
    Example Output:
    {
@@ -74,26 +98,54 @@ Do NOT extract:
      "sector": "",
      "tags": ["neutral"],
      "category": "multiple"
-     "summary": "The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix."
+     "summary": "The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix."
    }
 
 ────────────────────────────────────────
 
-2. Multiple_company_analysis
-   - The blog provides shallow to moderately detailed commentary on multiple companies.
-   - Typically 3–6 lines per company.
-   - Analysis includes light reasoning: opportunities, risks, general thesis, or quick takeaways.
-   - Not deep enough to be considered a full analysis of any single company.
+    2. Multiple_company_analysis
+    - The blog provides clear analytical commentary on TWO OR MORE companies.
+    - EACH company MUST have its OWN independent analysis with:
+      • A forward-looking driver or outlook
+      • A stated opportunity or risk
+      • OR a causal explanation (X → Y → Z)
+      
+    - EACH company MUST have at least 2–3 meaningful sentences focused on
+      future business or earnings impact.
+    - Mentions of price action, technical levels, breadth, or recent movement
+      do NOT count as analysis.
+      
+    STRICT REQUIREMENT (MANDATORY):
+    If EVEN ONE mentioned company lacks real analytical reasoning,
+    the article MUST NOT be classified as Multiple_company_analysis.
+      
+    DO NOT use Multiple_company_analysis if:
+    - Companies are listed as examples or market breadth indicators
+    - Commentary is observational or descriptive
+    - Discussion focuses on stocks rising/falling
+    - No per-company investment decision can be made
+    - Analysis depth is uneven across companies
+      
+    DEFAULT RULE:
+    If analysis quality is uneven OR there is any doubt,
+    CLASSIFY AS Multiple_company_update — NOT Company_analysis.
+      
+    Before choosing Multiple_company_analysis, answer:
+    "Could a professional investor make a buy or sell decision
+    on AT LEAST TWO companies from this article alone?"
+      
+    If NO → classification MUST be Multiple_company_update.
 
    Example Output:
    {
      "classification": "Multiple_company_analysis",
      "company": ["ITC", "HUL", "Nestle"],
      "sector": "",
-     "tags": ["moderately_bullish"],
+     "tags": ["neutral"],
      "category": "multiple"
-      "summary": "The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix."
+      "summary": "The upside case rests on Y’s dominant distribution flywheel and the shift of Z-category spend online, where the firm already captures ~18% share and expands gross margin through private-label mix."
    }
+
 
 ────────────────────────────────────────
 

@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { X, Bug } from "lucide-react";
+import { useToast } from "@/context/toastContext";
+import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
 
 const BugReporter = () => {
   const submitBug = useMutation(api.functions.bugs.submitBugReport);
@@ -15,7 +17,10 @@ const BugReporter = () => {
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
 
-  const handleSubmit = async () => {
+  const { addToast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!email || !description) return;
 
     try {
@@ -26,12 +31,14 @@ const BugReporter = () => {
         pageLink: window.location.href,
         bugDescription: description,
       });
+      trackEvent(GA_EVENT.BUG_REPORTED,{email:email})
+      addToast("success", "Bug report submitted successfully", "");
 
       setEmail("");
       setDescription("");
       setOpen(false);
     } catch (err) {
-      console.error("Bug report failed", err);
+      addToast("error", "Failed to submit bug report", "");
     } finally {
       setLoading(false);
     }
@@ -64,7 +71,8 @@ const BugReporter = () => {
               exit={{ y: 40, opacity: 0 }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between mb-4">
+              <form onSubmit={handleSubmit}>
+                <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Report a Bug</h3>
                 <button onClick={() => setOpen(false)}>
                   <X className="w-5 h-5 text-slate-500" />
@@ -93,12 +101,14 @@ const BugReporter = () => {
 
               {/* Submit */}
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={loading}
                 className="w-full bg-black text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-900 disabled:opacity-50"
               >
                 {loading ? "Submitting..." : "Submit Bug"}
               </button>
+              </form>
+              
             </motion.div>
           </motion.div>
         )}

@@ -14,6 +14,7 @@ export const GA_EVENT = {
   FOLLOW_AUTHOR_CLICKED: 'follow_author_clicked',
   SEARCH_PERFORMED: 'search_performed',
   HOME_CLICKED: 'home_clicked',
+  BUG_REPORTED: 'bug_reported',
 } as const;
 
 type GAEventParams = {
@@ -24,6 +25,7 @@ type GAEventParams = {
   company?: string;
   author?: string;
   blogUrl?: string;
+  email?: string;
 };
 
 type GtagEvent = (
