@@ -94,6 +94,10 @@ export default defineSchema({
       searchField: "name",
       staged: false,
     })
+    .searchIndex("nse_search", {
+      searchField: "nse_code",
+      staged: false,
+    })
     .index("bse_code", ["bse_code"]),
 
   users: defineTable({

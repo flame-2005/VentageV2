@@ -133,7 +133,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                  transition-all duration-150
                  peer-hover:opacity-100 peer-hover:scale-100"
                         >
-                            Report Post
+                            Bug / Request
                         </span>
                     </div>
                 </div>
