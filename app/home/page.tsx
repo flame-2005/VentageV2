@@ -16,7 +16,7 @@ export default function InvestmentDashboard() {
     const regularQuery = usePaginatedQuery(
         api.functions.substackBlogs.getPaginatedPosts,
         { paginationOpts: {} },
-        { initialNumItems: 20 }
+        { initialNumItems: 10 }
     );
 
 
@@ -36,7 +36,7 @@ export default function InvestmentDashboard() {
             (entries) => {
                 // When the loader div is visible, load more
                 if (entries[0].isIntersecting && canLoadMore && !isLoadingMore) {
-                    loadMore(20);
+                    loadMore(10);
                 }
             },
             {
