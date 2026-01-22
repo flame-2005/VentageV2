@@ -15,7 +15,7 @@ import {
   IncomingPost,
 } from "../../constant/posts";
 import { Id } from "../../_generated/dataModel";
-import { convertRssDateToIso } from "../../helper/post";
+import { calculateIsValidAnalysis, convertRssDateToIso } from "../../helper/post";
 
 type EnrichedPost = {
   blogId?: Id<"blogs">;
@@ -32,6 +32,7 @@ type EnrichedPost = {
   classification?: string;
   category?: string;
   tags?: string[];
+  isValidAnalysis?: boolean;
 
   companyDetails?: CompanyDetail[];
   companyName?: string;
@@ -147,6 +148,11 @@ export const processAndSavePosts = action({
               imageUrl: blogMap.get(post.blogId!)?.imageUrl ?? undefined,
               source: post.source,
               summary: agent1Typed.summary,
+              isValidAnalysis: calculateIsValidAnalysis({
+                companyDetails,
+                classification: agent1Typed.classification,
+                author: post.author,
+              }),
               classification: agent1Typed.classification,
               category: agent1Typed.classification,
               tags: agent1Typed.tags.length > 0 ? agent1Typed.tags : undefined,
