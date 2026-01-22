@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useUser } from "@/context/userContext";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
+import { capitalize } from "@/helper/text";
 
 export default function CompanyPage() {
     const params = useParams();
@@ -84,7 +85,7 @@ export default function CompanyPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold text-blue-600">
-                    Posts about {company}
+                    {capitalize(company)}
                 </h1>
 
                 <button

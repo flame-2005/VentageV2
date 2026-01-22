@@ -581,8 +581,8 @@ export const getCompanySuggestions = query({
     // 2️⃣ Exact NSE code match
     const nseResults = await ctx.db
       .query("master_company_list")
-      .withIndex("nse_code", (q) => q.eq("nse_code", upperTerm))
-      .take(1);
+      .withSearchIndex("nse_search", (q) => q.search("nse_code", upperTerm))
+      .take(4);
 
     // 3️⃣ Exact BSE code match
     const bseResults = await ctx.db

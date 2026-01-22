@@ -18,7 +18,7 @@ const Navbar = () => {
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden bg-white border-b border-slate-200 sticky top-0 z-50 px-4 pt-3 pb-4">
+      <header className="lg:hidden bg-white border-b border-slate-200 sticky top-0 z-50 px-4 pt-3 pb-6">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

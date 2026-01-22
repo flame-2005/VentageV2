@@ -135,10 +135,10 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
                                     </label>
                                     <div className="space-y-2">
                                         {[
-                                            { value: 'A - Blog quality is poor', label: 'A - Blog quality is poor' },
-                                            { value: 'B - Wrong company tag', label: 'B - Wrong company tag' },
-                                            { value: 'C - Link is broken / Domain expired', label: 'C - Link is broken / Domain expired' },
-                                            { value: 'D - Others', label: 'D - Others' }
+                                            { value: 'Blog quality is poor', label: 'Blog quality is poor' },
+                                            { value: 'Wrong company tag', label: 'Wrong company tag' },
+                                            { value: 'Link is broken / Domain expired', label: 'Link is broken / Domain expired' },
+                                            { value: 'Others', label: 'Others' }
                                         ].map((option) => (
                                             <label
                                                 key={option.value}

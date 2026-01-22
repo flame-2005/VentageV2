@@ -25,6 +25,7 @@
     "get:allHistoricalPosts": "tsx scripts/tagCompany/getAllHistoricalPosts.ts",
     "get:youtubeChannels": "tsx scripts/youtube/getChannels.ts",
     "get:checkPost": "tsx scripts/tagCompany/singlePostCheck.ts",
+    "get:historicalVideos": "tsx scripts/youtube/main.ts",
     "check:stressTest": "tsx scripts/stressTest.js",
     "get:removeNonMarketcap": "tsx scripts/tagCompany/removeNonMarketCap.ts",
     "categorize:posts": "tsx scripts/tagCompany/categorization.ts",

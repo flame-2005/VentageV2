@@ -80,6 +80,19 @@ const Sidebar: React.FC<SidebarInterface> = ({
           <span className="text-blue-600">tracking.</span>
         </h2>
       </div>
+      {/* Home Button - Enhanced (Mobile only) */}
+      <button
+        className="group relative flex items-center gap-3 text-slate-800 bg-gradient-to-r from-slate-50 to-white border-2 border-slate-400 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 cursor-pointer text-sm font-medium px-5 py-3 rounded-xl mb-2 w-full overflow-hidden"
+        onClick={() => {
+          trackEvent(GA_EVENT.HOME_CLICKED)
+          router.push("/home")
+          setIsOpen(false)
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+        <Home className="w-5 h-5 text-slate-700 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300 relative z-10" />
+        <span className="relative z-10 group-hover:text-blue-600 transition-colors duration-300">Home</span>
+      </button>
 
       {/* Submit Sources Button */}
       <button
@@ -95,19 +108,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
         <span className="relative z-10 group-hover:text-blue-600 transition-colors duration-300">SUBMIT SOURCES</span>
       </button>
 
-      {/* Home Button - Enhanced (Mobile only) */}
-      <button
-        className="lg:hidden group relative flex items-center gap-3 text-slate-800 bg-gradient-to-r from-slate-50 to-white border-2 border-slate-400 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 cursor-pointer text-sm font-medium px-5 py-3 rounded-xl mb-2 w-full overflow-hidden"
-        onClick={() => {
-          trackEvent(GA_EVENT.HOME_CLICKED)
-          router.push("/home")
-          setIsOpen(false)
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-        <Home className="w-5 h-5 text-slate-700 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300 relative z-10" />
-        <span className="relative z-10 group-hover:text-blue-600 transition-colors duration-300">Home</span>
-      </button>
+
 
       {/* User Section at Bottom */}
       <div className="mt-auto  border-t border-slate-200">
@@ -172,10 +173,10 @@ const Sidebar: React.FC<SidebarInterface> = ({
       <div className="mt-6 text-xs text-slate-400 text-center flex space-x-2">
         <div>
           THE VANTEDGE • V1.0
-          </div>
-          <div>
-            <Link href = {'/privacy-policy'} onClick={() => setIsOpen(false)}>Privacy Policy</Link>
-          </div>
+        </div>
+        <div>
+          <Link href={'/privacy-policy'} onClick={() => setIsOpen(false)}>Privacy Policy</Link>
+        </div>
       </div>
     </>
   )
