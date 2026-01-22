@@ -345,64 +345,14 @@ export const getAllPosts50 = query({
 });
 
 export const getPaginatedPosts = query({
-  args: {
-    paginationOpts: paginationOptsValidator,
-  },
+  args: { paginationOpts: paginationOptsValidator },
   handler: async (ctx, args) => {
     return ctx.db
       .query("posts")
-      .withIndex("by_pubDate")
-      .order("desc")
-      .filter((q) =>
-        q.and(
-          // ----------------------------
-          // Condition 1: Classification must ALWAYS match one of the 3
-          // ----------------------------
-          q.or(
-            q.eq(q.field("classification"), "Company_analysis"),
-            q.eq(q.field("classification"), "Multiple_company_analysis"),
-            q.eq(q.field("classification"), "Sector_analysis")
-          ),
-
-          // ----------------------------
-          // Condition 2: ONE of these must be true (OR)
-          // ----------------------------
-          q.or(
-            // has valid BSE code
-            q.and(
-              q.neq(q.field("bseCode"), undefined),
-              q.neq(q.field("bseCode"), null),
-              q.neq(q.field("bseCode"), "")
-            ),
-
-            // has valid NSE code
-            q.and(
-              q.neq(q.field("nseCode"), undefined),
-              q.neq(q.field("nseCode"), null),
-              q.neq(q.field("nseCode"), "")
-            ),
-
-            // has non-empty companyDetails
-            q.and(
-              q.neq(q.field("companyDetails"), undefined),
-              q.neq(q.field("companyDetails"), null)
-            )
-          ),
-
-          // ----------------------------
-          // Condition 3: Author must be defined and non-empty
-          // ----------------------------
-          q.and(
-            q.neq(q.field("author"), undefined),
-            q.neq(q.field("author"), null),
-            q.neq(q.field("author"), ""),
-            q.neq(q.field("author"), "Eduinvesting Team"),
-            q.neq(q.field("author"), "Lalitha Diwakarla"),
-            q.neq(q.field("author"), "Viceroy Research")
-          )
-        )
+      .withIndex("by_validAnalysis_pubDate", (q) => 
+        q.eq("isValidAnalysis", true)
       )
-
+      .order("desc")
       .paginate(args.paginationOpts);
   },
 });
@@ -481,6 +431,7 @@ export const bulkUpdatePosts = mutation({
           imageUrl: v.optional(v.string()),
           views: v.optional(v.string()),
           likes: v.optional(v.string()),
+          isValidAnalysis: v.optional(v.boolean()),
           companyDetails: v.optional(
             v.array(
               v.object({

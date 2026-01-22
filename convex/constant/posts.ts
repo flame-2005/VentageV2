@@ -79,3 +79,12 @@ export interface RSSItem {
   // Allow unknown fields safely without any
   [key: string]: unknown;
 }
+
+
+export type calculateIsValidAnalysisParams = {
+  nseCode?: string;
+  bseCode?: string;
+  companyDetails?: CompanyDetail[];
+  classification?: string;
+  author?: string;
+};

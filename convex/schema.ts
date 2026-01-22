@@ -57,6 +57,7 @@ export default defineSchema({
     usersShared: v.optional(v.array(v.string())),
     lastCheckedAt: v.optional(v.number()),
     source: v.optional(v.string()),
+    isValidAnalysis: v.optional(v.boolean()),
   })
     .index("by_blog", ["blogId"])
     .index("by_link", ["link"])
@@ -64,6 +65,7 @@ export default defineSchema({
     .index("by_author_pubDate", ["author", "pubDate"])
     .index("by_authorLower_pubDate", ["authorLower", "pubDate"])
     .index("by_company", ["companyName"])
+    .index("by_validAnalysis_pubDate", ["isValidAnalysis", "pubDate"])
     .index("by_pubDate", ["pubDate"])
     .index("by_classification_pubDate", ["classification", "pubDate"])
     .searchIndex("search_author_summary", {

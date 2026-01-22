@@ -7,8 +7,9 @@ import {
 import Papa from "papaparse";
 import { hasCompanyData } from "./blogs";
 import { api } from "../_generated/api";
-import { IncomingPost, RSSItem } from "../constant/posts";
+import { calculateIsValidAnalysisParams, IncomingPost, RSSItem } from "../constant/posts";
 import { v } from "convex/values";
+import { Doc } from "../_generated/dataModel";
 
 // 2️⃣ Generate CSV for both
 export const exportCsv = action({
@@ -141,45 +142,6 @@ export function extractDate(item: RSSItem): string {
 
   return "";
 }
-
-export const deleteNewsBlogs = mutation({
-  handler: async (ctx) => {
-    // List of domains to remove
-    const bannedDomains = [
-      "https://www.visualcapitalist.com",
-      "https://www.moneylife.in",
-      "https://www.theverge.com",
-      "https://www.forbesindia.com",
-      "https://www.cnbctv18.com",
-      "https://finshots.in",
-      "https://www.theceomagazine.com",
-      "https://knowledge.wharton.upenn.edu",
-      "https://www.businesstoday.in",
-      "https://yourstory.com",
-      "https://www.dsij.in",
-      "https://www.moneycontrol.com",
-      "https://thelogicalindian.com",
-      "https://thedailybrief.zerodha.com",
-      "https://www.fortuneindia.com",
-      "https://shows.ivmpodcasts.com",
-    ];
-
-    // Fetch all blogs
-    const blogs = await ctx.db.query("blogs").collect();
-
-    // Match blogs whose feedUrl contains any banned domain
-    const toDelete = blogs.filter((blog) =>
-      bannedDomains.some((domain) => blog.feedUrl?.includes(domain))
-    );
-
-    // Delete matching blogs
-    for (const blog of toDelete) {
-      await ctx.db.delete(blog._id);
-    }
-
-    return { deleted: toDelete.length };
-  },
-});
 
 export const migrateCompanyPosts = internalMutation({
   args: {
@@ -355,31 +317,49 @@ export function isValidAuthor(author: unknown): boolean {
   );
 }
 
-// export const getPostsWithACC = query({
-//   args: {
-//     limit: v.optional(v.number()),
-//     cursor: v.optional(v.any()),
-//   },
-//   handler: async (ctx, { limit = 100, cursor }) => {
-//     const q = ctx.db
-//       .query("posts")
-//       .order("desc");
 
-//     const page = cursor
-//       ? await q.paginate({ numItems: limit, cursor })
-//       : await q.paginate({ numItems: limit });
 
-//     const filtered = page.page.filter(
-//       p =>
-//         typeof p.companyName === "string" &&
-//         p.companyName.toUpperCase().includes("ACC")
-//     );
 
-//     return {
-//       posts: filtered,
-//       cursor: page.continueCursor,
-//     };
-//   },
-// });
+export function calculateIsValidAnalysis({
+  nseCode ,
+  bseCode,
+  companyDetails,
+  classification,
+  author,
+}: calculateIsValidAnalysisParams): boolean {
+  const validClassifications = [
+    "Company_analysis",
+    "Multiple_company_analysis",
+    "Sector_analysis",
+  ];
 
+  const excludedAuthors = [
+    "Eduinvesting Team",
+    "Lalitha Diwakarla",
+    "Viceroy Research",
+  ];
+
+  // Condition 1: Classification check
+  const hasValidClassification = validClassifications.includes(
+    classification!
+  );
+
+  // Condition 2: Has valid BSE/NSE code or companyDetails
+
+  const hasCompanyDetails =
+    companyDetails !== undefined &&
+    companyDetails !== null &&
+    companyDetails.length > 0;
+
+  const hasValidCompanyInfo =  hasCompanyDetails;
+
+  // Condition 3: Author check
+  const hasValidAuthor =
+    author !== undefined &&
+    author !== null &&
+    author.trim() !== "" &&
+    !excludedAuthors.includes(author);
+
+  return hasValidClassification && hasValidCompanyInfo && hasValidAuthor;
+}
 
