@@ -66,6 +66,7 @@ import type * as functions_tracking_addTracking from "../functions/tracking/addT
 import type * as functions_tracking_notification from "../functions/tracking/notification.js";
 import type * as functions_users from "../functions/users.js";
 import type * as functions_usersLink from "../functions/usersLink.js";
+import type * as functions_videos from "../functions/videos.js";
 import type * as helper_addBlogImage from "../helper/addBlogImage.js";
 import type * as helper_addBulkBlogs from "../helper/addBulkBlogs.js";
 import type * as helper_addImage from "../helper/addImage.js";
@@ -151,6 +152,7 @@ declare const fullApi: ApiFromModules<{
   "functions/tracking/notification": typeof functions_tracking_notification;
   "functions/users": typeof functions_users;
   "functions/usersLink": typeof functions_usersLink;
+  "functions/videos": typeof functions_videos;
   "helper/addBlogImage": typeof helper_addBlogImage;
   "helper/addBulkBlogs": typeof helper_addBulkBlogs;
   "helper/addImage": typeof helper_addImage;

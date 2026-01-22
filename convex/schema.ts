@@ -12,6 +12,15 @@ export default defineSchema({
     imageUrl: v.optional(v.string()),
     extractionMethod: v.optional(v.string()),
   }),
+  channels: defineTable({
+    name: v.string(),
+    domain: v.string(),
+    feedUrl: v.string(),
+    lastCheckedAt: v.optional(v.number()),
+    source: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    extractionMethod: v.optional(v.string()),
+  }),
 
   posts: defineTable({
     blogId: v.optional(v.id("blogs")),
@@ -68,6 +77,59 @@ export default defineSchema({
     .searchIndex("search_company", {
       searchField: "companyName",
       filterFields: ["classification", "blogId"],
+    })
+    .index("by_classification", ["classification"]),
+  videos: defineTable({
+    channelId: v.optional(v.id("channels")),
+    title: v.string(),
+    link: v.string(),
+    channel_name: v.optional(v.string()),
+    pubDate: v.string(),
+    thumbnail: v.optional(v.string()),
+    createdAt: v.number(),
+    summary: v.optional(v.string()),
+    duration: v.optional(v.string()),
+    companyName: v.optional(v.string()),
+    bseCode: v.optional(v.string()),
+    nseCode: v.optional(v.string()),
+    companyDetails: v.optional(
+      v.array(
+        v.object({
+          company_name: v.string(),
+          bse_code: v.optional(v.string()),
+          nse_code: v.optional(v.string()),
+          market_cap: v.optional(v.number()),
+        })
+      )
+    ),
+    tags: v.optional(v.array(v.string())),
+    classification: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+    clickedCount: v.optional(v.number()),
+    usersLiked: v.optional(v.array(v.string())),
+    shareCount: v.optional(v.number()),
+    usersShared: v.optional(v.array(v.string())),
+    lastCheckedAt: v.optional(v.number()),
+    source: v.optional(v.string()),
+  })
+    .index("by_blog", ["channelId"])
+    .index("by_link", ["link"])
+    .index("by_author", ["channel_name"])
+    .index("by_author_pubDate", ["channel_name", "pubDate"])
+    .index("by_company", ["companyName"])
+    .index("by_pubDate", ["pubDate"])
+    .index("by_classification_pubDate", ["classification", "pubDate"])
+    .searchIndex("search_author_summary", {
+      searchField: "channel_name",
+      filterFields: ["classification", "channelId"],
+    })
+    .searchIndex("search_summary", {
+      searchField: "summary",
+      filterFields: ["classification", "channelId"],
+    })
+    .searchIndex("search_company", {
+      searchField: "companyName",
+      filterFields: ["classification", "channelId"],
     })
     .index("by_classification", ["classification"]),
 

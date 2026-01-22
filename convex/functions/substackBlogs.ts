@@ -44,44 +44,57 @@ export const getBlog = query({
 export const getPostsByCompany = query({
   args: {
     companyName: v.string(),
-    limit: v.optional(v.number()),
+    paginationOpts: paginationOptsValidator,
   },
-  handler: async (ctx, { companyName, limit = 50 }) => {
-    // Step 1: Get top N companyPosts (sorted by pubDate via index)
-    const companyPostEntries = await ctx.db
+  handler: async (ctx, { companyName, paginationOpts }) => {
+    // Step 1: Get paginated companyPosts (sorted by pubDate via index)
+    const companyPostPage = await ctx.db
       .query("companyPosts")
       .withIndex("by_company_pubDate", (q) => q.eq("companyName", companyName))
       .order("desc")
-      .collect();
+      .paginate(paginationOpts);
 
-    const postIds = [...new Set(companyPostEntries.map((cp) => cp.postId))];
+    // Step 2: Get unique postIds from this page
+    const postIds = [...new Set(companyPostPage.page.map((cp) => cp.postId))];
 
+    // Step 3: Fetch all posts for these IDs
     const posts = await Promise.all(
       postIds.map((postId) => ctx.db.get(postId))
     );
 
-    // Step 3: Filter and return
-    return posts
-      .filter((post): post is NonNullable<typeof post> => {
-        return post !== null && isValidAuthor(post.author);
-      })
-      .slice(0, limit);
+    // Step 4: Filter valid posts
+    const validPosts = posts.filter((post): post is NonNullable<typeof post> => {
+      return post !== null && isValidAuthor(post.author);
+    });
+
+    // Step 5: Return paginated result
+    return {
+      ...companyPostPage,
+      page: validPosts,
+    };
   },
 });
 
 export const getPostsByAuthor = query({
-  args: { author: v.string() },
-  handler: async (ctx, { author }) => {
+  args: { 
+    author: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { author, paginationOpts }) => {
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_author_pubDate", (q) => q.eq("author", author))
       .order("desc")
-      .collect();
+      .paginate(paginationOpts);
 
-    const validPosts = posts.filter(hasCompanyData);
+    // Filter the results page
+    const validPosts = posts.page.filter(hasCompanyData);
+    const filteredPosts = validPosts.filter((post) => post.companyDetails);
 
-    // Filter to only include posts where companyName is defined and not 'null'
-    return validPosts.filter((post) => post.companyDetails);
+    return {
+      ...posts,
+      page: filteredPosts,
+    };
   },
 });
 
