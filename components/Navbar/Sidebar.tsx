@@ -4,7 +4,7 @@ import { useUser } from '@/context/userContext';
 import { api } from '@/convex/_generated/api';
 import { signInWithGoogle } from '@/lib/users';
 import { useQuery } from 'convex/react';
-import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home } from 'lucide-react';
+import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
@@ -81,32 +81,47 @@ const Sidebar: React.FC<SidebarInterface> = ({
         </h2>
       </div>
       {/* Home Button - Enhanced (Mobile only) */}
-      <button
-        className="group relative flex items-center gap-3 text-slate-800 bg-gradient-to-r from-slate-50 to-white border-2 border-slate-400 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 cursor-pointer text-sm font-medium px-5 py-3 rounded-xl mb-2 w-full overflow-hidden"
-        onClick={() => {
-          trackEvent(GA_EVENT.HOME_CLICKED)
-          router.push("/home")
-          setIsOpen(false)
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-        <Home className="w-5 h-5 text-slate-700 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300 relative z-10" />
-        <span className="relative z-10 group-hover:text-blue-600 transition-colors duration-300">Home</span>
-      </button>
+      <div className='border border-slate-200 rounded-2xl overflow-hidden bg-white/50 backdrop-blur-sm'>
 
-      {/* Submit Sources Button */}
-      <button
-        className="group relative flex items-center gap-3 text-slate-800 bg-gradient-to-r from-slate-50 to-white border-2 border-slate-400 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300 cursor-pointer text-sm font-medium px-5 py-3 rounded-xl mb-2 w-full overflow-hidden"
-        onClick={() => {
-          trackEvent(GA_EVENT.TRACK_BLOG_CLICKED)
-          router.push("/track-link")
-          setIsOpen(false)
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/0 via-blue-50/50 to-blue-50/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-        <MessageCircleMore className="w-5 h-5 text-slate-700 group-hover:text-blue-600 group-hover:scale-110 transition-all duration-300 relative z-10" />
-        <span className="relative z-10 group-hover:text-blue-600 transition-colors duration-300">SUBMIT SOURCES</span>
-      </button>
+        <button
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-4 py-3.5 w-full"
+          onClick={() => {
+            trackEvent(GA_EVENT.HOME_CLICKED)
+            router.push("/home")
+            setIsOpen(false)
+          }}
+        >
+          <div className='flex items-center gap-3'>
+            <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors duration-200">
+              <Home className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors duration-200" />
+            </div>
+            <span className="text-slate-700 group-hover:text-slate-900 transition-colors duration-200">Home</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
+        </button>
+
+        {/* Divider */}
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-4" />
+
+        {/* Submit Sources Button */}
+        <button
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-4 py-3.5 w-full"
+          onClick={() => {
+            trackEvent(GA_EVENT.TRACK_BLOG_CLICKED)
+            router.push("/track-link")
+            setIsOpen(false)
+          }}
+        >
+          <div className='flex items-center gap-3'>
+            <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors duration-200">
+              <MessageCircleMore className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors duration-200" />
+            </div>
+            <span className="text-slate-700 group-hover:text-slate-900 transition-colors duration-200">Submit Sources</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
+        </button>
+
+      </div>
 
 
 
