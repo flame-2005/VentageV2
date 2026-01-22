@@ -1,27 +1,36 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import ArticleCard from "@/components/ArticleCard/ArticleCard";
 import { useParams } from "next/navigation";
 import CircularLoader from "@/components/circularLoader";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useUser } from "@/context/userContext";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
 
 export default function AuthorPage() {
     const params = useParams();
-    const author = decodeURIComponent(params.author as string);
+    const author = (() => {
+        try {
+            return decodeURIComponent(params.author as string);
+        } catch {
+            return params.author as string;
+        }
+    })();
 
     const { user } = useUser();
     const { addToast } = useToast();
+    
     // -----------------------------
-    // Queries
+    // Paginated Query
     // -----------------------------
-    const posts = useQuery(
+    const { results: posts, status, loadMore } = usePaginatedQuery(
         api.functions.substackBlogs.getPostsByAuthor,
-        { author }
+        { author },
+        { initialNumItems: 20 }
     );
 
     // -----------------------------
@@ -41,40 +50,70 @@ export default function AuthorPage() {
     );
 
     const [loading, setLoading] = useState(false);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
 
-    const isFollowing =
-        !!user?.authorsFollowing?.includes(author);
+    const isFollowing = !!user?.authorsFollowing?.includes(author);
+    const canLoadMore = status === "CanLoadMore";
+    const isLoadingMore = status === "LoadingMore";
+
+    // -----------------------------
+    // Infinite Scroll
+    // -----------------------------
+    useEffect(() => {
+        if (!loadMoreRef.current || !canLoadMore || isLoadingMore) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && canLoadMore) {
+                    loadMore(20);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        observer.observe(loadMoreRef.current);
+
+        return () => observer.disconnect();
+    }, [canLoadMore, isLoadingMore, loadMore]);
 
     const handleToggleFollow = async () => {
-        trackEvent(GA_EVENT.FOLLOW_AUTHOR_CLICKED, { author: author })
-        if (!user) {
-            addToast('error', 'Please login to follow', "")
-            return
-        };
+        trackEvent(GA_EVENT.FOLLOW_AUTHOR_CLICKED, { author: author });
+        
+        if (!user?._id) {
+            addToast('error', 'Please login to follow', "");
+            return;
+        }
 
         setLoading(true);
         try {
             if (isFollowing) {
-                await untrackAuthor({
-                    userId: user._id,
-                    targetId: author,
-                    targetType: 'author'
-                });
-                await unFollowAuthor({
-                    userId: user._id,
-                    authorName: author
-                })
+                await Promise.all([
+                    untrackAuthor({
+                        userId: user._id,
+                        targetId: author,
+                        targetType: 'author'
+                    }),
+                    unFollowAuthor({
+                        userId: user._id,
+                        authorName: author
+                    })
+                ]);
             } else {
-                await trackAuthor({
-                    userId: user._id,
-                    targetId: author,
-                    targetType: 'author'
-                });
-                await followAuthor({
-                    userId: user._id,
-                    authorName: author
-                });
+                await Promise.all([
+                    trackAuthor({
+                        userId: user._id,
+                        targetId: author,
+                        targetType: 'author'
+                    }),
+                    followAuthor({
+                        userId: user._id,
+                        authorName: author
+                    })
+                ]);
             }
+        } catch (error) {
+            console.error('Toggle follow error:', error);
+            addToast('error', 'Failed to update follow status', '');
         } finally {
             setLoading(false);
         }
@@ -83,7 +122,7 @@ export default function AuthorPage() {
     // -----------------------------
     // Loading
     // -----------------------------
-    if (posts === undefined) {
+    if (status === "LoadingFirstPage") {
         return <CircularLoader />;
     }
 
@@ -102,11 +141,11 @@ export default function AuthorPage() {
                     onClick={handleToggleFollow}
                     disabled={loading}
                     className={`px-4 py-2 rounded-lg font-medium transition
-              ${isFollowing
+                        ${isFollowing
                             ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
                             : "bg-indigo-600 text-white hover:bg-indigo-700"
                         }
-            `}
+                    `}
                 >
                     {loading
                         ? "Please wait..."
@@ -117,7 +156,7 @@ export default function AuthorPage() {
             </div>
 
             {/* Empty state */}
-            {posts.length === 0 && (
+            {posts.length === 0 && status !== "CanLoadMore" && (
                 <p className="text-slate-500">
                     No posts found for this author.
                 </p>
@@ -129,6 +168,21 @@ export default function AuthorPage() {
                     <ArticleCard key={post._id} post={post} />
                 ))}
             </div>
+
+            {/* Infinite Scroll Trigger */}
+            {(canLoadMore || isLoadingMore) && posts && posts.length > 0 && (
+                <div
+                    ref={loadMoreRef}
+                    className="flex justify-center items-center py-8"
+                >
+                    {isLoadingMore && (
+                        <div className="flex items-center gap-3 text-blue-500">
+                            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="font-medium">Loading more articles...</span>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

@@ -3,9 +3,9 @@
 import ArticleCard from '@/components/ArticleCard/ArticleCard';
 import CircularLoader from '@/components/circularLoader';
 import { api } from '@/convex/_generated/api';
-import { usePaginatedQuery, useQuery } from 'convex/react';
+import { usePaginatedQuery } from 'convex/react';
 import { useParams, useSearchParams } from 'next/navigation';
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 
 const Page = () => {
     const params = useParams();
@@ -36,11 +36,16 @@ const Page = () => {
         { initialNumItems: 20 }
     );
 
-    // Use author search for author route or generic search
-    const authorPost = useQuery(api.functions.substackBlogs.getPostsByAuthor, { author: actualSearchTerm })
+    // Use author search with pagination
+    const authorQuery = usePaginatedQuery(
+        api.functions.substackBlogs.getPostsByAuthor,
+        isAuthorSearch ? { author: actualSearchTerm } : "skip",
+        { initialNumItems: 20 }
+    );
 
     const { results: companyPost, status: companyStatus, loadMore: loadMoreCompany } = searchQuery;
     const { results: everywhereResults, status: everywhereStatus, loadMore: loadMoreEverywhere } = everywhereQuery;
+    const { results: authorPost, status: authorStatus, loadMore: loadMoreAuthor } = authorQuery;
 
     const posts = useMemo(() => {
         // If search everywhere mode, use those results
@@ -55,17 +60,14 @@ const Page = () => {
 
         // If author-specific search, return only author results
         if (isAuthorSearch) {
-            if (!authorPost) return [];
-            return Array.isArray(authorPost) ? authorPost : [authorPost];
+            return authorPost ?? [];
         }
 
         // Generic search - combine both company and author results
         const base = companyPost ?? [];
-        if (!authorPost) return base;
+        const authors = authorPost ?? [];
 
-        return Array.isArray(authorPost)
-            ? [...authorPost, ...base]
-            : [authorPost, ...base];
+        return [...authors, ...base];
     }, [
         companyPost,
         authorPost,
@@ -92,25 +94,32 @@ const Page = () => {
     }, [posts]);
 
     // Determine loading states based on search type
-    const status = isSearchEverywhere ? everywhereStatus : companyStatus;
-    const loadMore = isSearchEverywhere ? loadMoreEverywhere : loadMoreCompany;
+    const status = isSearchEverywhere 
+        ? everywhereStatus 
+        : isAuthorSearch 
+        ? authorStatus 
+        : companyStatus;
+    
+    const loadMore = isSearchEverywhere 
+        ? loadMoreEverywhere 
+        : isAuthorSearch 
+        ? loadMoreAuthor 
+        : loadMoreCompany;
 
     const isLoading = isSearchEverywhere
         ? (everywhereStatus === "LoadingFirstPage")
-        : (isCompanySearch ? (companyStatus === "LoadingFirstPage") : (isAuthorSearch ? authorPost === undefined : (companyStatus === "LoadingFirstPage" || authorPost === undefined)));
+        : (isCompanySearch 
+            ? (companyStatus === "LoadingFirstPage") 
+            : (isAuthorSearch 
+                ? (authorStatus === "LoadingFirstPage") 
+                : (companyStatus === "LoadingFirstPage" || authorStatus === "LoadingFirstPage")));
 
-    const isLoadingMore = !isAuthorSearch && status === "LoadingMore";
-    const canLoadMore = !isAuthorSearch && status === "CanLoadMore";
+    const isLoadingMore = status === "LoadingMore";
+    const canLoadMore = status === "CanLoadMore";
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
-    const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        // Clear any existing timeout
-        if (loadingTimeoutRef.current) {
-            clearTimeout(loadingTimeoutRef.current);
-        }
-
         if (!loadMoreRef.current || !canLoadMore || isLoadingMore) return;
 
         const currentRef = loadMoreRef.current;
@@ -132,16 +141,7 @@ const Page = () => {
         return () => {
             observer.disconnect();
         };
-    }, [canLoadMore, isLoadingMore, loadMore, posts]);
-
-    // Cleanup timeout on unmount
-    useEffect(() => {
-        return () => {
-            if (loadingTimeoutRef.current) {
-                clearTimeout(loadingTimeoutRef.current);
-            }
-        };
-    }, []);
+    }, [canLoadMore, isLoadingMore, loadMore]);
 
     // Get display title based on search type
     const getTitle = () => {
@@ -152,7 +152,7 @@ const Page = () => {
     };
 
     return (
-        <div className="min-h-screen  ">
+        <div className="min-h-screen">
             <div className="flex-1 lg:w-6xl px-4 py-8 h-full">
                 {isLoading ? (
                     <CircularLoader />
@@ -186,7 +186,7 @@ const Page = () => {
                             )}
                         </div>
 
-                        {/* Keep the trigger div mounted as long as we can load more OR are currently loading */}
+                        {/* Infinite scroll trigger */}
                         {(canLoadMore || isLoadingMore) && uniquePosts && uniquePosts.length > 0 && (
                             <div
                                 ref={loadMoreRef}
@@ -202,7 +202,7 @@ const Page = () => {
                         )}
 
                         {/* End of results message */}
-                        {!isAuthorSearch && status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
+                        {status === "Exhausted" && uniquePosts && uniquePosts.length > 0 && (
                             <div className="text-center py-8">
                                 <p className="text-slate-500 font-medium">
                                     You&apos;ve reached the end! No more articles to load.

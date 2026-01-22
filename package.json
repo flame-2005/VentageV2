@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed:blogs": "tsx scripts/seedBlogs.ts",
+    "seed:channels": "tsx scripts/seedChannel.ts",
     "process:otherBlogs": "tsx scripts/classifyWebsites.ts",
     "run:rssFetcher": "tsx scripts/rss/run.ts",
     "process:substack": "tsx scripts/processSubstack.ts",
