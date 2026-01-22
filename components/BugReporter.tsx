@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { X, Bug } from "lucide-react";
+import { X, Bug, MessageSquareWarning } from "lucide-react";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
 
@@ -51,8 +51,8 @@ const BugReporter = () => {
         onClick={() => setOpen(true)}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-black text-white px-4 py-3 shadow-lg hover:bg-slate-900 transition"
       >
-        <Bug className="w-4 h-4" />
-        <span className="text-sm font-medium">Report Bug</span>
+        <MessageSquareWarning className="w-4 h-4" />
+        <span className="text-sm font-medium">Bug / Request</span>
       </button>
 
       {/* Modal */}
@@ -91,7 +91,7 @@ const BugReporter = () => {
 
               {/* Description */}
               <textarea
-                placeholder="Describe the issue..."
+                placeholder="Please describe the issue or request."
                 rows={4}
                 required
                 value={description}
