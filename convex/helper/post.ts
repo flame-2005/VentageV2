@@ -10,6 +10,7 @@ import { api } from "../_generated/api";
 import { calculateIsValidAnalysisParams, IncomingPost, RSSItem } from "../constant/posts";
 import { v } from "convex/values";
 import { Doc } from "../_generated/dataModel";
+import { paginationOptsValidator } from "convex/server";
 
 // 2️⃣ Generate CSV for both
 export const exportCsv = action({
@@ -143,27 +144,28 @@ export function extractDate(item: RSSItem): string {
   return "";
 }
 
-export const migrateCompanyPosts = internalMutation({
+export const migrateCompanyPosts = mutation({
   args: {
     batchSize: v.optional(v.number()),
+    paginationOpts: v.optional(paginationOptsValidator),
   },
   handler: async (ctx, args) => {
-    const batchSize = args.batchSize || 100;
+    const batchSize = args.batchSize ?? 100;
 
-    // Get all posts
-    const posts = await ctx.db.query("posts").collect();
+    const page = await ctx.db
+      .query("posts")
+      .paginate({
+        cursor: args.paginationOpts?.cursor ?? null,
+        numItems: batchSize,
+      });
 
     let totalCreated = 0;
-    let postsProcessed = 0;
     const errors: Array<{ postId: string; error: string }> = [];
 
-    for (const post of posts) {
-      postsProcessed++;
-
+    for (const post of page.page) {
       try {
-        // Check if post has companyDetails array
-        if (post.companyDetails && post.companyDetails.length > 0) {
-          // Create a companyPost entry for each company in the array
+        // Case 1: companyDetails array
+        if (post.companyDetails?.length && post.classification !== "Multiple_company_update" && post.classification !== "General_investment_guide") {
           for (const company of post.companyDetails) {
             await ctx.db.insert("companyPosts", {
               postId: post._id,
@@ -176,8 +178,8 @@ export const migrateCompanyPosts = internalMutation({
             totalCreated++;
           }
         }
-        // Fallback: if no companyDetails but has top-level company fields
-        else if (post.companyName) {
+        // Case 2: fallback single company
+        else if (post.companyName && post.classification !== "Multiple_company_update" && post.classification !== "General_investment_guide") {
           await ctx.db.insert("companyPosts", {
             postId: post._id,
             companyName: post.companyName,
@@ -187,13 +189,6 @@ export const migrateCompanyPosts = internalMutation({
             marketCap: undefined,
           });
           totalCreated++;
-        }
-
-        // Process in batches to avoid timeouts
-        if (postsProcessed % batchSize === 0) {
-          console.log(
-            `Processed ${postsProcessed}/${posts.length} posts, created ${totalCreated} company posts`
-          );
         }
       } catch (error) {
         errors.push({
@@ -205,9 +200,11 @@ export const migrateCompanyPosts = internalMutation({
 
     return {
       success: true,
-      totalPostsProcessed: postsProcessed,
-      totalCompanyPostsCreated: totalCreated,
-      errors: errors.length > 0 ? errors : undefined,
+      postsProcessed: page.page.length,
+      companyPostsCreated: totalCreated,
+      continueCursor: page.continueCursor ?? null,
+      hasMore: page.continueCursor !== null,
+      errors: errors.length ? errors : undefined,
     };
   },
 });
