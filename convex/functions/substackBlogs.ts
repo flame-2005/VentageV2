@@ -536,6 +536,8 @@ export const getCompanySuggestions = query({
     const term = searchTerm.trim();
     const upperTerm = term.toUpperCase();
 
+    const nseTerm = term.replace(" ","").toUpperCase();
+
     // 1️⃣ Fuzzy name search (typo-tolerant)
     const nameResults = await ctx.db
       .query("master_company_list")
@@ -545,7 +547,7 @@ export const getCompanySuggestions = query({
     // 2️⃣ Exact NSE code match
     const nseResults = await ctx.db
       .query("master_company_list")
-      .withSearchIndex("nse_search", (q) => q.search("nse_code", upperTerm))
+      .withSearchIndex("nse_search", (q) => q.search("nse_code", nseTerm))
       .take(4);
 
     // 3️⃣ Exact BSE code match
