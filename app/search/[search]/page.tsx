@@ -3,6 +3,7 @@
 import ArticleCard from '@/components/ArticleCard/ArticleCard';
 import CircularLoader from '@/components/circularLoader';
 import { api } from '@/convex/_generated/api';
+import { capitalize } from '@/helper/text';
 import { usePaginatedQuery } from 'convex/react';
 import { useParams, useSearchParams } from 'next/navigation';
 import React, { useEffect, useMemo, useRef } from 'react'
@@ -143,14 +144,6 @@ const Page = () => {
         };
     }, [canLoadMore, isLoadingMore, loadMore]);
 
-    // Get display title based on search type
-    const getTitle = () => {
-        if (isSearchEverywhere) return 'Search Results';
-        if (isCompanySearch) return `Company: ${actualSearchTerm}`;
-        if (isAuthorSearch) return `Author: ${actualSearchTerm}`;
-        return 'Latest Articles';
-    };
-
     return (
         <div className="min-h-screen">
             <div className="flex-1 lg:w-6xl px-4 py-8 h-full">
@@ -160,7 +153,7 @@ const Page = () => {
                     <>
                         <div className="mb-6">
                             <h1 className="text-3xl md:text-4xl font-semibold text-slate-900">
-                                {getTitle()}
+                                {capitalize(actualSearchTerm)}
                             </h1>
                         </div>
                         <div className="space-y-6">
