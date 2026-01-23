@@ -1,5 +1,5 @@
 import { Doc, Id } from '@/convex/_generated/dataModel'
-import { Calendar, Heart, MousePointerClick, Share2, User, Building2, Flag, X, AlertCircle } from 'lucide-react'
+import { Calendar, Heart, MousePointerClick, Share2, User, Building2, Flag, X, AlertCircle, Play } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
@@ -9,8 +9,6 @@ import { useToast } from '@/context/toastContext'
 import { useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { useUser } from '@/context/userContext'
-import { ArticleBugReporter } from '../ArticleCard/ArticleBugReport'
-import { trackEvent, GA_EVENT } from '@/lib/analytics/ga'
 import { formatYouTubeDuration } from '@/helper/text'
 
 type VideoCardProps = {
@@ -142,7 +140,9 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
 
 
                 {/* Image - Full width on mobile, compact on desktop */}
-                <div className="flex-shrink-0 w-full sm:w-44">
+                <a onClick={() => handlePostClick()}
+                    href={post.link}
+                    target="_blank" className="flex-shrink-0 w-full sm:w-44">
                     <div className="relative w-full sm:h-32 bg-slate-100 rounded-lg overflow-hidden">
                         {!imageError ? (
                             <img
@@ -157,14 +157,22 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                             </div>
                         )}
 
-                        {/* Duration Badge */}
+                        {/* Center Play Icon */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-black/70 text-white p-2 rounded-full">
+                                <Play className="w-4 h-4" />
+                            </div>
+                        </div>
+
+                        {/* Duration Badge (bottom-right) */}
                         {post.duration && (
                             <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[11px] px-1.5 py-0.5 rounded">
                                 {formatYouTubeDuration(post.duration)}
                             </div>
                         )}
                     </div>
-                </div>
+
+                </a>
 
 
 
