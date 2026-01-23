@@ -26,6 +26,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
   const { user, isLoading, signOut } = useUser();
   const router = useRouter();
   const [imgError, setImgError] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const displayName = user ? (user.fullName || user.username) : "";
   const fallbackLetter = displayName ? displayName.charAt(0).toUpperCase() : "";
@@ -65,7 +66,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       {/* Search Bar */}
       <div className='hidden lg:block mb-8'>
 
-        <SearchBar />
+        <SearchBar inputRef={inputRef} />
       </div>
 
       {/* Main Heading */}

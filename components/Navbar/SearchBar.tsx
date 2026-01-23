@@ -8,7 +8,7 @@ import { GA_EVENT, trackEvent } from '@/lib/analytics/ga';
 
 interface SearchBarProps {
     shouldFocus?: boolean;
-    inputRef?: React.RefObject<HTMLInputElement | null>;
+    inputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
@@ -138,6 +138,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
         clearSearch();
         closeSuggestions();
         setDebouncedInputValue('');
+        inputRef?.current?.focus()
     };
 
     const handleSearchEverywhere = () => {
