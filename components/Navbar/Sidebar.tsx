@@ -100,6 +100,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
           </div>
           <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
         </button>
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-4" />
         <button
           className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-4 py-3.5 w-full"
           onClick={() => {

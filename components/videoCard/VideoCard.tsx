@@ -11,6 +11,7 @@ import { api } from '@/convex/_generated/api'
 import { useUser } from '@/context/userContext'
 import { ArticleBugReporter } from '../ArticleCard/ArticleBugReport'
 import { trackEvent, GA_EVENT } from '@/lib/analytics/ga'
+import { formatYouTubeDuration } from '@/helper/text'
 
 type VideoCardProps = {
     post: Doc<'videos'>,
@@ -62,18 +63,18 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
     const shareMutation = useMutation(api.functions.users.sharePost)
 
     const likePost = async () => {
-    //     trackEvent(GA_EVENT.LIKE_CLICKED, { postId: post._id })
-    //     if (!user) {
-    //         addToast('error', 'Login Required', 'Please log in to like posts.')
-    //         return
-    //     }
-    //     setIsLiked(!isLiked)
-    //     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
-    //     await likeMutation({
-    //         postId: post._id,
-    //         userId: user?._id as Id<"users">,
-    //     })
-     }
+        //     trackEvent(GA_EVENT.LIKE_CLICKED, { postId: post._id })
+        //     if (!user) {
+        //         addToast('error', 'Login Required', 'Please log in to like posts.')
+        //         return
+        //     }
+        //     setIsLiked(!isLiked)
+        //     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
+        //     await likeMutation({
+        //         postId: post._id,
+        //         userId: user?._id as Id<"users">,
+        //     })
+    }
 
     const sharePost = async () => {
         // trackEvent(GA_EVENT.SHARE_CLICKED, { postId: post._id })
@@ -142,7 +143,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
 
                 {/* Image - Full width on mobile, compact on desktop */}
                 <div className="flex-shrink-0 w-full sm:w-44">
-                    <div className="w-full sm:h-32 bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center">
+                    <div className="relative w-full sm:h-32 bg-slate-100 rounded-lg overflow-hidden">
                         {!imageError ? (
                             <img
                                 src={post.thumbnail || post.imageUrl}
@@ -151,12 +152,20 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                                 onError={() => setImageError(true)}
                             />
                         ) : (
-                            <div className="px-3 py-2 text-center text-sm font-semibold text-slate-500 break-words">
+                            <div className="flex items-center justify-center h-48 sm:h-32 px-3 py-2 text-center text-sm font-semibold text-slate-500 break-words">
                                 {firstCompany || "N/A"}
+                            </div>
+                        )}
+
+                        {/* Duration Badge */}
+                        {post.duration && (
+                            <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[11px] px-1.5 py-0.5 rounded">
+                                {formatYouTubeDuration(post.duration)}
                             </div>
                         )}
                     </div>
                 </div>
+
 
 
                 {/* Content Area */}
