@@ -4,7 +4,7 @@ import { useUser } from '@/context/userContext';
 import { api } from '@/convex/_generated/api';
 import { signInWithGoogle } from '@/lib/users';
 import { useQuery } from 'convex/react';
-import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home, ArrowRight } from 'lucide-react';
+import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home, ArrowRight, Video } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
@@ -100,7 +100,22 @@ const Sidebar: React.FC<SidebarInterface> = ({
           </div>
           <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
         </button>
-
+        <button
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-4 py-3.5 w-full"
+          onClick={() => {
+            // trackEvent(GA_EVENT.HOME_CLICKED)
+            router.push("/videos")
+            setIsOpen(false)
+          }}
+        >
+          <div className='flex items-center gap-3'>
+            <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors duration-200">
+              <Video className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors duration-200" />
+            </div>
+            <span className="text-slate-700 group-hover:text-slate-900 transition-colors duration-200">Videos</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
+        </button>
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-4" />
 
