@@ -283,13 +283,13 @@ export const addBulkVideos = mutation({
   args: {
     videos: v.array(
       v.object({
-        blogId: v.optional(v.id("channels")),
+        channelId: v.id("channels"),
         title: v.string(),
         description: v.optional(v.string()),
         link: v.string(),
         channel_name: v.optional(v.string()),
         pubDate: v.string(),
-        image: v.optional(v.string()),
+        thumbnail: v.optional(v.string()),
         content: v.optional(v.string()),
         createdAt: v.number(),
         summary: v.optional(v.string()),

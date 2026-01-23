@@ -8,18 +8,18 @@ import { GA_EVENT, trackEvent } from '@/lib/analytics/ga';
 
 interface SearchBarProps {
     shouldFocus?: boolean;
+    inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
-    const inputRef = useRef<HTMLInputElement>(null);
+const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const [inputValue, setInputValue] = useState<string>()
-    const [inputType, setInputType] = useState<string>()
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const [debouncedInputValue, setDebouncedInputValue] = useState<string>('');
 
     useEffect(() => {
+        if (!inputRef) return;
         if (shouldFocus && inputRef.current) {
             // Small delay for smooth transition
             setTimeout(() => {
@@ -161,7 +161,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
                     type="text"
                     placeholder="Search ticker or company..."
                     value={inputValue}
-
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
                     onKeyDown={handleKeyDown}
@@ -171,7 +170,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus }) => {
                             setActiveIndex(0);
                         }
                     }}
-                    className="w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm"
+                    className="w-full pl-9 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-base"
                 />
                 {(inputValue) && (
                     <button
