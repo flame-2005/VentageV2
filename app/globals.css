@@ -1,2 +1,9 @@
 @import "tailwindcss";
 
+@layer base {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}

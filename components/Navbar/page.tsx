@@ -1,5 +1,5 @@
 import { X, Menu, Zap, SearchCheckIcon, SearchCode, SearchIcon, Search, Radar, ChevronRight } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import { signInWithGoogle } from '@/lib/users';
 import { useUser } from '@/context/userContext';
@@ -9,6 +9,7 @@ import SearchBar from './SearchBar';
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSearchBaropen, setIsSearchBarOpen] = useState<boolean>(false)
+  const inputRef = useRef<HTMLInputElement>(null);
 
   return (
     <>
@@ -32,20 +33,23 @@ const Navbar = () => {
               <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
                 <Radar className="w-6 h-6 text-white" />
               </div>
-             <div className="relative inline-block">
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">
-              The VantEdge
-            </h1>
+              <div className="relative inline-block">
+                <h1 className="text-4xl font-bold tracking-tight text-slate-900 leading-none italic">
+                  The VantEdge
+                </h1>
 
-            <span className="absolute my-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
-              powered by Pkeday
-            </span>
-          </div>
+                <span className="absolute my-1 right-0 text-[10px] font-bold text-blue-600 tracking-[0.2em] uppercase">
+                  powered by Pkeday
+                </span>
+              </div>
             </Link>
           </div>
 
           <div>
-            <button className='lg:hidden items-center justify-center flex' onClick={() => setIsSearchBarOpen(true)}>
+            <button className='lg:hidden items-center justify-center flex' onClick={() => {
+              setIsSearchBarOpen(true)
+              inputRef.current?.focus()
+            }}>
               <Search />
             </button>
 
@@ -54,7 +58,7 @@ const Navbar = () => {
               className={`fixed top-0 right-0  bg-white shadow-lg z-50 flex items-center justify-center gap-2 p-4 transition-transform duration-300 ease-in-out ${isSearchBaropen ? 'translate-x-0' : 'translate-x-full'
                 } w-screen`}
             >
-              <SearchBar shouldFocus={isSearchBaropen} />
+              <SearchBar shouldFocus={isSearchBaropen} inputRef={inputRef} />
               <button
                 onClick={() => setIsSearchBarOpen(false)}
                 className="hover:bg-gray-100 rounded p-2 transition-colors"
@@ -69,6 +73,13 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       <>
+        {/* Mobile Backdrop */}
+        {isMobileMenuOpen && (
+          <div
+            className="lg:hidden fixed inset-0 z-40"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
         <aside
           className={`lg:hidden fixed left-0 top-0 h-[100dvh] w-80 bg-white border-r border-slate-200 p-6 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
             } overflow-y-auto`}
