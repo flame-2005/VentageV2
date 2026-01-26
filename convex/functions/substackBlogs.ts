@@ -703,6 +703,7 @@ export const addBulkPost = mutation({
         views: v.optional(v.string()),
         likes: v.optional(v.string()),
         source: v.optional(v.string()),
+        isValidAnalysis: v.optional(v.boolean()),
         lastCheckedAt: v.optional(v.number()),
       })
     ),
