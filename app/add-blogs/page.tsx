@@ -50,11 +50,32 @@ export default function AddBlogPage() {
         };
     }
 
+    function isValidUrl(input: string) {
+        try {
+            const url = new URL(input);
+
+            if (!url.hostname.includes(".")) return false;
+
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+
     async function handleSubmit() {
         if (!blogs) return; // still loading
 
         setLoading(true);
         setMessage("");
+
+        if (!isValidUrl(url.trim())) {
+            addToast(
+                "error",
+                "Invalid URL",
+                "Please enter a valid blog URL."
+            )
+        }
 
         try {
             const { name, domain, feedUrl } = deriveBlogData(url.trim());
@@ -131,7 +152,7 @@ export default function AddBlogPage() {
                                     </svg>
                                 </div>
                                 <input
-                                    type="url"
+                                    type="text"
                                     placeholder="https://example.substack.com"
                                     value={url}
                                     onChange={(e) => setUrl(e.target.value)}

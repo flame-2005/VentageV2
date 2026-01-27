@@ -20,9 +20,27 @@ export default function LinkSubmissionForm() {
 
     const { addToast } = useToast();
 
+    function isValidUrl(input: string) {
+        try {
+            if (!input.includes(".")) return false;
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
-        trackEvent(GA_EVENT.SUBMIT_BLOG_CLICKED,{blogUrl: url})
+        trackEvent(GA_EVENT.SUBMIT_BLOG_CLICKED, { blogUrl: url })
         e.preventDefault();
+
+        if (!isValidUrl(url.trim())) {
+            addToast(
+                "error",
+                "Invalid URL",
+                "Please enter a valid blog URL."
+            )
+            return;
+        }
 
         try {
             setLoading(true);
@@ -67,7 +85,7 @@ export default function LinkSubmissionForm() {
                                 </svg>
                             </div>
                             <input
-                                type="url"
+                                type="text"
                                 required
                                 placeholder="https://example.com"
                                 value={url}
