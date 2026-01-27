@@ -54,11 +54,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSupabaseUser(session?.user ?? null);
-        
+
         if (session?.user) {
           await syncUserWithConvex(session.user);
         }
-        
+
         setIsLoading(false);
       }
     );
@@ -84,21 +84,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      console.log('User signed out successfully');
+      console.log("[LOGOUT] Starting sign out");
+
+      // 🔥 Kill session everywhere
+      const { error } = await supabase.auth.signOut({ scope: "global" });
+      if (error) {
+        console.error("[LOGOUT] Supabase error", error);
+      }
+
+    } catch (err) {
+      console.error("[LOGOUT] Exception", err);
+    } finally {
+      // ✅ ALWAYS clear local state (even if Supabase fails)
       setSupabaseUser(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
+
+      // 🧹 Safe browser cleanup
+      if (typeof window !== "undefined") {
+        sessionStorage.clear();
+      }
+
+      console.log("[LOGOUT] Completed (fail-safe)");
     }
   };
+
+
 
   const refreshUser = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setSupabaseUser(session?.user ?? null);
-      
+
       if (session?.user) {
         await syncUserWithConvex(session.user);
       }
