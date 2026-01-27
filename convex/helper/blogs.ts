@@ -57,7 +57,7 @@ export function matchCompaniesWithMasterList(
     bse_code: string | null;
     nse_code: string | null;
     market_cap: number | null;
-  }>
+  }>,
 ) {
   if (!extractedCompanies) {
     return {
@@ -142,6 +142,12 @@ export function matchCompaniesWithMasterList(
         break;
       }
 
+      const masterTokens = masterName.split(" ");
+      const companyTokens = companyName.split(" ");
+
+      if (companyTokens.length === 1 && masterTokens[0] !== companyTokens[0]) {
+        continue; // 🚫 block Kotak Mahindra Bank
+      }
       // 2️⃣ Exact normalized name match
       if (
         companyName === masterName &&
@@ -267,7 +273,7 @@ export function normalizeUrl(url: string): string {
   // Remove any feed-like suffix
   normalized = normalized.replace(
     /\/(feed|rss|rss\.xml|index\.xml|atom\.xml)$/i,
-    ""
+    "",
   );
 
   return normalized;

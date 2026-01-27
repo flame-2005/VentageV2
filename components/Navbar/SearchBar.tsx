@@ -9,9 +9,10 @@ import { GA_EVENT, trackEvent } from '@/lib/analytics/ga';
 interface SearchBarProps {
     shouldFocus?: boolean;
     inputRef: React.RefObject<HTMLInputElement | null>;
+    setSearchBarOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBarOpen }) => {
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const [inputValue, setInputValue] = useState<string>()
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
@@ -71,13 +72,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
     };
 
     const clearSearch = () => {
-        setInputValue("");
+        setInputValue('');
     };
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
         if (e.key === 'Enter' && inputValue && inputValue?.length > 2) {
             router.push(`/search/${encodeURIComponent(inputValue)}`);
             closeSuggestions();
+            setInputValue('');
         }
     };
 
@@ -99,6 +101,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
             if (e.key === "Enter" && inputValue && inputValue?.length > 2) {
                 router.push(`/search/${encodeURIComponent(inputValue)}`);
                 closeSuggestions();
+                setInputValue('');
             }
             return;
         }
@@ -123,12 +126,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                 const selected = flatSuggestions[activeIndex];
                 if (selected) {
                     router.push(selected.href);
-                    setInputValue(selected.label);
+                    setInputValue('');
                     closeSuggestions();
                 }
                 break;
 
             case "Escape":
+                setInputValue('');
                 closeSuggestions();
                 break;
         }
@@ -146,6 +150,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
         if (inputValue) {
             router.push(`/search/search-everywhere?${encodeURIComponent(inputValue)}`);
             closeSuggestions();
+            setInputValue('');
+            if(setSearchBarOpen){
+                setSearchBarOpen(false)
+            }
         }
     };
 
@@ -208,6 +216,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                                                         trackEvent(GA_EVENT.SEARCH_PERFORMED, { category: "company", label: suggestion.companyName });
                                                         setInputValue(suggestion.companyName);
                                                         closeSuggestions();
+                                                        setInputValue('');
+                                                        if(setSearchBarOpen){
+                                                            setSearchBarOpen(false)
+                                                        }
                                                     }}
                                                     href={`/search/company?${encodeURIComponent(suggestion.companyName)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
@@ -240,6 +252,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                                                         trackEvent(GA_EVENT.SEARCH_PERFORMED, { category: "author", label: suggestion.author });
                                                         setInputValue(suggestion.author);
                                                         closeSuggestions();
+                                                        setInputValue('');
+                                                        if(setSearchBarOpen){
+                                                            setSearchBarOpen(false)
+                                                        }
                                                     }}
                                                     href={`/search/author?${encodeURIComponent(suggestion.author)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex

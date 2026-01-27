@@ -156,7 +156,7 @@ const Page = () => {
                                 {capitalize(actualSearchTerm)}
                             </h1>
                         </div>
-                        <div className="space-y-6">
+                        <div className="lg:space-y-6 space-y-7">
                             {uniquePosts && uniquePosts.length > 0 ? (
                                 uniquePosts.map((post) => (
                                     <ArticleCard

@@ -163,7 +163,7 @@ export default function CompanyPage() {
             )}
 
             {/* Posts */}
-            <div className="space-y-6">
+            <div className="lg:space-y-6 space-y-7">
                 {posts.map((post) => (
                     <ArticleCard key={post._id} post={post} />
                 ))}

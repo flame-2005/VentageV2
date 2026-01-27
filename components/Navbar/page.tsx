@@ -58,7 +58,7 @@ const Navbar = () => {
               className={`fixed top-0 right-0  bg-white shadow-lg z-50 flex items-center justify-center gap-2 p-4 transition-transform duration-300 ease-in-out ${isSearchBaropen ? 'translate-x-0' : 'translate-x-full'
                 } w-screen`}
             >
-              <SearchBar shouldFocus={isSearchBaropen} inputRef={inputRef} />
+              <SearchBar shouldFocus={isSearchBaropen} inputRef={inputRef} setSearchBarOpen={setIsSearchBarOpen} />
               <button
                 onClick={() => setIsSearchBarOpen(false)}
                 className="hover:bg-gray-100 rounded p-2 transition-colors"
