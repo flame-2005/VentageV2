@@ -61,7 +61,7 @@ export default function InvestmentDashboard() {
                             Latest Articles
                         </h1> */}
                         {/* Articles */}
-                        <div className="space-y-6">
+                        <div className="lg:space-y-6 space-y-7">
                             {posts && posts.length > 0 ? (
                                 posts.map((post) => (
                                     <ArticleCard

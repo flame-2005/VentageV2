@@ -401,11 +401,37 @@ export const updatePost = mutation({
       tags: v.optional(v.array(v.string())),
     }),
   },
+
   handler: async (ctx, args) => {
+    /* 1️⃣ Update post */
     await ctx.db.patch(args.postId, {
       ...args.data,
       lastCheckedAt: Date.now(),
     });
+
+    /* 2️⃣ Remove existing companyPosts */
+    const existingCompanyPosts = await ctx.db
+      .query("companyPosts")
+      .withIndex("by_post", q => q.eq("postId", args.postId))
+      .collect();
+
+    for (const row of existingCompanyPosts) {
+      await ctx.db.delete(row._id);
+    }
+
+    /* 3️⃣ Insert updated companyPosts */
+    if (args.data.companyDetails && args.data.pubDate) {
+      for (const company of args.data.companyDetails) {
+        await ctx.db.insert("companyPosts", {
+          postId: args.postId,
+          companyName: company.company_name,
+          pubDate: args.data.pubDate,
+          bseCode: company.bse_code,
+          nseCode: company.nse_code,
+          marketCap: company.market_cap,
+        });
+      }
+    }
   },
 });
 
