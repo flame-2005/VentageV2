@@ -86,6 +86,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      console.log('User signed out successfully');
       setSupabaseUser(null);
     } catch (error) {
       console.error('Error signing out:', error);
