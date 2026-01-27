@@ -113,7 +113,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: index * 0.05 }}
-                className="group bg-white rounded-2xl p-3 sm:p-4 hover:shadow-xl hover:shadow-slate-200/50 hover:border-blue-200 transition-all flex flex-col sm:flex-row gap-3 sm:gap-5 items-stretch relative"
+                className="group bg-white rounded-2xl p-3 sm:p-4 hover:shadow-lg shadow-md hover:border-blue-200 transition-all flex flex-col sm:flex-row gap-3 sm:gap-5 items-stretch relative"
             >
                 {/* Report Button - Top Right */}
                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
