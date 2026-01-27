@@ -86,7 +86,7 @@ const BugReporter = () => {
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full border rounded-lg px-3 py-2 text-base mb-3 focus:outline-none focus:ring-2 focus:ring-black"
               />
 
               {/* Description */}
@@ -96,7 +96,7 @@ const BugReporter = () => {
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full border rounded-lg px-3 py-2 text-base mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-black"
               />
 
               {/* Submit */}
