@@ -23,6 +23,8 @@ export default function LinkSubmissionForm() {
     function isValidUrl(input: string) {
         try {
             if (!input.includes(".")) return false;
+            const dotIndex = input.indexOf(".");
+            if (dotIndex === 0 || dotIndex === input.length - 1) return false;
             return true;
         } catch {
             return false;
@@ -91,7 +93,9 @@ export default function LinkSubmissionForm() {
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 onFocus={() => setFocusedField("url")}
-                                onBlur={() => setFocusedField("")}
+                                onBlur={() => {
+                                    setFocusedField("");
+                                }}
                                 className={`w-full rounded-xl border ${focusedField === "url" ? "border-blue-500 ring-4 ring-blue-50" : "border-gray-200"
                                     } bg-white pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:outline-none`}
                             />
