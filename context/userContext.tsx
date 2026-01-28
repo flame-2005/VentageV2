@@ -102,7 +102,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (typeof window !== "undefined") {
         sessionStorage.clear();
       }
-      router.refresh()
+      window.location.reload();
     }
   };
 
