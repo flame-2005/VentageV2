@@ -99,7 +99,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (!showSuggestions || flatSuggestions.length === 0) {
             if (e.key === "Enter" && inputValue && inputValue?.length > 2) {
-                router.push(`/search/${encodeURIComponent(inputValue)}`);
+                router.push(`/search/search-everywhere?${encodeURIComponent(inputValue)}`);
                 closeSuggestions();
                 setInputValue('');
             }
