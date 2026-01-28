@@ -38,7 +38,7 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
             await submitBugReport({
                 email: reportEmail,
                 pageLink: post.link || window.location.href,
-                bugDescription: `Wrong Tagging Report for "${post.title} \n\n Id - ${post._id}"\n\nCurrent Tags: ${post.tags?.join(', ') || 'None'}\n\nCompany: ${firstCompany || 'N/A'}\n\nIssue Type: ${selectedIssue}\n\nAdditional Details: ${reportDescription || 'None provided'}`,
+                bugDescription: `Wrong Tagging Report for "${post.title}"\n\nCurrent Tags: ${post.tags?.join(', ') || 'None'}\n\nCompany: ${firstCompany || 'N/A'}\n\nIssue Type: ${selectedIssue}\n\nAdditional Details: ${reportDescription || 'None provided'}`,
             })
             addToast('success', 'Report Submitted', 'Thank you for helping us improve our tagging!')
             setShowReportModal(false)

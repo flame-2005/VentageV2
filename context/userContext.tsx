@@ -6,6 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Id } from '@/convex/_generated/dataModel';
 import { user } from '@/constants/user';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -23,6 +24,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const createOrUpdateUser = useMutation(api.functions.users.createOrUpdateUser);
+
+  const router = useRouter()
 
   // Query Convex user data based on supabaseUser id
   const user = useQuery(
@@ -95,13 +98,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       // ✅ ALWAYS clear local state (even if Supabase fails)
       setSupabaseUser(null);
-
       // 🧹 Safe browser cleanup
       if (typeof window !== "undefined") {
         sessionStorage.clear();
       }
-
-      console.log("[LOGOUT] Completed (fail-safe)");
+      router.refresh()
     }
   };
 
