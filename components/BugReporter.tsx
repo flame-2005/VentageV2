@@ -105,7 +105,7 @@ const BugReporter = () => {
                 disabled={loading}
                 className="w-full bg-black text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-900 disabled:opacity-50"
               >
-                {loading ? "Submitting..." : "Submit Bug"}
+                {loading ? "Submitting..." : "Submit"}
               </button>
               </form>
               

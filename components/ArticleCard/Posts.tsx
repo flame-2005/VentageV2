@@ -25,8 +25,6 @@ export default function Posts({ initialPosts }: postProps) {
         }
     );
 
-
-
     const status = regularQuery.status;
     const posts =
         status === "LoadingFirstPage"
