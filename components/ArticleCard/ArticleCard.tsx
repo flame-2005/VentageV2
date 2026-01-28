@@ -257,9 +257,9 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                             <button
                                 onClick={async () => {
                                     try {
-                                        await sharePost()
                                         const shareUrl = `${window.location.origin}/share/${post._id}`
-                                        await navigator.clipboard.writeText(shareUrl)
+                                        navigator.clipboard.writeText(shareUrl)
+                                        await sharePost()
                                         addToast(
                                             "success",
                                             "Link Copied!",
