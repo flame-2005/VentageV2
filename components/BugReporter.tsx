@@ -74,7 +74,7 @@ const BugReporter = () => {
               <form onSubmit={handleSubmit}>
                 <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Report a Bug</h3>
-                <button onClick={() => setOpen(false)}>
+                <button type="button" onClick={() => setOpen(false)}>
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
