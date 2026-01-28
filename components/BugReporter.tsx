@@ -73,12 +73,14 @@ const BugReporter = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
           >
             <motion.div
               className="w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-6"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
               <form onSubmit={handleSubmit}>
