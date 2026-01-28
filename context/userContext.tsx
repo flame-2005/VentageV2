@@ -84,8 +84,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      console.log("[LOGOUT] Starting sign out");
-
       // 🔥 Kill session everywhere
       const { error } = await supabase.auth.signOut({ scope: "global" });
       if (error) {
