@@ -1,6 +1,7 @@
 import { useToast } from '@/context/toastContext';
 import { api } from '@/convex/_generated/api';
 import { Doc } from '@/convex/_generated/dataModel';
+import { isValidEmail } from '@/helper/text';
 import { useMutation } from 'convex/react';
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react';
@@ -25,6 +26,15 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
     const submitBugReport = useMutation(api.functions.bugs.submitBugReport)
 
     const handleReportSubmit = async () => {
+
+        if (reportEmail && !isValidEmail(reportEmail)) {
+            addToast(
+                "error",
+                "Invalid email",
+                "Please enter a valid email."
+            )
+            return;
+        }
         if (!reportEmail.trim()) {
             addToast('error', 'Email Required', 'Please provide your email address.')
             return

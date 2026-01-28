@@ -6,6 +6,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
+import { isValidEmail } from "@/helper/text";
 
 export default function LinkSubmissionForm() {
     const { user, isLoading } = useUser();
@@ -40,6 +41,14 @@ export default function LinkSubmissionForm() {
                 "error",
                 "Invalid URL",
                 "Please enter a valid blog URL."
+            )
+            return;
+        }
+        if (email && !isValidEmail(email)) {
+            addToast(
+                "error",
+                "Invalid email",
+                "Please enter a valid email."
             )
             return;
         }
