@@ -168,7 +168,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                 <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Search ticker or company..."
+                    placeholder="Search company or author"
                     value={inputValue}
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
