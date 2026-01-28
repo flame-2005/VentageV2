@@ -27,12 +27,12 @@ export const addBlogs = mutation({
 });
 
 export const getBlog = query({
-  args: { 
-    blogId: v.id("blogs") 
+  args: {
+    blogId: v.id("blogs"),
   },
   handler: async (ctx, { blogId }) => {
     const blog = await ctx.db.get(blogId);
-    
+
     if (!blog) {
       throw new Error(`Blog with ID ${blogId} not found`);
     }
@@ -59,13 +59,22 @@ export const getPostsByCompany = query({
 
     // Step 3: Fetch all posts for these IDs
     const posts = await Promise.all(
-      postIds.map((postId) => ctx.db.get(postId))
+      postIds.map((postId) => ctx.db.get(postId)),
     );
 
     // Step 4: Filter valid posts
-    const validPosts = posts.filter((post): post is NonNullable<typeof post> => {
-      return post !== null && isValidAuthor(post.author);
-    });
+    const validPosts = posts.filter(
+      (post): post is NonNullable<typeof post> => {
+        return (
+          post !== null &&
+          isValidAuthor(post.author) &&
+          !!post.companyDetails &&
+          (post.classification === "Company_analysis" ||
+            post.classification === "Multiple_company_analysis" ||
+            post.classification === "Sector_analysis")
+        );
+      },
+    );
 
     // Step 5: Return paginated result
     return {
@@ -76,7 +85,7 @@ export const getPostsByCompany = query({
 });
 
 export const getPostsByAuthor = query({
-  args: { 
+  args: {
     author: v.string(),
     paginationOpts: paginationOptsValidator,
   },
@@ -89,7 +98,13 @@ export const getPostsByAuthor = query({
 
     // Filter the results page
     const validPosts = posts.page.filter(hasCompanyData);
-    const filteredPosts = validPosts.filter((post) => post.companyDetails);
+    const filteredPosts = validPosts.filter(
+      (post) =>
+        post.companyDetails &&
+        (post.classification === "Company_analysis" ||
+          post.classification === "Multiple_company_analysis" ||
+          post.classification === "Sector_analysis"),
+    );
 
     return {
       ...posts,
@@ -125,7 +140,10 @@ export const searchEverywhere = query({
     blogId: v.optional(v.id("blogs")),
     paginationOpts: paginationOptsValidator, // Use Convex's built-in validator
   },
-  handler: async (ctx, { searchTerm, classification, blogId, paginationOpts }) => {
+  handler: async (
+    ctx,
+    { searchTerm, classification, blogId, paginationOpts },
+  ) => {
     if (!searchTerm || !searchTerm.trim()) {
       return {
         page: [],
@@ -150,10 +168,7 @@ export const searchEverywhere = query({
 
     // 3️⃣ Merge & dedupe
     const seenIds = new Set<string>();
-    const allResults = [
-      ...authorResults,
-      ...companyResults,
-    ].filter((post) => {
+    const allResults = [...authorResults, ...companyResults].filter((post) => {
       if (seenIds.has(post._id)) return false;
       seenIds.add(post._id);
       return true;
@@ -167,21 +182,21 @@ export const searchEverywhere = query({
           !!post.companyDetails &&
           (post.classification === "Company_analysis" ||
             post.classification === "Multiple_company_analysis" ||
-            post.classification === "Sector_analysis")
+            post.classification === "Sector_analysis"),
       )
       .sort((a, b) => b.pubDate.localeCompare(a.pubDate));
 
     // 5️⃣ Pagination logic using Convex's pattern
     const numItems = paginationOpts.numItems;
     let startIndex = 0;
-    
+
     if (paginationOpts.cursor) {
       // Find the index of the item after the cursor
-      const [cursorDate, cursorId] = paginationOpts.cursor.split('|');
+      const [cursorDate, cursorId] = paginationOpts.cursor.split("|");
       const cursorIndex = filteredAndSorted.findIndex(
-        (post) => post.pubDate === cursorDate && post._id === cursorId
+        (post) => post.pubDate === cursorDate && post._id === cursorId,
       );
-      
+
       if (cursorIndex !== -1) {
         startIndex = cursorIndex + 1;
       }
@@ -190,11 +205,12 @@ export const searchEverywhere = query({
     const endIndex = startIndex + numItems;
     const page = filteredAndSorted.slice(startIndex, endIndex);
     const isDone = endIndex >= filteredAndSorted.length;
-    
+
     // Generate continuation cursor
-    const continueCursor = !isDone && page.length > 0
-      ? `${page[page.length - 1].pubDate}|${page[page.length - 1]._id}`
-      : "";
+    const continueCursor =
+      !isDone && page.length > 0
+        ? `${page[page.length - 1].pubDate}|${page[page.length - 1]._id}`
+        : "";
 
     return {
       page,
@@ -317,7 +333,7 @@ export const getPostsWithPagination5000 = query({
       v.object({
         numItems: v.number(),
         cursor: v.union(v.string(), v.null()),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -349,8 +365,8 @@ export const getPaginatedPosts = query({
   handler: async (ctx, args) => {
     return ctx.db
       .query("posts")
-      .withIndex("by_validAnalysis_pubDate", (q) => 
-        q.eq("isValidAnalysis", true)
+      .withIndex("by_validAnalysis_pubDate", (q) =>
+        q.eq("isValidAnalysis", true),
       )
       .order("desc")
       .paginate(args.paginationOpts);
@@ -395,8 +411,8 @@ export const updatePost = mutation({
             bse_code: v.optional(v.string()),
             nse_code: v.optional(v.string()),
             market_cap: v.optional(v.number()),
-          })
-        )
+          }),
+        ),
       ),
       tags: v.optional(v.array(v.string())),
     }),
@@ -412,7 +428,7 @@ export const updatePost = mutation({
     /* 2️⃣ Remove existing companyPosts */
     const existingCompanyPosts = await ctx.db
       .query("companyPosts")
-      .withIndex("by_post", q => q.eq("postId", args.postId))
+      .withIndex("by_post", (q) => q.eq("postId", args.postId))
       .collect();
 
     for (const row of existingCompanyPosts) {
@@ -465,12 +481,12 @@ export const bulkUpdatePosts = mutation({
                 bse_code: v.optional(v.string()),
                 nse_code: v.optional(v.string()),
                 market_cap: v.optional(v.number()),
-              })
-            )
+              }),
+            ),
           ),
           tags: v.optional(v.array(v.string())),
         }),
-      })
+      }),
     ),
   },
 
@@ -509,14 +525,14 @@ export const searchPosts = query({
     const result = await ctx.db
       .query("companyPosts")
       .withIndex("by_company_pubDate", (q) =>
-        q.gte("companyName", term).lt("companyName", term + "\uffff")
+        q.gte("companyName", term).lt("companyName", term + "\uffff"),
       )
       .order("desc")
       .paginate(paginationOpts);
 
     // Step 2: Keep only exact PREFIX matches (companyName.startsWith)
     const matchingCompanyPosts = result.page.filter((entry) =>
-      entry.companyName.toLowerCase().startsWith(term.toLowerCase())
+      entry.companyName.toLowerCase().startsWith(term.toLowerCase()),
     );
 
     // Step 3: Extract unique postIds
@@ -524,7 +540,7 @@ export const searchPosts = query({
 
     // Step 4: Fetch posts
     const posts = await Promise.all(
-      postIds.map((postId) => ctx.db.get(postId))
+      postIds.map((postId) => ctx.db.get(postId)),
     );
 
     // Step 5: Filter valid posts (author good)
@@ -538,7 +554,7 @@ export const searchPosts = query({
             post.classification === "Multiple_company_analysis" ||
             post.classification === "Sector_analysis")
         );
-      }
+      },
     );
 
     // No sorting needed — index already ensures correct pubDate DESC
@@ -562,7 +578,7 @@ export const getCompanySuggestions = query({
     const term = searchTerm.trim();
     const upperTerm = term.toUpperCase();
 
-    const nseTerm = term.replace(" ","").toUpperCase();
+    const nseTerm = term.replace(" ", "").toUpperCase();
 
     // 1️⃣ Fuzzy name search (typo-tolerant)
     const nameResults = await ctx.db
@@ -595,7 +611,7 @@ export const getCompanySuggestions = query({
         }
         seenIds.add(company._id);
         return true;
-      }
+      },
     );
 
     // 5️⃣ Relevance sorting
@@ -650,7 +666,7 @@ export const getAuthorSuggestions = query({
     const exactResults = await ctx.db
       .query("posts")
       .withIndex("by_authorLower_pubDate", (q) =>
-        q.eq("authorLower", lowerTerm)
+        q.eq("authorLower", lowerTerm),
       )
       .take(5);
 
@@ -720,8 +736,8 @@ export const addBulkPost = mutation({
               bse_code: v.optional(v.string()),
               nse_code: v.optional(v.string()),
               market_cap: v.optional(v.number()),
-            })
-          )
+            }),
+          ),
         ),
         tags: v.optional(v.array(v.string())),
         classification: v.optional(v.string()),
@@ -731,7 +747,7 @@ export const addBulkPost = mutation({
         source: v.optional(v.string()),
         isValidAnalysis: v.optional(v.boolean()),
         lastCheckedAt: v.optional(v.number()),
-      })
+      }),
     ),
   },
 
@@ -767,7 +783,7 @@ export const addBulkPost = mutation({
         const existing = await ctx.db
           .query("companyPosts")
           .withIndex("by_company_postId", (q) =>
-            q.eq("companyName", companyName).eq("postId", postId)
+            q.eq("companyName", companyName).eq("postId", postId),
           )
           .unique();
 
@@ -799,33 +815,33 @@ export const splitPosts = query({
     const posts = await ctx.db
       .query("posts")
       .withIndex("by_classification", (q) =>
-        q.eq("classification", "Company_analysis")
+        q.eq("classification", "Company_analysis"),
       )
       .collect();
 
     const posts2 = await ctx.db
       .query("posts")
       .withIndex("by_classification", (q) =>
-        q.eq("classification", "Multiple_company_analysis")
+        q.eq("classification", "Multiple_company_analysis"),
       )
       .collect();
 
     const posts3 = await ctx.db
       .query("posts")
       .withIndex("by_classification", (q) =>
-        q.eq("classification", "Sector_analysis")
+        q.eq("classification", "Sector_analysis"),
       )
       .collect();
     const posts4 = await ctx.db
       .query("posts")
       .withIndex("by_classification", (q) =>
-        q.eq("classification", "Multiple_company_update")
+        q.eq("classification", "Multiple_company_update"),
       )
       .collect();
     const posts5 = await ctx.db
       .query("posts")
       .withIndex("by_classification", (q) =>
-        q.eq("classification", "General_investment_guide")
+        q.eq("classification", "General_investment_guide"),
       )
       .collect();
 
@@ -873,7 +889,7 @@ export const bulkUpdateBlogs = mutation({
         imageUrl: v.optional(v.string()),
         extractionMethod: v.optional(v.string()),
         feedUrl: v.optional(v.string()),
-      })
+      }),
     ),
   },
 
