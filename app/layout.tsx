@@ -49,7 +49,6 @@ export default function RootLayout({
             <ToastProvider>
               <SearchProvider>
                 <div className="lg:flex">
-
                   <Navbar />
                   <BugReporter />
                   <main className="flex-1 w-full lg:w-auto">
