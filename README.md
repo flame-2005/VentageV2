@@ -1,4 +1,4 @@
-# VentEdge
+# VantEdge
 
 A modern web application built with Next.js and Convex for real-time data management, featuring AI capabilities and financial data integration.
 
@@ -31,7 +31,7 @@ Before you begin, ensure you have:
 ### 1. Clone the repository
 ```bash
 git clone <your-repository-url>
-cd ventedge
+cd vantedge
 ```
 
 ### 2. Install dependencies
@@ -106,7 +106,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to see the a
 
 ## Project Structure
 ```
-ventedge/
+vantedge/
 ├── app/                # Next.js app directory
 ├── convex/            # Convex backend functions and schema
 ├── public/            # Static assets
