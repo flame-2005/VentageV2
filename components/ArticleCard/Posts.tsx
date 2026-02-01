@@ -26,10 +26,7 @@ export default function Posts({ initialPosts }: postProps) {
     );
 
     const status = regularQuery.status;
-    const posts =
-        status === "LoadingFirstPage"
-            ? initialPosts
-            : regularQuery.results ?? initialPosts;
+    const posts = regularQuery.results || initialPosts;
 
     const loadMore = regularQuery.loadMore;
 
@@ -78,15 +75,7 @@ export default function Posts({ initialPosts }: postProps) {
                                 />
                             ))
                         ) : (
-                            <div className="text-center py-16">
-                                <div className="text-6xl mb-4">📊</div>
-                                <h3 className="text-xl font-semibold text-slate-700 mb-2">
-                                    No articles found
-                                </h3>
-                                <p className="text-slate-500 mb-4">
-                                    No articles available at the moment
-                                </p>
-                            </div>
+                            <CircularLoader/>
                         )}
                     </div>
 
