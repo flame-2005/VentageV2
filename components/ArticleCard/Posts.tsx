@@ -21,7 +21,7 @@ export default function Posts({ initialPosts }: postProps) {
         api.functions.substackBlogs.getPaginatedPosts,
         { paginationOpts: {} },
         {
-            initialNumItems: 10,
+            initialNumItems: 20,
         }
     );
 
@@ -29,7 +29,8 @@ export default function Posts({ initialPosts }: postProps) {
     const posts =
         status === "LoadingFirstPage"
             ? initialPosts
-            : regularQuery.results;
+            : regularQuery.results ?? initialPosts;
+
     const loadMore = regularQuery.loadMore;
 
 
@@ -112,8 +113,8 @@ export default function Posts({ initialPosts }: postProps) {
                             </p>
                         </div>
                     )}
-                </div>):(
-                    <CircularLoader/>
+                </div>) : (
+                    <CircularLoader />
                 )}
             </div>
         </div>
