@@ -49,7 +49,6 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
     const router = useRouter()
 
     const handlePostClick = async () => {
-        console.log("GA postId:", post?._id)
 
         trackEvent(GA_EVENT.ARTICLE_CARD_CLICK, { postId: post._id })
         setClickedCount(clickedCount + 1)
