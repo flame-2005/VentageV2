@@ -1,21 +1,19 @@
+"use node"
+
 // convex/processPosts.ts
 
 import { action } from "../../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../../_generated/api";
-import {
-  fetchArticleContent,
-  matchCompaniesWithMasterList,
-  parseMultiMatch,
-} from "../../helper/blogs";
-import {
-  Agent1Response,
-  Agent2Response,
-  CompanyDetail,
-  IncomingPost,
-} from "../../constant/posts";
+import { fetchArticleContent } from "../../helper/blogs";
+import { CompanyDetail } from "../../constant/posts";
 import { Id } from "../../_generated/dataModel";
 import { calculateIsValidAnalysis, convertRssDateToIso } from "../../helper/post";
+import { classifyBlog } from "./newTaggingAlgo/Agents/ClassificationAgent";
+import { extractCompanies } from "./newTaggingAlgo/Agents/extractCompanies";
+import { resolveWithFilter } from "./newTaggingAlgo/Agents/VectorDBMatcher";
+import { Company, validateCompanies, } from "./newTaggingAlgo/Agents/varifyCompanies";
+import { summarizeBlog } from "./newTaggingAlgo/Agents/summarizeAgent";
 
 type EnrichedPost = {
   blogId?: Id<"blogs">;
@@ -72,18 +70,13 @@ export const processAndSavePosts = action({
   }> => {
     console.log(`🔄 Processing ${posts.length} posts...`);
 
-    const masterCompanyList = await ctx.runQuery(
-      api.functions.masterCompanyList.getAllCompanies,
-      {}
-    );
-
     const blogs = await ctx.runQuery(
       api.functions.substackBlogs.getAllBlogs,
       {}
     );
     const blogMap = new Map(blogs.map((b) => [b._id, b]));
 
-    // Process posts in parallel batches of 5
+    // Process posts in parallel batches of 10
     const PARALLEL_BATCH_SIZE = 10;
     const enrichedPosts: EnrichedPost[] = [];
 
@@ -98,44 +91,68 @@ export const processAndSavePosts = action({
           try {
             console.log("📌 Processing:", post.title);
 
+            // Fetch blog content
             const blogContent = await fetchArticleContent(post.link);
             if (!blogContent) {
               console.warn("⚠️ No content for:", post.title);
               return null;
             }
 
-            // Run both agents in parallel
-            const [agent1, agent2Raw] = await Promise.all([
-              ctx.runAction(
-                api.functions.processBlogs.agents.classifierAgent.runAgent1,
-                { blogText: blogContent }
-              ),
-              // Agent 2 needs agent 1 result, so we handle it after
-              (async () => {
-                const a1 = await ctx.runAction(
-                  api.functions.processBlogs.agents.classifierAgent.runAgent1,
-                  { blogText: blogContent }
-                );
-                return ctx.runAction(
-                  api.functions.processBlogs.agents.companyAgent.runAgent2,
-                  { agent1Companies: (a1 as Agent1Response).company }
-                );
-              })(),
-            ]);
+            // Agent 1: Classify blog
+            console.log("  → Agent 1: Classifying blog...");
+            const agent1Response = await classifyBlog(blogContent);
 
-            const agent1Typed = agent1 as Agent1Response;
-            const agent2Typed = agent2Raw as Agent2Response;
-
-            const joined =
-              agent2Typed.public.length > 0
-                ? agent2Typed.public.join(", ")
-                : agent2Typed.private.join(", ");
-
-            const matched = matchCompaniesWithMasterList(
-              joined,
-              masterCompanyList
+            // Agent 2: Extract companies
+            console.log("  → Agent 2: Extracting companies...");
+            const agent2Response = await extractCompanies(
+              agent1Response.classification,
+              blogContent
             );
-            const companyDetails = parseMultiMatch(matched);
+
+            const companies = agent2Response.map((res) => res.company.toUpperCase());
+
+            // Agent 3: Resolve company names with vector DB
+            console.log("  → Agent 3: Resolving company names...");
+            const agent3Response = await resolveWithFilter(companies);
+
+            // Filter to only include companies with status 'found' or 'ambiguous'
+            const matchedCompanies: Company[] = agent3Response
+              .filter(
+                (res) =>
+                  (res.status === "found" || res.status === "ambiguous") &&
+                  (res.nseCode || res.bseCode)
+              )
+              .map((res) => ({
+                name: res.matchedName ?? res.inputName,
+                extractedName: res.inputName,
+                nse: res.nseCode,
+                bse: res.bseCode,
+                marketCap:res.marketCap!
+              }));
+
+            // Agent 4: Validate companies against blog content
+            console.log("  → Agent 4: Validating companies...");
+            const agent4Response = await validateCompanies({
+              blogContent: blogContent,
+              companies: matchedCompanies,
+            });
+
+            // Agent 5: Summarize blog
+            console.log("  → Agent 5: Summarizing blog...");
+            const agent5Response = await summarizeBlog(blogContent);
+
+            // Extract only validated companies that matched (isMatch: true)
+            const validatedCompanies = agent4Response.validatedCompanies.filter(
+              (result) => result.isMatch
+            );
+
+            // Convert validated companies to CompanyDetail format
+            const companyDetails: CompanyDetail[] = validatedCompanies.map((result) => ({
+              company_name: result.company.name,
+              bse_code: result.company.bse,
+              nse_code: result.company.nse,
+              market_cap:result.company.marketCap
+            }));
 
             const enriched: EnrichedPost = {
               blogId: post.blogId,
@@ -147,15 +164,15 @@ export const processAndSavePosts = action({
               image: post.image ?? undefined,
               imageUrl: blogMap.get(post.blogId!)?.imageUrl ?? undefined,
               source: post.source,
-              summary: agent1Typed.summary,
+              summary: agent5Response.summary,
               isValidAnalysis: calculateIsValidAnalysis({
                 companyDetails,
-                classification: agent1Typed.classification,
+                classification: agent1Response.classification,
                 author: post.author,
               }),
-              classification: agent1Typed.classification,
-              category: agent1Typed.classification,
-              tags: agent1Typed.tags.length > 0 ? agent1Typed.tags : undefined,
+              classification: agent1Response.classification,
+              category: agent1Response.classification,
+              tags: agent5Response.tags?.length > 0 ? agent5Response.tags : undefined,
               companyDetails:
                 companyDetails.length > 0 ? companyDetails : undefined,
             };
@@ -169,6 +186,9 @@ export const processAndSavePosts = action({
                 enriched.nseCode = companyDetails[0].nse_code;
               }
             }
+
+            const companyCount = validatedCompanies.length;
+            console.log(`  ✓ Complete: ${companyCount} validated companies found`);
 
             return enriched;
           } catch (error) {

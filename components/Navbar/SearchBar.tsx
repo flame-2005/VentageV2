@@ -87,12 +87,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
         ...(companySuggestions?.map(s => ({
             type: "company" as const,
             label: s.companyName,
-            href: `/search/company?${encodeURIComponent(s.companyName)}`,
+            href: `/company/${encodeURIComponent(s.companyName)}`,
         })) || []),
         ...(authorSuggestions?.map(s => ({
             type: "author" as const,
             label: s.author,
-            href: `/search/author?${encodeURIComponent(s.author)}`,
+            href: `/author/${encodeURIComponent(s.author)}`,
         })) || []),
     ];
 
@@ -221,7 +221,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                                                             setSearchBarOpen(false)
                                                         }
                                                     }}
-                                                    href={`/search/company?${encodeURIComponent(suggestion.companyName)}`}
+                                                    href={`/company/${encodeURIComponent(suggestion.companyName)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
                                                         ? "bg-blue-50 text-blue-600"
                                                         : "hover:bg-blue-50"
@@ -257,7 +257,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                                                             setSearchBarOpen(false)
                                                         }
                                                     }}
-                                                    href={`/search/author?${encodeURIComponent(suggestion.author)}`}
+                                                    href={`/author/${encodeURIComponent(suggestion.author)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
                                                         ? "bg-blue-50 text-blue-600"
                                                         : "hover:bg-blue-50"
@@ -277,7 +277,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                             </>
                         ) : null}
 
-                        {inputValue && (
+                        {/* {inputValue && (
                             <div>
                                 <button
                                     onClick={handleSearchEverywhere}
@@ -287,7 +287,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                                     Search everywhere for {inputValue}
                                 </button>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 )}
             </div>

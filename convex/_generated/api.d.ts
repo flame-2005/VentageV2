@@ -60,6 +60,12 @@ import type * as functions_newPosts_platforms_substackPost from "../functions/ne
 import type * as functions_newPosts_platforms_wordpressPosts from "../functions/newPosts/platforms/wordpressPosts.js";
 import type * as functions_processBlogs_agents_classifierAgent from "../functions/processBlogs/agents/classifierAgent.js";
 import type * as functions_processBlogs_agents_companyAgent from "../functions/processBlogs/agents/companyAgent.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent from "../functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_VectorDBMatcher from "../functions/processBlogs/newTaggingAlgo/Agents/VectorDBMatcher.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_extractCompanies from "../functions/processBlogs/newTaggingAlgo/Agents/extractCompanies.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_summarizeAgent from "../functions/processBlogs/newTaggingAlgo/Agents/summarizeAgent.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_varifyCompanies from "../functions/processBlogs/newTaggingAlgo/Agents/varifyCompanies.js";
+import type * as functions_processBlogs_newTaggingAlgo_index from "../functions/processBlogs/newTaggingAlgo/index.js";
 import type * as functions_processBlogs_processBlogs from "../functions/processBlogs/processBlogs.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
 import type * as functions_tracking_addTracking from "../functions/tracking/addTracking.js";
@@ -138,6 +144,12 @@ declare const fullApi: ApiFromModules<{
   "functions/newPosts/platforms/wordpressPosts": typeof functions_newPosts_platforms_wordpressPosts;
   "functions/processBlogs/agents/classifierAgent": typeof functions_processBlogs_agents_classifierAgent;
   "functions/processBlogs/agents/companyAgent": typeof functions_processBlogs_agents_companyAgent;
+  "functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent;
+  "functions/processBlogs/newTaggingAlgo/Agents/VectorDBMatcher": typeof functions_processBlogs_newTaggingAlgo_Agents_VectorDBMatcher;
+  "functions/processBlogs/newTaggingAlgo/Agents/extractCompanies": typeof functions_processBlogs_newTaggingAlgo_Agents_extractCompanies;
+  "functions/processBlogs/newTaggingAlgo/Agents/summarizeAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_summarizeAgent;
+  "functions/processBlogs/newTaggingAlgo/Agents/varifyCompanies": typeof functions_processBlogs_newTaggingAlgo_Agents_varifyCompanies;
+  "functions/processBlogs/newTaggingAlgo/index": typeof functions_processBlogs_newTaggingAlgo_index;
   "functions/processBlogs/processBlogs": typeof functions_processBlogs_processBlogs;
   "functions/substackBlogs": typeof functions_substackBlogs;
   "functions/tracking/addTracking": typeof functions_tracking_addTracking;

@@ -49,6 +49,8 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
     const router = useRouter()
 
     const handlePostClick = async () => {
+        console.log("GA postId:", post?._id)
+
         trackEvent(GA_EVENT.ARTICLE_CARD_CLICK, { postId: post._id })
         setClickedCount(clickedCount + 1)
         try {
@@ -257,7 +259,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                             <button
                                 onClick={async () => {
                                     try {
-                                        const shareUrl = `${window.location.origin}/share/${post._id}`
+                                        const shareUrl = `${window.location.origin}/share/${post.title.trim().split(" ").join("-")}/${post._id}`
                                         navigator.clipboard.writeText(shareUrl)
                                         await sharePost()
                                         addToast(

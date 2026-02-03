@@ -13,7 +13,7 @@ export async function generateMetadata({
   const resolvedParams = await params;
   const shareLink = decodeURIComponent(resolvedParams.shareLink);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ventage-v2-git-bugs-fixing-flame2005s-projects.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   let post;
   try {
