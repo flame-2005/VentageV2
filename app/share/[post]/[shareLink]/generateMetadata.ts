@@ -37,11 +37,11 @@ export async function generateMetadata({ params }: { params: { shareLink: string
 
   return {
     title: post.title ?? "Shared Post",
-    description: post.description ?? "Check out this post!",
+    description: post.summary ?? "Check out this post!",
 
     openGraph: {
       title: post.title,
-      description: post.description ?? "Check out this post!",
+      description: post.summary ?? "Check out this post!",
       url: `${baseUrl}/share/${shareLink}`,
       type: "article",
       images: [
