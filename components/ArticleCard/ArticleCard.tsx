@@ -103,6 +103,11 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
         if (trimmedTag === 'bearish' || trimmedTag === 'negative') return 'BEARISH'
         return 'NEUTRAL'
     }
+    const getClassificationDisplay = (classification: string) => {
+        const trimmedTag = classification?.trim().toLowerCase() || ''
+        if (trimmedTag === 'sector_analysis' || trimmedTag === 'positive') return 'Sector Deep Dive'
+        return 'Company Thesis'
+    }
 
     const mainTag = post.tags?.[0]
 
@@ -197,6 +202,9 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                                     {getToneDisplay(mainTag)}
                                 </span>
                             )}
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase whitespace-nowrap ${getToneStyles(post.classification!)}`}>
+                                {getClassificationDisplay(post.classification!)}
+                            </span>
                         </div>
 
                         {/* Date */}

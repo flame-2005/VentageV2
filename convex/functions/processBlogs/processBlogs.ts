@@ -8,7 +8,7 @@ import { api, internal } from "../../_generated/api";
 import { fetchArticleContent } from "../../helper/blogs";
 import { CompanyDetail } from "../../constant/posts";
 import { Id } from "../../_generated/dataModel";
-import { calculateIsValidAnalysis, convertRssDateToIso } from "../../helper/post";
+import { calculateIsValidAnalysis, convertRssDateToIso, getValidImageUrl } from "../../helper/post";
 import { classifyBlog } from "./newTaggingAlgo/Agents/ClassificationAgent";
 import { extractCompanies } from "./newTaggingAlgo/Agents/extractCompanies";
 import { resolveWithFilter } from "./newTaggingAlgo/Agents/VectorDBMatcher";
@@ -161,7 +161,7 @@ export const processAndSavePosts = action({
               pubDate: convertRssDateToIso(post.published),
               createdAt: Date.now(),
               author: post.author,
-              image: post.image ?? undefined,
+              image: post.image ? getValidImageUrl(post.image) : undefined,
               imageUrl: blogMap.get(post.blogId!)?.imageUrl ?? undefined,
               source: post.source,
               summary: agent5Response.summary,

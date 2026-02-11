@@ -58,6 +58,10 @@ import type * as functions_newPosts_platforms_blogstopPosts from "../functions/n
 import type * as functions_newPosts_platforms_mediumPosts from "../functions/newPosts/platforms/mediumPosts.js";
 import type * as functions_newPosts_platforms_substackPost from "../functions/newPosts/platforms/substackPost.js";
 import type * as functions_newPosts_platforms_wordpressPosts from "../functions/newPosts/platforms/wordpressPosts.js";
+import type * as functions_newVideos_extractTranscript from "../functions/newVideos/extractTranscript.js";
+import type * as functions_newVideos_getLatestVideos from "../functions/newVideos/getLatestVideos.js";
+import type * as functions_newVideos_index from "../functions/newVideos/index.js";
+import type * as functions_newVideos_processVideos from "../functions/newVideos/processVideos.js";
 import type * as functions_processBlogs_agents_classifierAgent from "../functions/processBlogs/agents/classifierAgent.js";
 import type * as functions_processBlogs_agents_companyAgent from "../functions/processBlogs/agents/companyAgent.js";
 import type * as functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent from "../functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent.js";
@@ -142,6 +146,10 @@ declare const fullApi: ApiFromModules<{
   "functions/newPosts/platforms/mediumPosts": typeof functions_newPosts_platforms_mediumPosts;
   "functions/newPosts/platforms/substackPost": typeof functions_newPosts_platforms_substackPost;
   "functions/newPosts/platforms/wordpressPosts": typeof functions_newPosts_platforms_wordpressPosts;
+  "functions/newVideos/extractTranscript": typeof functions_newVideos_extractTranscript;
+  "functions/newVideos/getLatestVideos": typeof functions_newVideos_getLatestVideos;
+  "functions/newVideos/index": typeof functions_newVideos_index;
+  "functions/newVideos/processVideos": typeof functions_newVideos_processVideos;
   "functions/processBlogs/agents/classifierAgent": typeof functions_processBlogs_agents_classifierAgent;
   "functions/processBlogs/agents/companyAgent": typeof functions_processBlogs_agents_companyAgent;
   "functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent;

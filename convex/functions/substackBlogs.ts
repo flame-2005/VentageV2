@@ -368,6 +368,9 @@ export const getPaginatedPosts = query({
       .withIndex("by_validAnalysis_pubDate", (q) =>
         q.eq("isValidAnalysis", true),
       )
+      .filter((q) =>
+        q.neq(q.field("classification"), "Multiple_company_analysis"),
+      )
       .order("desc")
       .paginate(args.paginationOpts);
   },
