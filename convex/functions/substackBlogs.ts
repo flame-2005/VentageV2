@@ -70,7 +70,6 @@ export const getPostsByCompany = query({
           isValidAuthor(post.author) &&
           !!post.companyDetails &&
           (post.classification === "Company_analysis" ||
-            post.classification === "Multiple_company_analysis" ||
             post.classification === "Sector_analysis")
         );
       },
@@ -102,7 +101,6 @@ export const getPostsByAuthor = query({
       (post) =>
         post.companyDetails &&
         (post.classification === "Company_analysis" ||
-          post.classification === "Multiple_company_analysis" ||
           post.classification === "Sector_analysis"),
     );
 

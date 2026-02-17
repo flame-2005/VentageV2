@@ -57,6 +57,8 @@ export const sendNotificationEmail = internalAction({
       html: `
     <p>A new post was published.</p>
     <p><strong>${post?.title}</strong></p>
+    <p><strong>From: ${post?.author}</strong></p>
+    <p><strong>Company: ${post?.companyName}</strong></p>
     <p>${post?.summary}</p>
     <p>
       <a href="${post?.link}" target="_blank" rel="noopener noreferrer"

@@ -34,19 +34,19 @@ export default function AddBlogPage() {
     }, [user, isLoading, router]);
 
 
-    function deriveBlogData(domain: string) {
-        const hostname = domain
+    function deriveBlogData(input: string) {
+        const hostname = input
             .replace("https://", "")
             .replace("http://", "")
             .replace("www.", "")
-            .split("/")[0];
+            .split("/")[0]; // "edgemint.substack.com"
 
-        const name = hostname.split(".")[0];
+        const name = hostname.split(".")[0]; // "edgemint"
 
         return {
             name,
-            domain,
-            feedUrl: domain,
+            domain: hostname,                        // "edgemint.substack.com"
+            feedUrl: `https://${hostname}`,          // "https://edgemint.substack.com"
         };
     }
 
