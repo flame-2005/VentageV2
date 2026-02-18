@@ -12,21 +12,10 @@ export default function SharePageClient() {
   const params = useParams();
   const shareLink = decodeURIComponent(params.shareLink as string);
 
-  const post = useQuery(api.functions.substackBlogs.getPostById, {
-    id: shareLink as Id<"posts">,
-  });
 
   useEffect(() => {
-    if (post === undefined) return; // still loading
-
-    if (!post) {
-      console.error("Post not found!");
-      return;
-    }
-
-    // Redirect to the actual post.link
-    router.replace(post.link);
-  }, [post, router]);
+    router.replace(shareLink);
+  }, [shareLink, router]);
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
