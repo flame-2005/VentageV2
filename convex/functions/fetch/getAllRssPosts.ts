@@ -36,11 +36,12 @@ export const processNewBlogPosts = action({
 
       let posts;
       try {
-        posts = await fetchHistoricalFromRSS(blog.domain);
+        posts = await fetchHistoricalFromRSS(blog.domain,blog.source!);
 
         posts = posts.map((post) => ({
           ...post,
           source: blog.source || "others",
+          blogId: blog._id,
         }));
       } catch (err) {
         console.error("❌ RSS fetch failed:", err);
