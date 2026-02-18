@@ -137,7 +137,7 @@ function extractImageFromHTML(html: string): string | null {
 }
 
 async function fetchSitemapUrls(
-  sitemapUrl: string
+  sitemapUrl: string,
 ): Promise<{ sitemaps: string[]; posts: SitemapUrl[] }> {
   console.log(`🗺️ Fetching sitemap: ${sitemapUrl}`);
 
@@ -177,7 +177,7 @@ async function fetchSitemapUrls(
     });
 
     console.log(
-      `📦 Sitemap extracted ${sitemaps.length} child sitemaps, ${posts.length} posts`
+      `📦 Sitemap extracted ${sitemaps.length} child sitemaps, ${posts.length} posts`,
     );
     return { sitemaps, posts };
   } catch (err) {
@@ -241,7 +241,7 @@ async function fetchSubstackPost(url: string): Promise<UnifiedPost | null> {
 async function fetchSubstackFromSitemap(base: string): Promise<UnifiedPost[]> {
   console.log("🚀 Starting Substack sitemap ingestion");
 
-  const master = `${base}/sitemap.xml`;
+  const master = `https://${base}/sitemap.xml`;
   const postUrls = new Map<string, string>(); // url -> lastmod
 
   // Fetch the master sitemap
@@ -512,7 +512,7 @@ async function crawlArchives(base: string): Promise<string[]> {
 
 async function normalize(
   items: RSSItem[],
-  source: string
+  source: string,
 ): Promise<UnifiedPost[]> {
   const results: UnifiedPost[] = [];
 
@@ -536,7 +536,7 @@ async function normalize(
 // MAIN UNIVERSAL FUNCTION
 // --------------------------------------------------------------
 
-export async function fetchHistoricalFromRSS(url: string) {
+export async function fetchHistoricalFromRSS(url: string,source: string) {
   console.log("\n====================================================");
   console.log(`🌐 Starting universal fetch for: ${url}`);
   console.log("====================================================\n");
@@ -544,7 +544,7 @@ export async function fetchHistoricalFromRSS(url: string) {
   const clean = url.replace(/\/$/, "");
 
   // ✅ Substack detection
-  if (clean.includes("substack.com") || clean.includes("thedailybrief")) {
+  if (clean.includes("substack.com") || clean.includes("thedailybrief") || source === "substack") {
     console.log("📌 Detected Substack — switching to sitemap ingestion");
     return await fetchSubstackFromSitemap(clean);
   }
