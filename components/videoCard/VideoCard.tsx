@@ -76,7 +76,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
     }
 
     const sharePost = async () => {
-        trackEvent(GA_EVENT.SHARE_CLICKED, { videoId: post._id })
+        trackEvent(GA_EVENT.SHARE_CLICKED, { postId: post._id })
         setShareCount(shareCount + 1)
         await shareMutation({
             videoId: post._id,
