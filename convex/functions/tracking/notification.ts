@@ -29,7 +29,7 @@ export const createNotification = mutation({
   },
 });
 
-function isPost(post: Doc<"posts"> | Doc<"videos">): post is Doc<"posts"> {
+export function isPost(post: Doc<"posts"> | Doc<"videos">): post is Doc<"posts"> {
   return post._id.__tableName === "posts";
 }
 
