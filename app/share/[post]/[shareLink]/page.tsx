@@ -2,8 +2,8 @@
 import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { SharePageClient } from "@/components/loadingDots";
 import { isPost } from "@/convex/functions/tracking/notification";
+import SharePageClient from "@/components/loadingDots";
 
 let post: (Doc<"posts"> | Doc<"videos">) | null = null;
 
