@@ -11,7 +11,7 @@ type shareLinkParams = {
   shareLink: string;
 };
 
-export const SharePageClient: React.FC<shareLinkParams> = ({ shareLink }) =>  {
+export default function SharePageClient({ shareLink }: shareLinkParams) {
   const router = useRouter(); 
   useEffect(() => {
     router.replace(shareLink);
