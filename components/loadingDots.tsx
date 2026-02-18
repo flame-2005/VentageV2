@@ -7,12 +7,12 @@ import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Id } from "@/convex/_generated/dataModel";
 
-export default function SharePageClient() {
-  const router = useRouter();
-  const params = useParams();
-  const shareLink = decodeURIComponent(params.shareLink as string);
+type shareLinkParams = {
+  shareLink: string;
+};
 
-
+export const SharePageClient: React.FC<shareLinkParams> = ({ shareLink }) =>  {
+  const router = useRouter(); 
   useEffect(() => {
     router.replace(shareLink);
   }, [shareLink, router]);

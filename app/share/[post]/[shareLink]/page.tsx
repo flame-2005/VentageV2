@@ -1,9 +1,11 @@
 // app/share/[shareLink]/page.tsx
 import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
-import { Id } from "@/convex/_generated/dataModel";
-import SharePageClient from "@/components/loadingDots";
+import { Doc, Id } from "@/convex/_generated/dataModel";
+import { SharePageClient } from "@/components/loadingDots";
 import { isPost } from "@/convex/functions/tracking/notification";
+
+let post: (Doc<"posts"> | Doc<"videos">) | null = null;
 
 export async function generateMetadata({
   params
@@ -16,7 +18,6 @@ export async function generateMetadata({
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-  let post;
   try {
     post = await fetchQuery(api.functions.substackBlogs.getPostById, {
       id: shareLink as (Id<"posts"> | Id<"videos">),
@@ -74,5 +75,5 @@ export async function generateMetadata({
 }
 
 export default function SharePage() {
-  return <SharePageClient />;
+  return <SharePageClient shareLink={post!.link} />;
 }
