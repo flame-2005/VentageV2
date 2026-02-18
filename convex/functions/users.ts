@@ -172,7 +172,7 @@ export const unfollowCompany = mutation({
 
     await ctx.db.patch(user._id, {
       companiesFollowing: (user.companiesFollowing ?? []).filter(
-        (company) => company !== args.companyName
+        (company) => company !== args.companyName,
       ),
     });
 
@@ -196,7 +196,7 @@ export const unfollowAuthor = mutation({
 
     await ctx.db.patch(user._id, {
       authorsFollowing: (user.authorsFollowing ?? []).filter(
-        (company) => company !== args.authorName
+        (company) => company !== args.authorName,
       ),
     });
 
@@ -253,7 +253,7 @@ export const unfollowBlogWebsite = mutation({
 
     await ctx.db.patch(user._id, {
       blogWebsitesFollowing: user.blogWebsitesFollowing.filter(
-        (blog) => blog !== args.blogUrl
+        (blog) => blog !== args.blogUrl,
       ),
     });
 
@@ -463,5 +463,86 @@ export const getUserEmail = query({
     const user = await ctx.db.get(args.userId);
     if (!user?.email) return null;
     return user.email;
+  },
+});
+
+export const likevideo = mutation({
+  args: {
+    videoId: v.id("videos"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, { videoId, userId }) => {
+    // Fetch post
+    const post = await ctx.db.get(videoId);
+    if (!post) throw new Error("Video not found");
+
+    // Fetch user
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const alreadyLiked = post.usersLiked?.includes(userId) ?? false;
+
+    if (!alreadyLiked) {
+      // ----- LIKE -----
+      await ctx.db.patch(videoId, {
+        usersLiked: [...(post.usersLiked ?? []), userId],
+      });
+
+      await ctx.db.patch(userId, {
+        likedVideos: [...(user.likedVideos ?? []), videoId],
+      });
+
+      return { status: "liked" };
+    } else {
+      // ----- UNLIKE -----
+      await ctx.db.patch(videoId, {
+        usersLiked: (post.usersLiked ?? []).filter((id) => id !== userId),
+      });
+
+      await ctx.db.patch(userId, {
+        likedVideos: (user.likedVideos ?? []).filter((id) => id !== videoId),
+      });
+
+      return { status: "unliked" };
+    }
+  },
+});
+
+
+export const shareVideo = mutation({
+  args: {
+    videoId: v.id("videos"),
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, { videoId, userId }) => {
+    if (!userId) {
+      // Just increment share count if no userId provided
+      const video = await ctx.db.get(videoId);
+      if (!video) throw new Error("Video not found");
+      await ctx.db.patch(videoId, { shareCount: (video.shareCount ?? 0) + 1 });
+      return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
+    }
+    const video = await ctx.db.get(videoId);
+    if (!video) throw new Error("Video not found");
+
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    // Increase share count ALWAYS
+    await ctx.db.patch(videoId, {
+      shareCount: (video.shareCount ?? 0) + 1,
+      usersShared: video.usersShared?.includes(userId)
+        ? video.usersShared
+        : [...(video.usersShared ?? []), userId],
+    });
+
+    // Add videoId to user's sharedVideos ONCE
+    await ctx.db.patch(userId, {
+      sharedVideos: user.sharedVideos?.includes(videoId)
+        ? user.sharedVideos
+        : [...(user.sharedVideos ?? []), videoId],
+    });
+
+    return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
   },
 });

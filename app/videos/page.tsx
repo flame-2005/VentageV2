@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import {  useEffect, useRef } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import CircularLoader from "@/components/circularLoader";
@@ -20,7 +20,7 @@ export default function VideoPage() {
 
 
     // Use the appropriate query based on whether search term exists
-    const { results: posts, status, loadMore } = regularQuery;
+    const { results: videos, status, loadMore } = regularQuery;
 
     // Check loading states
     const isLoading = status === "LoadingFirstPage";
@@ -61,8 +61,8 @@ export default function VideoPage() {
                         </h1> */}
                         {/* Articles */}
                         <div className="space-y-6">
-                            {posts && posts.length > 0 ? (
-                                posts.map((post) => (
+                            {videos && videos.length > 0 ? (
+                                videos.map((post) => (
                                     <VideoCard
                                         key={post._id}
                                         post={post}
@@ -82,7 +82,7 @@ export default function VideoPage() {
                         </div>
 
                         {/* Infinite scroll trigger + Loading indicator */}
-                        {(canLoadMore || isLoadingMore) && posts && posts.length > 0 && (
+                        {(canLoadMore || isLoadingMore) && videos && videos.length > 0 && (
                             <div
                                 ref={loadMoreRef}
                                 className="flex justify-center items-center py-8"
@@ -97,7 +97,7 @@ export default function VideoPage() {
                         )}
 
                         {/* End of results message */}
-                        {status === "Exhausted" && posts && posts.length > 0 && (
+                        {status === "Exhausted" && videos && videos.length > 0 && (
                             <div className="text-center py-8">
                                 <p className="text-slate-500 font-medium">
                                     You&apos;ve reached the end! No more articles to load.

@@ -10,6 +10,7 @@ import { useMutation } from 'convex/react'
 import { api } from '@/convex/_generated/api'
 import { useUser } from '@/context/userContext'
 import { formatYouTubeDuration } from '@/helper/text'
+import { GA_EVENT, trackEvent } from '@/lib/analytics/ga'
 
 type VideoCardProps = {
     post: Doc<'videos'>,
@@ -32,7 +33,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
         : []
 
     const isFullCaps = (name: string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim())
-    const incrementClickCount = useMutation(api.functions.substackBlogs.incrementClickCount)
+    const incrementClickCount = useMutation(api.functions.videos.incrementClickCount)
 
     const fullCapsCompanies = (() => {
         const filtered = companyNames.filter(isFullCaps)
@@ -47,40 +48,40 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
 
     const router = useRouter()
 
-    const handlePostClick = async () => {
-        // trackEvent(GA_EVENT.ARTICLE_CARD_CLICK, { postId: post._id })
-        // setClickedCount(clickedCount + 1)
-        // try {
-        //     await incrementClickCount({ postId: post._id })
-        // } catch (error) {
-        //     console.error("Failed to update click count:", error)
-        // }
+    const handleVideoClick = async () => {
+        trackEvent(GA_EVENT.ARTICLE_CARD_CLICK, { postId: post._id })
+        setClickedCount(clickedCount + 1)
+        try {
+            await incrementClickCount({ videoId: post._id })
+        } catch (error) {
+            console.error("Failed to update click count:", error)
+        }
     }
 
-    const likeMutation = useMutation(api.functions.users.likePost)
-    const shareMutation = useMutation(api.functions.users.sharePost)
+    const likeMutation = useMutation(api.functions.users.likevideo)
+    const shareMutation = useMutation(api.functions.users.shareVideo)
 
-    const likePost = async () => {
-        //     trackEvent(GA_EVENT.LIKE_CLICKED, { postId: post._id })
-        //     if (!user) {
-        //         addToast('error', 'Login Required', 'Please log in to like posts.')
-        //         return
-        //     }
-        //     setIsLiked(!isLiked)
-        //     setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
-        //     await likeMutation({
-        //         postId: post._id,
-        //         userId: user?._id as Id<"users">,
-        //     })
+    const likeVideo = async () => {
+             trackEvent(GA_EVENT.LIKE_CLICKED, { postId: post._id })
+             if (!user) {
+                 addToast('error', 'Login Required', 'Please log in to like videos.')
+                 return
+             }
+             setIsLiked(!isLiked)
+             setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
+             await likeMutation({
+                 videoId: post._id,
+                 userId: user?._id as Id<"users">,
+             })
     }
 
     const sharePost = async () => {
-        // trackEvent(GA_EVENT.SHARE_CLICKED, { postId: post._id })
-        // setShareCount(shareCount + 1)
-        // await shareMutation({
-        //     postId: post._id,
-        //     userId: user?._id || undefined,
-        // })
+        trackEvent(GA_EVENT.SHARE_CLICKED, { videoId: post._id })
+        setShareCount(shareCount + 1)
+        await shareMutation({
+            videoId: post._id,
+            userId: user?._id || undefined,
+        })
     }
 
     // Get tag configuration
@@ -140,7 +141,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
 
 
                 {/* Image - Full width on mobile, compact on desktop */}
-                <a onClick={() => handlePostClick()}
+                <a onClick={() => handleVideoClick()}
                     href={post.link}
                     target="_blank" className="flex-shrink-0 w-full sm:w-44">
                     <div className="relative w-full sm:h-32 bg-slate-100 rounded-lg overflow-hidden">
@@ -231,7 +232,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                     {/* Title & Summary */}
                     <div>
                         <a
-                            onClick={() => handlePostClick()}
+                            onClick={() => handleVideoClick()}
                             href={post.link}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -263,7 +264,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                         {/* Stats */}
                         <div className="flex items-center gap-3 sm:gap-4 text-slate-500">
                             <button
-                                onClick={() => likePost()}
+                                onClick={() => likeVideo()}
                                 className={`flex items-center gap-1 transition-colors cursor-pointer ${isLiked ? "text-rose-500" : "hover:text-rose-500"
                                     }`}
                             >
@@ -275,7 +276,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                                 onClick={async () => {
                                     try {
                                         await sharePost()
-                                        const shareUrl = `${window.location.origin}/share/${post._id}`
+                                        const shareUrl = `${window.location.origin}/share/${post.title.trim().split(" ").join("-")}/${post._id}`
                                         await navigator.clipboard.writeText(shareUrl)
                                         addToast(
                                             "success",
@@ -306,14 +307,14 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                 </div>
             </motion.article>
 
-            {/* <ArticleBugReporter
+             {/* <ArticleBugReporter
                 firstCompany={firstCompany}
                 showReportModal={showReportModal}
                 setShowReportModal={setShowReportModal}
                 post={post}
                 reportEmail={reportEmail}
                 setReportEmail={setReportEmail}
-            /> */}
+            />  */}
         </>
     )
 }

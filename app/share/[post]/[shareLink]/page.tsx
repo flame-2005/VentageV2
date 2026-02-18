@@ -18,7 +18,7 @@ export async function generateMetadata({
   let post;
   try {
     post = await fetchQuery(api.functions.substackBlogs.getPostById, {
-      id: shareLink as Id<"posts">,
+      id: shareLink,
     });
   } catch (e) {
     console.error("Metadata fetch failed:", e);
