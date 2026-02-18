@@ -13,7 +13,7 @@ export async function generateMetadata({
   const resolvedParams = await params;
   const shareLink = decodeURIComponent(resolvedParams.shareLink);
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ventage-v2-git-bugs-fixing-flame2005s-projects.vercel.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   let post;
   try {
@@ -37,10 +37,10 @@ export async function generateMetadata({
 
   return {
     title: post.title ?? "Shared Post",
-    description: post.description ?? "Check out this post!",
+    description: post.summary ?? "Check out this post!",
     openGraph: {
       title: post.title ?? "Shared Post",
-      description: post.description ?? "Check out this post!",
+      description: post.summary ?? "Check out this post!",
       url: `${baseUrl}/share/${shareLink}`,
       type: "article",
       images: [
@@ -55,7 +55,7 @@ export async function generateMetadata({
     twitter: {
       card: "summary_large_image",
       title: post.title ?? "Shared Post",
-      description: post.description ?? "Check out this post!",
+      description: post.summary ?? "Check out this post!",
       images: [{
         url: imageUrl,
         width: 1200,

@@ -6,6 +6,7 @@ import { api } from '@/convex/_generated/api';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { Id } from '@/convex/_generated/dataModel';
 import { user } from '@/constants/user';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -23,6 +24,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const createOrUpdateUser = useMutation(api.functions.users.createOrUpdateUser);
+
+  const router = useRouter()
 
   // Query Convex user data based on supabaseUser id
   const user = useQuery(
@@ -54,11 +57,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSupabaseUser(session?.user ?? null);
-        
+
         if (session?.user) {
           await syncUserWithConvex(session.user);
         }
-        
+
         setIsLoading(false);
       }
     );
@@ -84,20 +87,32 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // 🔥 Kill session everywhere
+      const { error } = await supabase.auth.signOut({ scope: "global" });
+      if (error) {
+        console.error("[LOGOUT] Supabase error", error);
+      }
+
+    } catch (err) {
+      console.error("[LOGOUT] Exception", err);
+    } finally {
+      // ✅ ALWAYS clear local state (even if Supabase fails)
       setSupabaseUser(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      throw error;
+      // 🧹 Safe browser cleanup
+      if (typeof window !== "undefined") {
+        sessionStorage.clear();
+      }
+      window.location.reload();
     }
   };
+
+
 
   const refreshUser = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setSupabaseUser(session?.user ?? null);
-      
+
       if (session?.user) {
         await syncUserWithConvex(session.user);
       }

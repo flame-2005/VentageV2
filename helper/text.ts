@@ -1,19 +1,13 @@
 export const capitalize = (str = "") =>
-  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 
+export function isValidEmail(email: string): boolean {
+  if (!email) return false;
 
-export function formatYouTubeDuration(duration: string): string {
-  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const value = email.trim();
 
-  if (!match) return "00:00";
+  // basic structure check
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const hours = parseInt(match[1] || "0", 10);
-  const minutes = parseInt(match[2] || "0", 10);
-  const seconds = parseInt(match[3] || "0", 10);
-
-  if (hours > 0) {
-    return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  }
-
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  return emailRegex.test(value);
 }

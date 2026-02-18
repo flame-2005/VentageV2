@@ -58,8 +58,18 @@ import type * as functions_newPosts_platforms_blogstopPosts from "../functions/n
 import type * as functions_newPosts_platforms_mediumPosts from "../functions/newPosts/platforms/mediumPosts.js";
 import type * as functions_newPosts_platforms_substackPost from "../functions/newPosts/platforms/substackPost.js";
 import type * as functions_newPosts_platforms_wordpressPosts from "../functions/newPosts/platforms/wordpressPosts.js";
+import type * as functions_newVideos_extractTranscript from "../functions/newVideos/extractTranscript.js";
+import type * as functions_newVideos_getLatestVideos from "../functions/newVideos/getLatestVideos.js";
+import type * as functions_newVideos_index from "../functions/newVideos/index.js";
+import type * as functions_newVideos_processVideos from "../functions/newVideos/processVideos.js";
 import type * as functions_processBlogs_agents_classifierAgent from "../functions/processBlogs/agents/classifierAgent.js";
 import type * as functions_processBlogs_agents_companyAgent from "../functions/processBlogs/agents/companyAgent.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent from "../functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_VectorDBMatcher from "../functions/processBlogs/newTaggingAlgo/Agents/VectorDBMatcher.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_extractCompanies from "../functions/processBlogs/newTaggingAlgo/Agents/extractCompanies.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_summarizeAgent from "../functions/processBlogs/newTaggingAlgo/Agents/summarizeAgent.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_varifyCompanies from "../functions/processBlogs/newTaggingAlgo/Agents/varifyCompanies.js";
+import type * as functions_processBlogs_newTaggingAlgo_index from "../functions/processBlogs/newTaggingAlgo/index.js";
 import type * as functions_processBlogs_processBlogs from "../functions/processBlogs/processBlogs.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
 import type * as functions_tracking_addTracking from "../functions/tracking/addTracking.js";
@@ -85,14 +95,6 @@ import type {
   FunctionReference,
 } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
   _client: typeof _client;
   "constant/blogs": typeof constant_blogs;
@@ -144,8 +146,18 @@ declare const fullApi: ApiFromModules<{
   "functions/newPosts/platforms/mediumPosts": typeof functions_newPosts_platforms_mediumPosts;
   "functions/newPosts/platforms/substackPost": typeof functions_newPosts_platforms_substackPost;
   "functions/newPosts/platforms/wordpressPosts": typeof functions_newPosts_platforms_wordpressPosts;
+  "functions/newVideos/extractTranscript": typeof functions_newVideos_extractTranscript;
+  "functions/newVideos/getLatestVideos": typeof functions_newVideos_getLatestVideos;
+  "functions/newVideos/index": typeof functions_newVideos_index;
+  "functions/newVideos/processVideos": typeof functions_newVideos_processVideos;
   "functions/processBlogs/agents/classifierAgent": typeof functions_processBlogs_agents_classifierAgent;
   "functions/processBlogs/agents/companyAgent": typeof functions_processBlogs_agents_companyAgent;
+  "functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent;
+  "functions/processBlogs/newTaggingAlgo/Agents/VectorDBMatcher": typeof functions_processBlogs_newTaggingAlgo_Agents_VectorDBMatcher;
+  "functions/processBlogs/newTaggingAlgo/Agents/extractCompanies": typeof functions_processBlogs_newTaggingAlgo_Agents_extractCompanies;
+  "functions/processBlogs/newTaggingAlgo/Agents/summarizeAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_summarizeAgent;
+  "functions/processBlogs/newTaggingAlgo/Agents/varifyCompanies": typeof functions_processBlogs_newTaggingAlgo_Agents_varifyCompanies;
+  "functions/processBlogs/newTaggingAlgo/index": typeof functions_processBlogs_newTaggingAlgo_index;
   "functions/processBlogs/processBlogs": typeof functions_processBlogs_processBlogs;
   "functions/substackBlogs": typeof functions_substackBlogs;
   "functions/tracking/addTracking": typeof functions_tracking_addTracking;
@@ -165,14 +177,30 @@ declare const fullApi: ApiFromModules<{
   "helper/post": typeof helper_post;
   posts: typeof posts;
 }>;
-declare const fullApiWithMounts: typeof fullApi;
 
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "public">
 >;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
 export declare const internal: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "internal">
 >;
 

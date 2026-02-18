@@ -23,7 +23,7 @@ export default function AuthorPage() {
 
     const { user } = useUser();
     const { addToast } = useToast();
-    
+
     // -----------------------------
     // Paginated Query
     // -----------------------------
@@ -78,7 +78,7 @@ export default function AuthorPage() {
 
     const handleToggleFollow = async () => {
         trackEvent(GA_EVENT.FOLLOW_AUTHOR_CLICKED, { author: author });
-        
+
         if (!user?._id) {
             addToast('error', 'Please login to follow', "");
             return;
@@ -134,7 +134,7 @@ export default function AuthorPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-3xl font-bold text-indigo-600">
-                    Articles by {author}
+                    {author}
                 </h1>
 
                 <button
@@ -163,7 +163,7 @@ export default function AuthorPage() {
             )}
 
             {/* Posts */}
-            <div className="space-y-6">
+            <div className="lg:space-y-6 space-y-7">
                 {posts.map((post) => (
                     <ArticleCard key={post._id} post={post} />
                 ))}

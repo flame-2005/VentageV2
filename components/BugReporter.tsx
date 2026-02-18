@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { X, Bug, MessageSquareWarning } from "lucide-react";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
+import { isValidEmail } from "@/helper/text";
 
 const BugReporter = () => {
   const submitBug = useMutation(api.functions.bugs.submitBugReport);
@@ -23,6 +24,15 @@ const BugReporter = () => {
     e.preventDefault();
     if (!email || !description) return;
 
+    if (!isValidEmail(email)) {
+      addToast(
+        "error",
+        "Invalid email",
+        "Please enter a valid email."
+      )
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -31,7 +41,7 @@ const BugReporter = () => {
         pageLink: window.location.href,
         bugDescription: description,
       });
-      trackEvent(GA_EVENT.BUG_REPORTED,{email:email})
+      trackEvent(GA_EVENT.BUG_REPORTED, { email: email })
       addToast("success", "Bug report submitted successfully", "");
 
       setEmail("");
@@ -63,52 +73,54 @@ const BugReporter = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setOpen(false)}
           >
             <motion.div
               className="w-full sm:w-[420px] bg-white rounded-t-2xl sm:rounded-2xl p-6"
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 40, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
               <form onSubmit={handleSubmit}>
                 <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Report a Bug</h3>
-                <button onClick={() => setOpen(false)}>
-                  <X className="w-5 h-5 text-slate-500" />
+                  <h3 className="text-lg font-semibold">Report a Bug</h3>
+                  <button type="button" onClick={() => setOpen(false)}>
+                    <X className="w-5 h-5 text-slate-500" />
+                  </button>
+                </div>
+
+                {/* Email */}
+                <input
+                  type="email"
+                  required
+                  placeholder="Your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-base mb-3 focus:outline-none focus:ring-2 focus:ring-black"
+                />
+
+                {/* Description */}
+                <textarea
+                  placeholder="Please describe the issue or request."
+                  rows={4}
+                  required
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-base mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-black"
+                />
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-black text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-900 disabled:opacity-50"
+                >
+                  {loading ? "Submitting..." : "Submit"}
                 </button>
-              </div>
-
-              {/* Email */}
-              <input
-                type="email"
-                required
-                placeholder="Your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-black"
-              />
-
-              {/* Description */}
-              <textarea
-                placeholder="Please describe the issue or request."
-                rows={4}
-                required
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-black"
-              />
-
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-black text-white py-2 rounded-lg text-sm font-medium hover:bg-slate-900 disabled:opacity-50"
-              >
-                {loading ? "Submitting..." : "Submit Bug"}
-              </button>
               </form>
-              
+
             </motion.div>
           </motion.div>
         )}

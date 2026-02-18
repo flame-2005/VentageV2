@@ -9,9 +9,10 @@ import { GA_EVENT, trackEvent } from '@/lib/analytics/ga';
 interface SearchBarProps {
     shouldFocus?: boolean;
     inputRef: React.RefObject<HTMLInputElement | null>;
+    setSearchBarOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBarOpen }) => {
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const [inputValue, setInputValue] = useState<string>()
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
@@ -71,13 +72,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
     };
 
     const clearSearch = () => {
-        setInputValue("");
+        setInputValue('');
     };
 
     const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>): void => {
         if (e.key === 'Enter' && inputValue && inputValue?.length > 2) {
             router.push(`/search/${encodeURIComponent(inputValue)}`);
             closeSuggestions();
+            setInputValue('');
         }
     };
 
@@ -85,20 +87,21 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
         ...(companySuggestions?.map(s => ({
             type: "company" as const,
             label: s.companyName,
-            href: `/search/company?${encodeURIComponent(s.companyName)}`,
+            href: `/company/${encodeURIComponent(s.companyName)}`,
         })) || []),
         ...(authorSuggestions?.map(s => ({
             type: "author" as const,
             label: s.author,
-            href: `/search/author?${encodeURIComponent(s.author)}`,
+            href: `/author/${encodeURIComponent(s.author)}`,
         })) || []),
     ];
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (!showSuggestions || flatSuggestions.length === 0) {
             if (e.key === "Enter" && inputValue && inputValue?.length > 2) {
-                router.push(`/search/${encodeURIComponent(inputValue)}`);
+                router.push(`/search/search-everywhere?${encodeURIComponent(inputValue)}`);
                 closeSuggestions();
+                setInputValue('');
             }
             return;
         }
@@ -123,12 +126,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                 const selected = flatSuggestions[activeIndex];
                 if (selected) {
                     router.push(selected.href);
-                    setInputValue(selected.label);
+                    setInputValue('');
                     closeSuggestions();
                 }
                 break;
 
             case "Escape":
+                setInputValue('');
                 closeSuggestions();
                 break;
         }
@@ -146,6 +150,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
         if (inputValue) {
             router.push(`/search/search-everywhere?${encodeURIComponent(inputValue)}`);
             closeSuggestions();
+            setInputValue('');
+            if(setSearchBarOpen){
+                setSearchBarOpen(false)
+            }
         }
     };
 
@@ -160,7 +168,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                 <input
                     ref={inputRef}
                     type="text"
-                    placeholder="Search ticker or company..."
+                    placeholder="Search company or author"
                     value={inputValue}
                     onChange={handleInputChange}
                     onKeyPress={handleKeyPress}
@@ -208,8 +216,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                                                         trackEvent(GA_EVENT.SEARCH_PERFORMED, { category: "company", label: suggestion.companyName });
                                                         setInputValue(suggestion.companyName);
                                                         closeSuggestions();
+                                                        setInputValue('');
+                                                        if(setSearchBarOpen){
+                                                            setSearchBarOpen(false)
+                                                        }
                                                     }}
-                                                    href={`/search/company?${encodeURIComponent(suggestion.companyName)}`}
+                                                    href={`/company/${encodeURIComponent(suggestion.companyName)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
                                                         ? "bg-blue-50 text-blue-600"
                                                         : "hover:bg-blue-50"
@@ -240,8 +252,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                                                         trackEvent(GA_EVENT.SEARCH_PERFORMED, { category: "author", label: suggestion.author });
                                                         setInputValue(suggestion.author);
                                                         closeSuggestions();
+                                                        setInputValue('');
+                                                        if(setSearchBarOpen){
+                                                            setSearchBarOpen(false)
+                                                        }
                                                     }}
-                                                    href={`/search/author?${encodeURIComponent(suggestion.author)}`}
+                                                    href={`/author/${encodeURIComponent(suggestion.author)}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
                                                         ? "bg-blue-50 text-blue-600"
                                                         : "hover:bg-blue-50"
@@ -261,7 +277,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                             </>
                         ) : null}
 
-                        {inputValue && (
+                        {/* {inputValue && (
                             <div>
                                 <button
                                     onClick={handleSearchEverywhere}
@@ -271,7 +287,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef }) => {
                                     Search everywhere for {inputValue}
                                 </button>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 )}
             </div>

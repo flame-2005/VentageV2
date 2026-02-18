@@ -3,7 +3,7 @@
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexProvider } from "convex/react";
 import { convex } from "@/convex/_client";
 import Navbar from "@/components/Navbar/page";
 import { useEffect, useState } from "react";
@@ -49,7 +49,6 @@ export default function RootLayout({
             <ToastProvider>
               <SearchProvider>
                 <div className="lg:flex">
-
                   <Navbar />
                   <BugReporter />
                   <main className="flex-1 w-full lg:w-auto">

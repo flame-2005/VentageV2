@@ -6,6 +6,7 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
+import { isValidEmail } from "@/helper/text";
 
 export default function LinkSubmissionForm() {
     const { user, isLoading } = useUser();
@@ -20,9 +21,37 @@ export default function LinkSubmissionForm() {
 
     const { addToast } = useToast();
 
+    function isValidUrl(input: string) {
+        try {
+            if (!input.includes(".")) return false;
+            const dotIndex = input.indexOf(".");
+            if (dotIndex === 0 || dotIndex === input.length - 1) return false;
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     const handleSubmit = async (e: React.FormEvent) => {
-        trackEvent(GA_EVENT.SUBMIT_BLOG_CLICKED,{blogUrl: url})
+        trackEvent(GA_EVENT.SUBMIT_BLOG_CLICKED, { blogUrl: url })
         e.preventDefault();
+
+        if (!isValidUrl(url.trim())) {
+            addToast(
+                "error",
+                "Invalid URL",
+                "Please enter a valid blog URL."
+            )
+            return;
+        }
+        if (email && !isValidEmail(email)) {
+            addToast(
+                "error",
+                "Invalid email",
+                "Please enter a valid email."
+            )
+            return;
+        }
 
         try {
             setLoading(true);
@@ -67,13 +96,15 @@ export default function LinkSubmissionForm() {
                                 </svg>
                             </div>
                             <input
-                                type="url"
+                                type="text"
                                 required
                                 placeholder="https://example.com"
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 onFocus={() => setFocusedField("url")}
-                                onBlur={() => setFocusedField("")}
+                                onBlur={() => {
+                                    setFocusedField("");
+                                }}
                                 className={`w-full rounded-xl border ${focusedField === "url" ? "border-blue-500 ring-4 ring-blue-50" : "border-gray-200"
                                     } bg-white pl-12 pr-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:outline-none`}
                             />

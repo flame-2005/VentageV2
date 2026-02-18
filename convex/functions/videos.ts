@@ -134,8 +134,7 @@ export const getPaginatedVideos = query({
           // ----------------------------
           q.or(
             q.eq(q.field("classification"), "Company_analysis"),
-            q.eq(q.field("classification"), "Multiple_company_analysis"),
-            q.eq(q.field("classification"), "Sector_analysis")
+            q.eq(q.field("classification"), "Sector_analysis"),
           ),
 
           // ----------------------------
@@ -170,9 +169,7 @@ export const getPaginatedVideos = query({
             q.neq(q.field("channel_name"), undefined),
             q.neq(q.field("channel_name"), null),
             q.neq(q.field("channel_name"), ""),
-            q.neq(q.field("channel_name"), "Eduinvesting Team"),
-            q.neq(q.field("channel_name"), "Lalitha Diwakarla"),
-            q.neq(q.field("channel_name"), "Viceroy Research")
+            q.neq(q.field("channel_name"), "Money Purse"),
           )
         )
       )

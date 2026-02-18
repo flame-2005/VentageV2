@@ -52,11 +52,13 @@ export const sendNotificationEmail = internalAction({
     // 3️⃣ Send email via Resend
     const result = await resend.emails.send({
       to: email,
-      from: "VentEdge <no-reply@thevantedge.com>",
+      from: "VantEdge <no-reply@thevantedge.com>",
       subject: "New post you’re tracking",
       html: `
     <p>A new post was published.</p>
     <p><strong>${post?.title}</strong></p>
+    <p><strong>From: ${post?.author}</strong></p>
+    <p><strong>Company: ${post?.companyName}</strong></p>
     <p>${post?.summary}</p>
     <p>
       <a href="${post?.link}" target="_blank" rel="noopener noreferrer"

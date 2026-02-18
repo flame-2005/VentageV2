@@ -144,7 +144,7 @@ export function extractDate(item: RSSItem): string {
   return "";
 }
 
-export const migrateCompanyPosts = internalMutation({
+export const migrateCompanyPosts = mutation({
   args: {
     batchSize: v.optional(v.number()),
     paginationOpts: v.optional(paginationOptsValidator),
@@ -360,3 +360,18 @@ export function calculateIsValidAnalysis({
   return hasValidClassification && hasValidCompanyInfo && hasValidAuthor;
 }
 
+export function getValidImageUrl(url?: string) {
+  if (!url) return undefined;
+
+  // reject audio files
+  if (url.toLowerCase().endsWith(".mp3")) return undefined;
+
+  // // allow only image extensions
+  // const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg"];
+
+  // const isImage = imageExtensions.some(ext =>
+  //   url.toLowerCase().endsWith(ext)
+  // );
+
+  return  url 
+}

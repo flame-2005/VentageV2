@@ -1,6 +1,7 @@
 import { useToast } from '@/context/toastContext';
 import { api } from '@/convex/_generated/api';
 import { Doc } from '@/convex/_generated/dataModel';
+import { isValidEmail } from '@/helper/text';
 import { useMutation } from 'convex/react';
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react';
@@ -25,6 +26,15 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
     const submitBugReport = useMutation(api.functions.bugs.submitBugReport)
 
     const handleReportSubmit = async () => {
+
+        if (reportEmail && !isValidEmail(reportEmail)) {
+            addToast(
+                "error",
+                "Invalid email",
+                "Please enter a valid email."
+            )
+            return;
+        }
         if (!reportEmail.trim()) {
             addToast('error', 'Email Required', 'Please provide your email address.')
             return
@@ -89,7 +99,7 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-bold text-slate-900">Report Wrong Tagging</h3>
+                                <h3 className="text-lg font-bold text-slate-900">Feedback on Link</h3>
                                 <button
                                     onClick={() => setShowReportModal(false)}
                                     className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
@@ -125,7 +135,7 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
                                         value={reportEmail}
                                         onChange={(e) => setReportEmail(e.target.value)}
                                         placeholder="your@email.com"
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base resize-none"
                                     />
                                 </div>
 
@@ -169,7 +179,7 @@ export const ArticleBugReporter = ({ showReportModal, setShowReportModal, post, 
                                         onChange={(e) => setReportDescription(e.target.value)}
                                         placeholder="Add any additional information..."
                                         rows={4}
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                                        className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base resize-none"
                                     />
                                 </div>
 

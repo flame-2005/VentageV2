@@ -24,7 +24,7 @@ export default function AuthCallbackClient() {
         if (error) throw error;
 
         if (!session?.user) {
-          router.replace("/login");
+          router.replace("/home");
           return;
         }
 
@@ -44,7 +44,7 @@ export default function AuthCallbackClient() {
         router.replace(next);
       } catch (err) {
         console.error("Auth callback error:", err);
-        router.replace("/login");
+        router.replace("/home");
       }
     };
 

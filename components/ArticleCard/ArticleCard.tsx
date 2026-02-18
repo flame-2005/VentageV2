@@ -49,6 +49,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
     const router = useRouter()
 
     const handlePostClick = async () => {
+
         trackEvent(GA_EVENT.ARTICLE_CARD_CLICK, { postId: post._id })
         setClickedCount(clickedCount + 1)
         try {
@@ -102,6 +103,11 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
         if (trimmedTag === 'bearish' || trimmedTag === 'negative') return 'BEARISH'
         return 'NEUTRAL'
     }
+    const getClassificationDisplay = (classification: string) => {
+        const trimmedTag = classification?.trim().toLowerCase() || ''
+        if (trimmedTag === 'sector_analysis' || trimmedTag === 'positive') return 'Sector Deep Dive'
+        return 'Company Thesis'
+    }
 
     const mainTag = post.tags?.[0]
 
@@ -113,7 +119,7 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: index * 0.05 }}
-                className="group bg-white rounded-2xl p-3 sm:p-4 hover:shadow-xl hover:shadow-slate-200/50 hover:border-blue-200 transition-all flex flex-col sm:flex-row gap-3 sm:gap-5 items-stretch relative"
+                className="group bg-white rounded-2xl p-3 sm:p-4 hover:shadow-lg shadow-sm hover:border-blue-200 transition-all flex flex-col sm:flex-row gap-3 sm:gap-5 items-stretch relative"
             >
                 {/* Report Button - Top Right */}
                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
@@ -196,6 +202,9 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                                     {getToneDisplay(mainTag)}
                                 </span>
                             )}
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase whitespace-nowrap ${getToneStyles(post.classification!)}`}>
+                                {getClassificationDisplay(post.classification!)}
+                            </span>
                         </div>
 
                         {/* Date */}
@@ -257,9 +266,9 @@ const ArticleCard = ({ post, index = 0 }: ArticleCardProps) => {
                             <button
                                 onClick={async () => {
                                     try {
+                                        const shareUrl = `${window.location.origin}/share/${post.title.trim().split(" ").join("-")}/${post._id}`
+                                        navigator.clipboard.writeText(shareUrl)
                                         await sharePost()
-                                        const shareUrl = `${window.location.origin}/share/${post._id}`
-                                        await navigator.clipboard.writeText(shareUrl)
                                         addToast(
                                             "success",
                                             "Link Copied!",

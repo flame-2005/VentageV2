@@ -9,6 +9,12 @@ crons.interval(
   api.functions.newPosts.checkNewPosts.fetchAllBlogsAction
 );
 
+crons.interval(
+  "track youtube channels",
+  { hours: 24 },
+  api.functions.newVideos.processVideos.triggerAllChannelTracking
+);
+
 crons.weekly(
   "refresh-master-company-details-weekly",
   {
