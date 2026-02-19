@@ -75,5 +75,5 @@ export async function generateMetadata({
 }
 
 export default function SharePage() {
-  return <SharePageClient />;
+  return <SharePageClient shareLink={post!.link} />;
 }
