@@ -1,10 +1,11 @@
 "use client";
 
-import {  useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import CircularLoader from "@/components/circularLoader";
 import VideoCard from "@/components/videoCard/VideoCard";
+import { getYouTubeDurationInSeconds } from "@/helper/text";
 
 
 export default function VideoPage() {
@@ -62,12 +63,14 @@ export default function VideoPage() {
                         {/* Articles */}
                         <div className="space-y-6">
                             {videos && videos.length > 0 ? (
-                                videos.map((post) => (
-                                    <VideoCard
-                                        key={post._id}
-                                        post={post}
-                                    />
-                                ))
+                                videos
+                                    .filter((post) => {
+                                        const totalSeconds = getYouTubeDurationInSeconds(post.duration!);
+                                        return totalSeconds >= 300; // 5 minutes
+                                    })
+                                    .map((post) => (
+                                        <VideoCard key={post._id} post={post} />
+                                    ))
                             ) : (
                                 <div className="text-center py-16">
                                     <div className="text-6xl mb-4">📊</div>
