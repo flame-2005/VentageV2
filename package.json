@@ -31,6 +31,7 @@
     "get:checkPost": "tsx scripts/tagCompany/singlePostCheck.ts",
     "get:historicalVideos": "tsx scripts/youtube/main.ts",
     "get:historicalVideosNewAlgo": "tsx scripts/newTaggingAlgo/Video/index.ts",
+    "fix:updateVideos": "tsx scripts/newTaggingAlgo/Video/updateVideos.ts",
     "check:stressTest": "tsx scripts/stressTest.js",
     "get:removeNonMarketcap": "tsx scripts/tagCompany/removeNonMarketCap.ts",
     "categorize:posts": "tsx scripts/tagCompany/categorization.ts",

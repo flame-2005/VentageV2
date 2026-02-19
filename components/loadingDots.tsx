@@ -7,15 +7,26 @@ import { api } from "@/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { Id } from "@/convex/_generated/dataModel";
 
-type shareLinkParams = {
-  shareLink: string;
-};
+export default function SharePageClient() {
+  const router = useRouter();
+  const params = useParams();
+  const shareLink = decodeURIComponent(params.shareLink as string);
 
-export default function SharePageClient({ shareLink }: shareLinkParams) {
-  const router = useRouter(); 
+  const post = useQuery(api.functions.substackBlogs.getPostById, {
+    id: shareLink as Id<"posts">,
+  });
+
   useEffect(() => {
-    router.replace(shareLink);
-  }, [shareLink, router]);
+    if (post === undefined) return; // still loading
+
+    if (!post) {
+      console.error("Post not found!");
+      return;
+    }
+
+    // Redirect to the actual post.link
+    router.replace(post.link);
+  }, [post, router]);
 
   return (
     <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">

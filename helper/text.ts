@@ -1,3 +1,5 @@
+import { Doc } from "@/convex/_generated/dataModel";
+
 export const capitalize = (str = "") => {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -29,6 +31,10 @@ export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   return emailRegex.test(value);
+}
+
+export function isPost(post: Doc<"posts"> | Doc<"videos">): post is Doc<"posts"> {
+  return post._id.__tableName === "posts";
 }
 
 

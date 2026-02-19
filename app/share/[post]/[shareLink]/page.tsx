@@ -2,7 +2,7 @@
 import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { isPost } from "@/convex/functions/tracking/notification";
+import { isPost } from "@/helper/text";
 import SharePageClient from "@/components/loadingDots";
 
 let post: (Doc<"posts"> | Doc<"videos">) | null = null;
@@ -75,5 +75,5 @@ export async function generateMetadata({
 }
 
 export default function SharePage() {
-  return <SharePageClient shareLink={post!.link} />;
+  return <SharePageClient />;
 }

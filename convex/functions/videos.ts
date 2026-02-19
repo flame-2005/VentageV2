@@ -220,7 +220,7 @@ export const updateVideo = mutation({
   },
 });
 
-export const bulkUpdatePosts = mutation({
+export const bulkUpdateVideos = mutation({
   args: {
     updates: v.array(
       v.object({
