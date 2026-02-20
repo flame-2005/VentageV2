@@ -29,6 +29,7 @@
     "test:newCompanytags": "tsx scripts/newTaggingAlgo/index.ts",
     "create:vectorDB": "tsx scripts/newTaggingAlgo/createVectorDB.ts",
     "get:checkPost": "tsx scripts/tagCompany/singlePostCheck.ts",
+    "get:checkVideos": "tsx scripts/newTaggingAlgo/Video/checkResult.ts",
     "get:historicalVideos": "tsx scripts/youtube/main.ts",
     "get:historicalVideosNewAlgo": "tsx scripts/newTaggingAlgo/Video/index.ts",
     "fix:updateVideos": "tsx scripts/newTaggingAlgo/Video/updateVideos.ts",

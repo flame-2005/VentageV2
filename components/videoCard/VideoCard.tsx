@@ -62,17 +62,17 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
     const shareMutation = useMutation(api.functions.users.shareVideo)
 
     const likeVideo = async () => {
-             trackEvent(GA_EVENT.LIKE_CLICKED, { postId: post._id })
-             if (!user) {
-                 addToast('error', 'Login Required', 'Please log in to like videos.')
-                 return
-             }
-             setIsLiked(!isLiked)
-             setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
-             await likeMutation({
-                 videoId: post._id,
-                 userId: user?._id as Id<"users">,
-             })
+        trackEvent(GA_EVENT.LIKE_CLICKED, { postId: post._id })
+        if (!user) {
+            addToast('error', 'Login Required', 'Please log in to like videos.')
+            return
+        }
+        setIsLiked(!isLiked)
+        setLikeCount(isLiked ? likeCount - 1 : likeCount + 1)
+        await likeMutation({
+            videoId: post._id,
+            userId: user?._id as Id<"users">,
+        })
     }
 
     const sharePost = async () => {
@@ -101,6 +101,13 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
         if (trimmedTag === 'bullish' || trimmedTag === 'positive') return 'BULLISH'
         if (trimmedTag === 'bearish' || trimmedTag === 'negative') return 'BEARISH'
         return 'NEUTRAL'
+    }
+
+    const getClassificationDisplay = (classification: string) => {
+        const trimmedTag = classification?.trim().toLowerCase() || ''
+        if (trimmedTag === 'sector_analysis') return 'Sector Deep Dive'
+        if (trimmedTag === 'management_interview') return 'Management Interview'
+        return 'Company Thesis'
     }
 
     const mainTag = post.tags?.[0]
@@ -214,6 +221,10 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                                     {getToneDisplay(mainTag)}
                                 </span>
                             )}
+
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase whitespace-nowrap ${getToneStyles(post.classification!)}`}>
+                                {getClassificationDisplay(post.classification!)}
+                            </span>
                         </div>
 
                         {/* Date */}
@@ -307,7 +318,7 @@ const VideoCard = ({ post, index = 0 }: VideoCardProps) => {
                 </div>
             </motion.article>
 
-             {/* <ArticleBugReporter
+            {/* <ArticleBugReporter
                 firstCompany={firstCompany}
                 showReportModal={showReportModal}
                 setShowReportModal={setShowReportModal}
