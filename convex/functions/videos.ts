@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { mutation, query } from "../_generated/server";
 import { paginationOptsValidator } from "convex/server";
 import { Id } from "../_generated/dataModel";
+import { isValidAuthor } from "../helper/post";
 
 export const addChannel = mutation({
   args: {
@@ -25,12 +26,12 @@ export const addChannel = mutation({
 });
 
 export const getChannelById = query({
-  args: { 
-    channelId: v.id("channels"), 
+  args: {
+    channelId: v.id("channels"),
   },
   handler: async (ctx, { channelId }) => {
     const channel = await ctx.db.get(channelId);
-    
+
     if (!channel) {
       throw new Error(`Channel with ID ${channelId} not found`);
     }
@@ -39,10 +40,37 @@ export const getChannelById = query({
   },
 });
 
-
 export const getChannel = query({
   handler: async (ctx) => {
     return await ctx.db.query("channels").collect();
+  },
+});
+
+export const getVideosByChannel = query({
+  args: {
+    author: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { author, paginationOpts }) => {
+    const posts = await ctx.db
+      .query("videos")
+      .withIndex("by_author_pubDate", (q) => q.eq("channel_name", author))
+      .order("desc")
+      .paginate(paginationOpts);
+
+    // Filter the results page
+    const filteredPosts = posts.page.filter(
+      (post) =>
+        post.companyDetails &&
+        (post.classification === "Company_analysis" ||
+          post.classification === "Sector_analysis" ||
+          post.classification === "Management_interview"),
+    );
+
+    return {
+      ...posts,
+      page: filteredPosts,
+    };
   },
 });
 
@@ -135,6 +163,7 @@ export const getPaginatedVideos = query({
           q.or(
             q.eq(q.field("classification"), "Company_analysis"),
             q.eq(q.field("classification"), "Sector_analysis"),
+            q.eq(q.field("classification"), "Management_interview"),
           ),
 
           // ----------------------------
@@ -145,21 +174,21 @@ export const getPaginatedVideos = query({
             q.and(
               q.neq(q.field("bseCode"), undefined),
               q.neq(q.field("bseCode"), null),
-              q.neq(q.field("bseCode"), "")
+              q.neq(q.field("bseCode"), ""),
             ),
 
             // has valid NSE code
             q.and(
               q.neq(q.field("nseCode"), undefined),
               q.neq(q.field("nseCode"), null),
-              q.neq(q.field("nseCode"), "")
+              q.neq(q.field("nseCode"), ""),
             ),
 
             // has non-empty companyDetails
             q.and(
               q.neq(q.field("companyDetails"), undefined),
-              q.neq(q.field("companyDetails"), null)
-            )
+              q.neq(q.field("companyDetails"), null),
+            ),
           ),
 
           // ----------------------------
@@ -170,8 +199,8 @@ export const getPaginatedVideos = query({
             q.neq(q.field("channel_name"), null),
             q.neq(q.field("channel_name"), ""),
             q.neq(q.field("channel_name"), "Money Purse"),
-          )
-        )
+          ),
+        ),
       )
 
       .paginate(args.paginationOpts);
@@ -206,8 +235,8 @@ export const updateVideo = mutation({
             bse_code: v.optional(v.string()),
             nse_code: v.optional(v.string()),
             market_cap: v.optional(v.number()),
-          })
-        )
+          }),
+        ),
       ),
       tags: v.optional(v.array(v.string())),
     }),
@@ -220,7 +249,7 @@ export const updateVideo = mutation({
   },
 });
 
-export const bulkUpdatePosts = mutation({
+export const bulkUpdateVideos = mutation({
   args: {
     updates: v.array(
       v.object({
@@ -249,12 +278,12 @@ export const bulkUpdatePosts = mutation({
                 bse_code: v.optional(v.string()),
                 nse_code: v.optional(v.string()),
                 market_cap: v.optional(v.number()),
-              })
-            )
+              }),
+            ),
           ),
           tags: v.optional(v.array(v.string())),
         }),
-      })
+      }),
     ),
   },
 
@@ -274,7 +303,6 @@ export const bulkUpdatePosts = mutation({
     return { success: true, updated: args.updates.length };
   },
 });
-
 
 export const addBulkVideos = mutation({
   args: {
@@ -302,8 +330,8 @@ export const addBulkVideos = mutation({
               bse_code: v.optional(v.string()),
               nse_code: v.optional(v.string()),
               market_cap: v.optional(v.number()),
-            })
-          )
+            }),
+          ),
         ),
         tags: v.optional(v.array(v.string())),
         classification: v.optional(v.string()),
@@ -312,7 +340,7 @@ export const addBulkVideos = mutation({
         likes: v.optional(v.string()),
         source: v.optional(v.string()),
         lastCheckedAt: v.optional(v.number()),
-      })
+      }),
     ),
   },
 
@@ -366,7 +394,7 @@ export const bulkUpdateBlogs = mutation({
         imageUrl: v.optional(v.string()),
         extractionMethod: v.optional(v.string()),
         feedUrl: v.optional(v.string()),
-      })
+      }),
     ),
   },
 

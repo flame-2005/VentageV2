@@ -45,8 +45,8 @@ export default defineSchema({
           bse_code: v.optional(v.string()),
           nse_code: v.optional(v.string()),
           market_cap: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
     tags: v.optional(v.array(v.string())),
     classification: v.optional(v.string()),
@@ -101,8 +101,8 @@ export default defineSchema({
           bse_code: v.optional(v.string()),
           nse_code: v.optional(v.string()),
           market_cap: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
     tags: v.optional(v.array(v.string())),
     classification: v.optional(v.string()),
@@ -173,7 +173,9 @@ export default defineSchema({
     authorsFollowing: v.optional(v.array(v.string())),
     blogWebsitesFollowing: v.array(v.string()), // Array of blog URLs or IDs
     likedPosts: v.optional(v.array(v.id("posts"))),
+    likedVideos: v.optional(v.array(v.id("videos"))),
     sharedPosts: v.optional(v.array(v.id("posts"))),
+    sharedVideos: v.optional(v.array(v.id("videos"))),
     avatarUrl: v.optional(v.string()),
     fullName: v.optional(v.string()),
   })
@@ -211,7 +213,7 @@ export default defineSchema({
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),
-      v.literal("rejected")
+      v.literal("rejected"),
     ),
   })
     .index("by_user", ["userId"])
@@ -249,8 +251,8 @@ export default defineSchema({
       v.union(
         v.literal("open"),
         v.literal("in_progress"),
-        v.literal("resolved")
-      )
+        v.literal("resolved"),
+      ),
     ),
   })
     .index("by_email", ["email"])

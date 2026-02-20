@@ -165,7 +165,7 @@ export const migrateCompanyPosts = mutation({
     for (const post of page.page) {
       try {
         // Case 1: companyDetails array
-        if (post.companyDetails?.length && post.classification !== "Multiple_company_update" && post.classification !== "General_investment_guide") {
+        if (post.companyDetails?.length) {
           for (const company of post.companyDetails) {
             await ctx.db.insert("companyPosts", {
               postId: post._id,
@@ -179,7 +179,7 @@ export const migrateCompanyPosts = mutation({
           }
         }
         // Case 2: fallback single company
-        else if (post.companyName && post.classification !== "Multiple_company_update" && post.classification !== "General_investment_guide") {
+        else if (post.companyName) {
           await ctx.db.insert("companyPosts", {
             postId: post._id,
             companyName: post.companyName,
