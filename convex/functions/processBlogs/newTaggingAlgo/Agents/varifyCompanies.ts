@@ -1,4 +1,4 @@
-"use node"
+"use node";
 
 import OpenAI from "openai";
 
@@ -7,7 +7,7 @@ export interface Company {
   nse?: string;
   bse?: string;
   name: string;
-  marketCap:number
+  marketCap: number;
   extractedName: string; // Name as mentioned in the blog
 }
 
@@ -40,7 +40,7 @@ export async function validateCompanies(
   input: Agent4Input,
 ): Promise<Agent4Output> {
   const openai = new OpenAI({
-    apiKey:process.env.OPENAI_API_KEY!
+    apiKey: process.env.OPENAI_API_KEY!,
   });
 
   let attempt = 0;
@@ -139,19 +139,33 @@ async function validateSingleCompany(
           role: "system",
           content: `You're a world class analyst at a hedge fund with extensive knowledge of public markets. Your task is to validate whether companies mentioned in a blog match the correct publicly listed entities from a database.
 
-          REMEMBER THAT IF A COMPANY OF A BRAND IS MENTIONED EVEN WHEN THE COMPANY IS NOT FULLY RELATED TO THE SECTOR STILL MUST BE INCLUDED IF THE BRAND BELONGS TO THAT SECTOR ex - ZOMATO AS COMPANY FOR QUICK COMMERS COMPANY BLINKIT
+          The blog’s PRIMARY INDUSTRY/SECTOR is defined as the industry that the article is analytically evaluating,
+          not industries of example companies referenced.
 
-Your validation criteria:
-1. SECTOR ALIGNMENT: The company's core business must match the blog's topic
-2. NAME SIMILARITY: If the company name is similar but the sector is different, REJECT it
-3. CONTEXTUAL CORRECTNESS: The company must be contextually correct with respect to the blog's subject matter
+          REMEMBER THAT IF A COMPANY OF A BRAND IS MENTIONED EVEN WHEN THE COMPANY IS NOT FULLY RELATED TO THE SECTOR STILL MUST BE INCLUDED IF THE BRAND BELONGS TO THAT SECTOR ex -ETERNAL - ZOMATO AS COMPANY FOR QUICK COMMERS COMPANY BLINKIT
 
-You must respond ONLY with valid JSON in this exact format:
-{
-  "isMatch": true/false,
-  "reason": "detailed explanation of why this is or isn't a match",
-  "confidence": "high/medium/low"
-}`,
+          IMPORTANT:
+          The database name may include ticker prefixes or formatting artifacts.
+          For example:
+          "ETERNAL - ZOMATO" refers to Zomato Limited.
+          Focus on the core brand name when validating.
+
+          Your validation criteria:
+          1. SECTOR ALIGNMENT: The company's core business must match the blog's topic
+          2. NAME SIMILARITY: If the company name is similar but the sector is different, REJECT it
+          3. CONTEXTUAL CORRECTNESS: The company must be contextually correct with respect to the blog's subject matter
+          4. PRIMARY TOPIC STRICTNESS:
+            The company must belong to the PRIMARY INDUSTRY being analyzed in the blog.
+            If the company is only mentioned as an example, analogy, or reference,
+            but is not part of the main economic/industry theme being discussed,
+            you MUST reject it.
+
+          You must respond ONLY with valid JSON in this exact format:
+          {
+            "isMatch": true/false,
+            "reason": "detailed explanation of why this is or isn't a match",
+            "confidence": "high/medium/low"
+          }`,
         },
         {
           role: "user",

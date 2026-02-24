@@ -918,3 +918,12 @@ export const getPostById = query({
     return await db.get(id);
   },
 });
+
+export const getPost = query({
+  args: {
+    id: v.id("posts"),
+  },
+  handler: async ({ db }, { id }) => {
+    return await db.get(id);
+  },
+});

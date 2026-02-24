@@ -1,5 +1,3 @@
-"use node"
-
 import OpenAI from "openai";
 
 // ============================================================================
@@ -13,6 +11,7 @@ export type ClassificationType =
   | "Company_analysis"
   | "General_investment_guide"
   | "Macro_economic_analysis"
+  | "Management_interview"
   | "Other";
 
 export interface ClassificationResult {
@@ -24,7 +23,7 @@ export interface ClassificationResult {
 // ============================================================================
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!
+  apiKey: process.env.OPENAI_API_KEY 
 });
 
 // ============================================================================
@@ -47,7 +46,7 @@ INCLUDES (VERY IMPORTANT):
 • Commentary that does NOT explain why a company will win or lose long term
 
 CHARACTERISTICS:
-• Typically 1–3 short sentences per company (length alone does NOT imply analysis)
+• Typically 1–3 short sentences per company or 60 to 180 words per company (length alone does NOT imply analysis)
 • No forward-looking earnings, margin, demand, or valuation reasoning
 • No causal chain (X → Y → Z) affecting future performance
 • No investment decision can be made for any individual company
@@ -79,7 +78,7 @@ EACH company MUST have its OWN independent analysis with:
 • A stated opportunity or risk
 • OR a causal explanation (X → Y → Z)
 
-EACH company MUST have at least 2–3 meaningful sentences focused on 
+EACH company MUST have at least 4-6 meaningful sentences or 180 to 360 words per company focused on 
 future business or earnings impact.
 
 STRICT REQUIREMENT (MANDATORY):
@@ -118,11 +117,13 @@ about ONE single, clearly identifiable sector or industry.
 MANDATORY CONDITIONS (ALL MUST PASS):
 
 1. SINGLE-SECTOR DOMINANCE (NON-NEGOTIABLE)
-   • One sector must account for ≥80% (by word count) of the article’s analytical content - VERY IMPORTANT
-   • The article’s title, introduction, and conclusion must all reference the SAME sector
+   • One sector must account for ≥80% of the article’s analytical content
+   • The article’s title, introduction, and conclusion must all reference
+     the SAME sector
 
-2. SECTOR-LEVEL ANALYSIS
-   The article must be a deep analysis of a single sector, not a macroeconomic analysis that touches on multiple sectors. It should provide:
+2. SECTOR-LEVEL ANALYSIS (NOT MACRO)
+   The article must explain at least THREE of the following
+   specifically for that sector:
    • Industry structure
    • Demand / supply drivers
    • Cost curves or margin structure
@@ -137,6 +138,7 @@ MANDATORY CONDITIONS (ALL MUST PASS):
    • If company-level analysis dominates → NOT Sector_analysis
 
 AUTOMATIC DISQUALIFIERS (ANY ONE FAIL → NOT Sector_analysis):
+
 • More than ONE sector is discussed analytically
 • Article focuses on:
   - Macro economy
@@ -147,12 +149,14 @@ AUTOMATIC DISQUALIFIERS (ANY ONE FAIL → NOT Sector_analysis):
 • Sector discussion is fragmented across unrelated industries
 • Sector is used only as a subsection, not the core thesis
 
-STRICT DISQUALIFIER: If TWO OR MORE distinct industries (e.g., Pharma AND Textiles) are analyzed, you MUST NOT use Sector_analysis. This is a Macro_economic_analysis.
+DEFAULT RULE:
+When in doubt, DO NOT classify as Sector_analysis.
 
 EXAMPLE OUTPUT:
 {
   "classification": "Sector_analysis",
 }
+
 ────────────────────────────────────────────────────────────────────────────
 
 4️⃣ COMPANY_ANALYSIS
@@ -224,8 +228,6 @@ EXAMPLE OUTPUT:
   "classification": "General_investment_guide",
 }
 
-────────────────────────────────────────────────────────────────────────────
-
 6️⃣ MACRO_ECONOMIC_ANALYSIS
 ────────────────────────────────────────────────────────────────────────────
 Articles whose PRIMARY focus is the overall economy and broad macro forces,
@@ -275,9 +277,69 @@ EXAMPLE OUTPUT:
   "classification": "Macro_economic_analysis",
 }
 
+
+7 MANAGEMENT_INTERVIEW
+────────────────────────────────────────────────────────────────────────────
+The content consists of an interview, talk, or direct commentary by a
+TOP EXECUTIVE of a company, focused on business, financial, or strategic
+matters supported by data, metrics, or factual insights.
+
+ELIGIBLE EXECUTIVES (MANDATORY):
+• CEO
+• CFO
+• COO
+• CTO
+• Managing Director
+• Executive Chairperson
+• Founder / Co-founder (only if acting in executive capacity)
+• Etc (Top decision-makers with direct operational responsibility)
+
+NON-NEGOTIABLE RULE:
+The speaker MUST be a senior decision-maker of a real operating company.
+Interviews of investors, economists, journalists, authors, or influencers
+are NOT allowed.
+
+CONTENT MUST INCLUDE (AT LEAST ONE):
+• Company performance metrics (revenue, margins, growth rates, capacity, etc.)
+• Strategic decisions or execution plans
+• Capital allocation, investments, expansion, or cost structure
+• Forward-looking business or earnings commentary
+• Sector-level data from the executive’s operating perspective
+• Market share, demand trends, or competitive positioning
+
+ALLOWED TOPICS:
+• Company business model and strategy
+• Financial performance and outlook
+• Industry structure and future of the sector
+• Technology, operations, or scale advantages
+• Regulatory or policy impact on the business
+• Executive’s journey ONLY if tied to company-building decisions and outcomes
+
+STRICT EXCLUSIONS (AUTOMATIC DISQUALIFIERS):
+• Motivational or philosophical talks
+• Leadership life lessons without data
+• Personal success stories without business metrics
+• Generic management advice
+• Interviews focused on personality, lifestyle, or inspiration
+• Talks without quantitative or factual grounding
+
+CLASSIFICATION TEST (MANDATORY):
+Ask:
+"Does this interview provide factual, decision-grade insight into how a
+real business or sector operates, based on data or execution experience?"
+
+→ If YES → Management_interview  
+→ If NO → Other
+
+EXAMPLE OUTPUT:
+{
+  "classification": "Management_interview"
+}
+
 ────────────────────────────────────────────────────────────────────────────
 
-7 OTHER
+────────────────────────────────────────────────────────────────────────────
+8️⃣ OTHER
 ────────────────────────────────────────────────────────────────────────────
 The blog does not clearly fit into any of the defined categories.
 
@@ -346,51 +408,41 @@ END OF SYSTEM PROMPT
 // ============================================================================
 
 const createUserPrompt = (blogText: string): string => `
-Read the blog content below and classify it into exactly ONE of these categories. 
-You MUST adhere to these strict boundary definitions:
-
-1. Macro_economic_analysis:
-   - MUST be used for Trade Agreements, Treaties, FTAs, or Central Bank policies.
-   - MUST be used if analytical focus is spread across 2 or more distinct sectors.
-   - The "Policy" or "Macro Event" is the primary subject.
-
-2. Sector_analysis:
-   - MUST exclusively focus on ONE industry (>=80% of text).
-   - DISQUALIFIED if the catalyst is a Trade Deal, FTA, or Macro Policy.
-   - DISQUALIFIED if more than one sector is analyzed.
-
-3. Multiple_company_analysis:
-   - MUST have 120+ words of forward-looking analysis for AT LEAST 2 companies.
-   - If analysis is thin or purely descriptive, use Multiple_company_update.
-
-4. Company_analysis:
-   - MUST have exactly ONE company and exceed 500 words with a clear investment thesis.
-
-5. General_investment_guide:
-   - Educational content (SIPs, Psychology, Portfolio construction) only.
-
-6. Other:
-   - Use if the post is purely news, earnings results without a thesis, or doesn't fit the above.
+Read the blog content below and classify it into exactly ONE of the 6 predefined categories.
 
 Your output must follow this strict JSON format:
 {
-  "classification": ""
+  "classification": "",
 }
 
-Return ONLY the JSON object. No explanations. No notes.
+Where:
+- "classification" = one of:
+    "Multiple_company_update",
+    "Multiple_company_analysis",
+    "Sector_analysis",
+    "Company_analysis",
+    "General_investment_guide",
+    "Management_interview",
+    "Macro_economic_analysis",
+    "Other"
+
+Return ONLY the JSON object.
+No explanations. No notes. No reasoning.
+
+CRITICAL REMINDER:
+• Company_analysis should strictly have only ONE company in the array
+• If more than one company is present, it should be classified as Multiple_company_analysis
+• This rule is MANDATORY
 
 ════════════════════════════════════════════════════════════════════════════
 📄 BLOG CONTENT:
 ════════════════════════════════════════════════════════════════════════════
 
 ${blogText}
+
+════════════════════════════════════════════════════════════════════════════
 `;
-
-// ============================================================================
-// MAIN CLASSIFICATION FUNCTION
-// ============================================================================
-
-export async function classifyBlog(
+export async function classifyVideo(
   blogText: string,
   options: {
     model?: string;
@@ -453,8 +505,9 @@ function validateClassificationResult(result: ClassificationResult): void {
     "Multiple_company_analysis",
     "Sector_analysis",
     "Company_analysis",
-    "General_investment_guide",
     "Macro_economic_analysis",
+    "General_investment_guide",
+    "Management_interview",
     "Other",
   ];
 
@@ -482,7 +535,7 @@ export async function classifyBlogsBatch(
   const delay = options?.delayMs || 0;
 
   for (let i = 0; i < blogs.length; i++) {
-    const result = await classifyBlog(blogs[i], options);
+    const result = await classifyVideo(blogs[i], options);
     results.push(result);
 
     // Add delay between requests if specified
@@ -499,6 +552,6 @@ export async function classifyBlogsBatch(
 // ============================================================================
 
 export default {
-  classifyBlog,
+  classifyVideo,
   classifyBlogsBatch,
 };

@@ -1,4 +1,4 @@
-"use node"
+"use node";
 
 // convex/processPosts.ts
 
@@ -8,11 +8,18 @@ import { api, internal } from "../../_generated/api";
 import { fetchArticleContent } from "../../helper/blogs";
 import { CompanyDetail } from "../../constant/posts";
 import { Id } from "../../_generated/dataModel";
-import { calculateIsValidAnalysis, convertRssDateToIso, getValidImageUrl } from "../../helper/post";
+import {
+  calculateIsValidAnalysis,
+  convertRssDateToIso,
+  getValidImageUrl,
+} from "../../helper/post";
 import { classifyBlog } from "./newTaggingAlgo/Agents/ClassificationAgent";
 import { extractCompanies } from "./newTaggingAlgo/Agents/extractCompanies";
 import { resolveWithFilter } from "./newTaggingAlgo/Agents/VectorDBMatcher";
-import { Company, validateCompanies, } from "./newTaggingAlgo/Agents/varifyCompanies";
+import {
+  Company,
+  validateCompanies,
+} from "./newTaggingAlgo/Agents/varifyCompanies";
 import { summarizeBlog } from "./newTaggingAlgo/Agents/summarizeAgent";
 
 type EnrichedPost = {
@@ -57,13 +64,13 @@ export const processAndSavePosts = action({
         author: v.optional(v.string()),
         image: v.optional(v.union(v.string(), v.null())),
         source: v.string(),
-      })
+      }),
     ),
   },
 
   handler: async (
     ctx,
-    { posts }
+    { posts },
   ): Promise<{
     totalProcessed: number;
     batches: number;
@@ -72,7 +79,7 @@ export const processAndSavePosts = action({
 
     const blogs = await ctx.runQuery(
       api.functions.substackBlogs.getAllBlogs,
-      {}
+      {},
     );
     const blogMap = new Map(blogs.map((b) => [b._id, b]));
 
@@ -83,7 +90,7 @@ export const processAndSavePosts = action({
     for (let i = 0; i < posts.length; i += PARALLEL_BATCH_SIZE) {
       const batch = posts.slice(i, i + PARALLEL_BATCH_SIZE);
       console.log(
-        `🔄 Processing batch ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(posts.length / PARALLEL_BATCH_SIZE)}`
+        `🔄 Processing batch ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(posts.length / PARALLEL_BATCH_SIZE)}`,
       );
 
       const batchResults = await Promise.all(
@@ -106,10 +113,12 @@ export const processAndSavePosts = action({
             console.log("  → Agent 2: Extracting companies...");
             const agent2Response = await extractCompanies(
               agent1Response.classification,
-              blogContent
+              blogContent,
             );
 
-            const companies = agent2Response.map((res) => res.company.toUpperCase());
+            const companies = agent2Response.map((res) =>
+              res.company.toUpperCase(),
+            );
 
             // Agent 3: Resolve company names with vector DB
             console.log("  → Agent 3: Resolving company names...");
@@ -120,14 +129,14 @@ export const processAndSavePosts = action({
               .filter(
                 (res) =>
                   (res.status === "found" || res.status === "ambiguous") &&
-                  (res.nseCode || res.bseCode)
+                  (res.nseCode || res.bseCode),
               )
               .map((res) => ({
                 name: res.matchedName ?? res.inputName,
                 extractedName: res.inputName,
                 nse: res.nseCode,
                 bse: res.bseCode,
-                marketCap:res.marketCap!
+                marketCap: res.marketCap!,
               }));
 
             // Agent 4: Validate companies against blog content
@@ -143,16 +152,18 @@ export const processAndSavePosts = action({
 
             // Extract only validated companies that matched (isMatch: true)
             const validatedCompanies = agent4Response.validatedCompanies.filter(
-              (result) => result.isMatch
+              (result) => result.isMatch,
             );
 
             // Convert validated companies to CompanyDetail format
-            const companyDetails: CompanyDetail[] = validatedCompanies.map((result) => ({
-              company_name: result.company.name,
-              bse_code: result.company.bse,
-              nse_code: result.company.nse,
-              market_cap:result.company.marketCap
-            }));
+            const companyDetails: CompanyDetail[] = validatedCompanies.map(
+              (result) => ({
+                company_name: result.company.name,
+                bse_code: result.company.bse,
+                nse_code: result.company.nse,
+                market_cap: result.company.marketCap,
+              }),
+            );
 
             const enriched: EnrichedPost = {
               blogId: post.blogId,
@@ -172,7 +183,10 @@ export const processAndSavePosts = action({
               }),
               classification: agent1Response.classification,
               category: agent1Response.classification,
-              tags: agent5Response.tags?.length > 0 ? agent5Response.tags : undefined,
+              tags:
+                agent5Response.tags?.length > 0
+                  ? agent5Response.tags
+                  : undefined,
               companyDetails:
                 companyDetails.length > 0 ? companyDetails : undefined,
             };
@@ -188,18 +202,20 @@ export const processAndSavePosts = action({
             }
 
             const companyCount = validatedCompanies.length;
-            console.log(`  ✓ Complete: ${companyCount} validated companies found`);
+            console.log(
+              `  ✓ Complete: ${companyCount} validated companies found`,
+            );
 
             return enriched;
           } catch (error) {
             console.error("❌ Error processing post:", post.title, error);
             return null;
           }
-        })
+        }),
       );
 
       enrichedPosts.push(
-        ...batchResults.filter((p): p is EnrichedPost => p !== null)
+        ...batchResults.filter((p): p is EnrichedPost => p !== null),
       );
     }
 
@@ -211,9 +227,59 @@ export const processAndSavePosts = action({
         api.functions.substackBlogs.addBulkPost,
         {
           posts: chunks[i],
-        }
+        },
       );
 
+      // 🔥 Fetch full inserted posts from DB
+      const fullPosts = await Promise.all(
+        insertedPosts.map((p) =>
+          ctx.runQuery(api.functions.substackBlogs.getPost, {
+            id: p.postId,
+          }),
+        ),
+      );
+
+      // 🔥 Filter only valid ones
+      const validPosts = fullPosts.filter(
+        (post): post is NonNullable<typeof post> =>
+          post !== null && post?.isValidAnalysis === true,
+      );
+      // 🔥 Convert to validItems format
+      if (validPosts.length > 0) {
+        const validItemsPayload = validPosts.map((post) => ({
+          sourceType: "post" as const,
+          itemId: post._id,
+          sourceId: post.blogId ?? undefined,
+          title: post.title,
+          link: post.link,
+          authorName: post.author ?? "Unknown",
+          pubDate: post.pubDate,
+          createdAt: post.createdAt,
+          summary: post.summary ?? "",
+          imageUrl: post.imageUrl ?? post.image,
+          thumbnail: post.image ?? undefined,
+          duration: undefined,
+          companyName: post.companyName ?? "",
+          bseCode: post.bseCode,
+          nseCode: post.nseCode,
+          companyDetails: post.companyDetails ?? [],
+          classification: post.classification ?? "",
+          tags: post.tags ?? [],
+          clickedCount: 0,
+          usersLiked: [],
+          shareCount: 0,
+          usersShared: [],
+          source: post.source!,
+          isDeleted: false,
+        }));
+
+        // 🔥 Bulk insert into validItems (max 100 safe)
+        if (validItemsPayload.length > 0) {
+          await ctx.runMutation(api.functions.validItems.bulkInsertValidItems, {
+            items: validItemsPayload,
+          });
+        }
+      }
       for (const p of insertedPosts) {
         await ctx.scheduler.runAfter(
           0,
@@ -222,7 +288,7 @@ export const processAndSavePosts = action({
             postId: p.postId,
             companyIds: p.companyNames,
             authorId: p.author,
-          }
+          },
         );
       }
     }

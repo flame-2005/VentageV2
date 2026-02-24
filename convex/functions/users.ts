@@ -546,3 +546,82 @@ export const shareVideo = mutation({
     return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
   },
 });
+export const shareValidItem = mutation({
+  args: {
+    validItemId: v.id("validItems"),
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, { validItemId, userId }) => {
+    if (!userId) {
+      // Just increment share count if no userId provided
+      const video = await ctx.db.get(validItemId);
+      if (!video) throw new Error("ValidItem not found");
+      await ctx.db.patch(validItemId, { shareCount: (video.shareCount ?? 0) + 1 });
+      return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
+    }
+    const video = await ctx.db.get(validItemId);
+    if (!video) throw new Error("ValidItem not found");
+
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    // Increase share count ALWAYS
+    await ctx.db.patch(validItemId, {
+      shareCount: (video.shareCount ?? 0) + 1,
+      usersShared: video.usersShared?.includes(userId)
+        ? video.usersShared
+        : [...(video.usersShared ?? []), userId],
+    });
+
+    // Add validItemId to user's sharedValidItems ONCE
+    await ctx.db.patch(userId, {
+      sharedValidItems: user.sharedValidItems?.includes(validItemId)
+        ? user.sharedValidItems
+        : [...(user.sharedValidItems ?? []), validItemId],
+    });
+
+    return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
+  },
+});
+
+export const likeValidItem = mutation({
+  args: {
+    validItemId: v.id("validItems"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, { validItemId, userId }) => {
+    // Fetch post
+    const post = await ctx.db.get(validItemId);
+    if (!post) throw new Error("ValidItem not found");
+
+    // Fetch user
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const alreadyLiked = post.usersLiked?.includes(userId) ?? false;
+
+    if (!alreadyLiked) {
+      // ----- LIKE -----
+      await ctx.db.patch(validItemId, {
+        usersLiked: [...(post.usersLiked ?? []), userId],
+      });
+
+      await ctx.db.patch(userId, {
+        likedValidItems: [...(user.likedValidItems ?? []), validItemId],
+      });
+
+      return { status: "liked" };
+    } else {
+      // ----- UNLIKE -----
+      await ctx.db.patch(validItemId, {
+        usersLiked: (post.usersLiked ?? []).filter((id) => id !== userId),
+      });
+
+      await ctx.db.patch(userId, {
+        likedValidItems: (user.likedValidItems ?? []).filter((id) => id !== validItemId),
+      });
+
+      return { status: "unliked" };
+    }
+  },
+});

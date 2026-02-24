@@ -2,7 +2,6 @@
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import Posts from "@/components/ArticleCard/Posts";
-import ValidItems from "@/components/ItemCard/ValidItem";
 
 export default async function Page() {
     const convex = new ConvexHttpClient(
@@ -10,7 +9,7 @@ export default async function Page() {
     );
 
     const initialPosts = await convex.query(
-        api.functions.validItems.getFeedItems,
+        api.functions.substackBlogs.getPaginatedPosts,
         {
             paginationOpts: {
                 numItems: 10,
@@ -22,6 +21,6 @@ export default async function Page() {
 
 
     return (
-        <ValidItems initialItems={initialPosts.page} />
+        <Posts initialPosts={initialPosts.page} />
     );
 }

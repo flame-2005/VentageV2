@@ -135,6 +135,56 @@ export default defineSchema({
     })
     .index("by_classification", ["classification"]),
 
+  validItems: defineTable({
+    sourceType: v.union(
+      v.literal("post"),
+      v.literal("video"),
+      v.literal("tweet"),
+    ),
+    itemId: v.string(),
+    sourceId: v.optional(v.string()),
+    title: v.string(),
+    link: v.string(),
+    authorName: v.string(),
+    pubDate: v.string(),
+    createdAt: v.number(),
+    summary: v.string(),
+    lastCheckedAt: v.optional(v.number()),
+    imageUrl: v.optional(v.string()),
+    thumbnail: v.optional(v.string()),
+    duration: v.optional(v.string()),
+    companyName: v.string(),
+    bseCode: v.optional(v.string()),
+    nseCode: v.optional(v.string()),
+    companyDetails: v.array(
+      v.object({
+        company_name: v.string(),
+        bse_code: v.optional(v.string()),
+        nse_code: v.optional(v.string()),
+        market_cap: v.optional(v.number()),
+      }),
+    ),
+
+    classification: v.string(),
+    tags: v.array(v.string()),
+    clickedCount: v.optional(v.number()),
+    usersLiked: v.optional(v.array(v.string())),
+    shareCount: v.optional(v.number()),
+    usersShared: v.optional(v.array(v.string())),
+    source: v.string(),
+    isDeleted: v.optional(v.boolean()), // for future safety
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_pubDate", ["pubDate"])
+    .index("by_itemId", ["itemId"])
+    .index("by_sourceType_createdAt", ["sourceType", "createdAt"])
+    .index("by_classification_createdAt", ["classification", "createdAt"])
+    .index("by_company_createdAt", ["companyName", "pubDate"])
+    .searchIndex("search_title_summary", {
+      searchField: "title",
+      filterFields: ["classification"],
+    }),
+
   master_company_list: defineTable({
     bse_code: v.optional(v.string()),
     nse_code: v.string(),
@@ -174,8 +224,10 @@ export default defineSchema({
     blogWebsitesFollowing: v.array(v.string()), // Array of blog URLs or IDs
     likedPosts: v.optional(v.array(v.id("posts"))),
     likedVideos: v.optional(v.array(v.id("videos"))),
+    likedValidItems: v.optional(v.array(v.id("validItems"))),
     sharedPosts: v.optional(v.array(v.id("posts"))),
     sharedVideos: v.optional(v.array(v.id("videos"))),
+    sharedValidItems: v.optional(v.array(v.id("validItems"))),
     avatarUrl: v.optional(v.string()),
     fullName: v.optional(v.string()),
   })

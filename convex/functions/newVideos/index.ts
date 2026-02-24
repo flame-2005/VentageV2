@@ -1,4 +1,4 @@
-"use node"
+"use node";
 
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../_generated/api";
@@ -15,9 +15,12 @@ import { summarizeBlog } from "../processBlogs/newTaggingAlgo/Agents/summarizeAg
 import {
   getLatestVideosFromPlaylist,
   getUploadsPlaylistId,
-} from "./getLatestVideos"
+} from "./getLatestVideos";
 import { action } from "../../_generated/server";
 import { v } from "convex/values";
+import { shouldProcessVideo } from "../../helper/videoPreFilter";
+import { classifyVideo } from "../processBlogs/newTaggingAlgo/Agents/videoClassificationAgent";
+import { calculateIsValidAnalysis } from "../../helper/post";
 
 const client = new ConvexHttpClient(
   "https://jovial-cassowary-685.convex.cloud",
@@ -65,7 +68,7 @@ async function processVideoWithNewAlgorithm(
 
   // AGENT 1: Classify the blog/video content
   console.log("⏳ Agent 1: Classifying content...");
-  const agent1Response = await classifyBlog(videoContent);
+  const agent1Response = await classifyVideo(videoContent);
   console.log("✅ Agent 1 Classification:", agent1Response);
 
   // AGENT 2: Extract companies based on classification
@@ -151,9 +154,64 @@ async function runYouTubeChannelTrackingWithNewAlgorithm(
       );
 
       try {
-        await client.mutation(api.functions.videos.addBulkVideos, {
-          videos: batch,
-        });
+        const insertedVideos = await client.mutation(
+          api.functions.videos.addBulkVideos,
+          {
+            videos: batch,
+          },
+        );
+
+        const fullVideos = await Promise.all(
+          insertedVideos.map((v) =>
+            client.query(api.functions.videos.getVideoById, {
+              id: v.videoId,
+            }),
+          ),
+        );
+
+        const validVideos = fullVideos.filter(
+          (video): video is NonNullable<typeof video> =>
+            video !== null &&
+            calculateIsValidAnalysis({
+              companyDetails: video.companyDetails,
+              classification: video.classification,
+              author: video.channel_name,
+            }),
+        );
+
+        const validItemsPayload = validVideos.map((video) => ({
+          sourceType: "video" as const,
+          itemId: video._id,
+          sourceId: video.channelId ?? undefined,
+          title: video.title,
+          link: video.link,
+          authorName: video.channel_name ?? "Unknown",
+          pubDate: video.pubDate,
+          createdAt: video.createdAt,
+          summary: video.summary ?? "",
+          imageUrl: video.imageUrl ?? video.thumbnail,
+          thumbnail: video.thumbnail ?? undefined,
+          duration: video.duration ?? undefined,
+          companyName: video.companyName ?? "",
+          bseCode: video.bseCode,
+          nseCode: video.nseCode,
+          companyDetails: video.companyDetails ?? [],
+          classification: video.classification ?? "",
+          tags: video.tags ?? [],
+          clickedCount: 0,
+          usersLiked: [],
+          shareCount: 0,
+          usersShared: [],
+          source: video.source!,
+          isDeleted: false,
+        }));
+
+        if (validItemsPayload.length > 0) {
+          await client.mutation(api.functions.validItems.bulkInsertValidItems, {
+            items: validItemsPayload,
+          });
+        }
+
         console.log(`✅ Batch ${batchNumber} successfully inserted!`);
       } catch (err) {
         console.error(`❌ Error inserting batch ${batchNumber}:`, err);
@@ -173,6 +231,15 @@ async function runYouTubeChannelTrackingWithNewAlgorithm(
     // Process videos ONE AT A TIME
     for (let i = 0; i < videos.length; i++) {
       const video = videos[i];
+
+      const isValidVideo = await shouldProcessVideo(video);
+
+      if (!isValidVideo.process) {
+        console.log(
+          `❌ Skipping video (pre-filter): ${video.title} | Reason: ${isValidVideo.reason}`,
+        );
+        continue;
+      }
 
       const exists =
         existingVideos[`https://www.youtube.com/watch?v=${video.videoId}`];
@@ -328,14 +395,14 @@ async function runYouTubeChannelTrackingWithNewAlgorithm(
 // Run the main function
 export const trackYouTubeChannels = action({
   args: {
-    channelId: v.id("channels")
+    channelId: v.id("channels"),
   },
   handler: async (ctx, args) => {
     console.log("📡 Starting YouTube Channel Tracking with New Algorithm...");
-    
+
     // Get the specific channel
     const channel = await ctx.runQuery(api.functions.videos.getChannelById, {
-      channelId: args.channelId
+      channelId: args.channelId,
     });
 
     if (!channel) {
@@ -346,14 +413,13 @@ export const trackYouTubeChannels = action({
     // Process the channel
     const youtubeChannelId = channel.feedUrl.split("/channel/")[1];
     const channelName = channel.name;
-    
+
     await runYouTubeChannelTrackingWithNewAlgorithm(
       youtubeChannelId,
       channelName,
       channel._id,
     );
-    
+
     console.log("✅ Completed tracking YouTube channel:", channelName);
   },
 });
-

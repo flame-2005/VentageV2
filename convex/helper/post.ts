@@ -318,16 +318,14 @@ export function isValidAuthor(author: unknown): boolean {
 
 
 export function calculateIsValidAnalysis({
-  nseCode ,
-  bseCode,
   companyDetails,
   classification,
   author,
 }: calculateIsValidAnalysisParams): boolean {
   const validClassifications = [
     "Company_analysis",
-    "Multiple_company_analysis",
     "Sector_analysis",
+    "Management_interview",
   ];
 
   const excludedAuthors = [

@@ -346,7 +346,7 @@ export const addBulkVideos = mutation({
 
   handler: async (ctx, args) => {
     const insertedPosts: {
-      postId: Id<"videos">;
+      videoId: Id<"videos">;
       companyNames: string[];
       channel_name?: string;
     }[] = [];
@@ -358,6 +358,12 @@ export const addBulkVideos = mutation({
       const videoId = await ctx.db.insert("videos", {
         ...video,
         lastCheckedAt: Date.now(),
+      });
+
+      insertedPosts.push({
+        videoId,
+        companyNames: video.companyDetails?.map((c) => c.company_name) || [],
+        channel_name: video.channel_name,
       });
     }
     return insertedPosts;
