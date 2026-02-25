@@ -265,12 +265,7 @@ export const processAndSavePosts = action({
           companyDetails: post.companyDetails ?? [],
           classification: post.classification ?? "",
           tags: post.tags ?? [],
-          clickedCount: 0,
-          usersLiked: [],
-          shareCount: 0,
-          usersShared: [],
           source: post.source!,
-          isDeleted: false,
         }));
 
         // 🔥 Bulk insert into validItems (max 100 safe)

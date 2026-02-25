@@ -180,6 +180,7 @@ export default defineSchema({
     .index("by_sourceType_createdAt", ["sourceType", "createdAt"])
     .index("by_classification_createdAt", ["classification", "createdAt"])
     .index("by_company_createdAt", ["companyName", "pubDate"])
+    .index("by_authorName_pubDate", ["authorName", "pubDate"])
     .searchIndex("search_title_summary", {
       searchField: "title",
       filterFields: ["classification"],

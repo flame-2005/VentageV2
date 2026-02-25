@@ -11,8 +11,9 @@ import { useState, useRef, useEffect } from "react";
 import { useUser } from "@/context/userContext";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
+import ValidItemCard from "@/components/ItemCard/ValidItemCard";
 
-type Tab = "posts" | "videos";
+type Tab = "posts" | "videos" | "all";
 
 export default function AuthorPage() {
     const params = useParams();
@@ -44,6 +45,12 @@ export default function AuthorPage() {
         { initialNumItems: 20 }
     );
 
+    const { results: allItems, status: allItemsStatus, loadMore: loadMoreAllItems } = usePaginatedQuery(
+        api.functions.validItems.getValidItemsByAuthor,
+        { authorName: author },
+        { initialNumItems: 20 }
+    );
+
     // -----------------------------
     // Mutations
     // -----------------------------
@@ -66,9 +73,9 @@ export default function AuthorPage() {
     const isFollowing = !!user?.authorsFollowing?.includes(author);
 
     // Active tab data
-    const results = activeTab === "posts" ? posts : videos;
-    const status = activeTab === "posts" ? postsStatus : videosStatus;
-    const loadMore = activeTab === "posts" ? loadMorePosts : loadMoreVideos;
+    const results = activeTab === "posts" ? posts : activeTab === "videos" ? videos : allItems;
+    const status = activeTab === "posts" ? postsStatus : activeTab === "videos" ? videosStatus : allItemsStatus;
+    const loadMore = activeTab === "posts" ? loadMorePosts : activeTab === "videos" ? loadMoreVideos : loadMoreAllItems;
 
     const canLoadMore = status === "CanLoadMore";
     const isLoadingMore = status === "LoadingMore";
@@ -174,7 +181,7 @@ export default function AuthorPage() {
 
             {/* Tab Toggle */}
             <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
-                {(["posts", "videos"] as Tab[]).map((tab) => (
+                {(["all", "posts", "videos"] as Tab[]).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -197,15 +204,19 @@ export default function AuthorPage() {
                 </p>
             )}
 
-            {/* Posts / Videos */}
+            {/* Posts / Videos / All */}
             <div className="lg:space-y-6 space-y-7">
                 {activeTab === "posts"
                     ? posts.map((post) => (
                         <ArticleCard key={post._id} post={post} />
                     ))
-                    : videos.map((video) => (
-                        <VideoCard key={video._id} post={video} />
-                    ))
+                    : activeTab === "videos"
+                        ? videos.map((video) => (
+                            <VideoCard key={video._id} post={video} />
+                        ))
+                        : allItems.map((item) => (
+                            <ValidItemCard key={item._id} post={item} />
+                        ))
                 }
             </div>
 

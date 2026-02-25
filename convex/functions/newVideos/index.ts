@@ -61,14 +61,14 @@ type ConvexVideo = {
  * using the improved multi-agent pipeline
  */
 async function processVideoWithNewAlgorithm(
-  videoUrl: string,
+  videoTitle: string,
   videoContent: string,
 ) {
   console.log("🤖 Starting new tagging algorithm...");
 
   // AGENT 1: Classify the blog/video content
   console.log("⏳ Agent 1: Classifying content...");
-  const agent1Response = await classifyVideo(videoContent);
+  const agent1Response = await classifyVideo(videoContent,videoTitle);
   console.log("✅ Agent 1 Classification:", agent1Response);
 
   // AGENT 2: Extract companies based on classification
@@ -198,12 +198,7 @@ async function runYouTubeChannelTrackingWithNewAlgorithm(
           companyDetails: video.companyDetails ?? [],
           classification: video.classification ?? "",
           tags: video.tags ?? [],
-          clickedCount: 0,
-          usersLiked: [],
-          shareCount: 0,
-          usersShared: [],
           source: video.source!,
-          isDeleted: false,
         }));
 
         if (validItemsPayload.length > 0) {
@@ -269,7 +264,7 @@ async function runYouTubeChannelTrackingWithNewAlgorithm(
         // STEP 2: Process with new tagging algorithm (5 agents)
         console.log("⏳ Step 2: Running new tagging algorithm...");
         const tagResults = await processVideoWithNewAlgorithm(
-          videoUrl,
+          video.title,
           videoDetails.videoContent,
         );
         console.log("✅ Tagging complete");

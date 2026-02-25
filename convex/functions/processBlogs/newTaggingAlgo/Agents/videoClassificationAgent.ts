@@ -407,43 +407,64 @@ END OF SYSTEM PROMPT
 // USER PROMPT TEMPLATE
 // ============================================================================
 
-const createUserPrompt = (blogText: string): string => `
-Read the blog content below and classify it into exactly ONE of the 6 predefined categories.
+const createUserPrompt = (blogText: string, blogTitle: string): string => `
+Read the blog content and title below and classify it into exactly ONE of these categories. 
+You MUST adhere to these strict boundary definitions:
+
+1. Macro_economic_analysis:
+   - MUST be used if analytical focus is spread across 2 or more distinct sectors.
+   - Can be used for Trade Agreements, Treaties, FTAs, or Central Bank policies.
+   - The "Policy" or "Macro Event" is the primary subject.
+
+2. Sector_analysis:
+   - MUST exclusively focus on ONE Sector.
+   - DISQUALIFIED if the catalyst is a Trade Deal, FTA, or Macro Policy.
+   - DISQUALIFIED if more than one Sector is analyzed.
+
+3. Multiple_company_analysis:
+   - MUST have 120+ words of forward-looking analysis for AT LEAST 2 companies.
+   - If analysis is thin or purely descriptive, use Multiple_company_update.
+
+4. Company_analysis:
+   - MUST have exactly ONE company and exceed 500 words with a clear investment thesis.
+
+5. Management_interview:
+   - MUST be structured as an interview, conversation, fireside chat, ideation series, leadership talk, management discussion, or executive interaction with a senior executive (CEO/CFO/MD/Founder/COO/CTO) of an operating company.
+   - The executive must be directly speaking and discussing company strategy, performance, operations, capital allocation, or forward-looking business plans.
+   - If executive interview format is present, DO NOT classify as Company_analysis.
+6. General_investment_guide:
+   - Educational content (SIPs, Psychology, Portfolio construction,Investment guide) only.
+
+7. Other:
+   - Use if the post is purely news, earnings results without a thesis, or doesn't fit the above.
+
+8. Multiple_company_update:
+   - MUST be used for brief, factual, or "market-tape" notes on several stocks.
+   - Includes lists of gainers/losers, price action, or news without a forward-looking thesis.
 
 Your output must follow this strict JSON format:
 {
-  "classification": "",
+  "classification": ""
+  "sector": "", // Optional, only if classification is Sector_analysis
+  "reasoning": "" // A concise explanation (1-2 sentences) of why you chose the classification
 }
 
-Where:
-- "classification" = one of:
-    "Multiple_company_update",
-    "Multiple_company_analysis",
-    "Sector_analysis",
-    "Company_analysis",
-    "General_investment_guide",
-    "Management_interview",
-    "Macro_economic_analysis",
-    "Other"
-
-Return ONLY the JSON object.
-No explanations. No notes. No reasoning.
-
-CRITICAL REMINDER:
-• Company_analysis should strictly have only ONE company in the array
-• If more than one company is present, it should be classified as Multiple_company_analysis
-• This rule is MANDATORY
+Return ONLY the JSON object. No explanations. No notes.
 
 ════════════════════════════════════════════════════════════════════════════
 📄 BLOG CONTENT:
 ════════════════════════════════════════════════════════════════════════════
+VERY IMPORTANT:
+-If you think its company analysis, but the title indicates management interview, classify as management interview.
+-If Multiple Sector are Discussed in the Blog text then Never classify as sector analysis even if the title indicates sector analysis.
+-If the blog is not a core thesis about a company or sector and talk about finance such as mutual funds, asset allocation, investing psychology, portfolio construction then classify as general investment guide.
 
-${blogText}
-
-════════════════════════════════════════════════════════════════════════════
+Blog Title : ${blogTitle}
+Blog Text : ${blogText}
 `;
 export async function classifyVideo(
   blogText: string,
+  blogTitle: string,
   options: {
     model?: string;
     temperature?: number;
@@ -470,7 +491,7 @@ export async function classifyVideo(
       max_tokens: config.maxTokens,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: createUserPrompt(blogText) },
+        { role: "user", content: createUserPrompt(blogText, blogTitle) },
       ],
     });
 
@@ -519,39 +540,9 @@ function validateClassificationResult(result: ClassificationResult): void {
 }
 
 // ============================================================================
-// BATCH PROCESSING UTILITY
-// ============================================================================
-
-export async function classifyBlogsBatch(
-  blogs: string[],
-  options?: {
-    model?: string;
-    temperature?: number;
-    maxTokens?: number;
-    delayMs?: number;
-  }
-): Promise<ClassificationResult[]> {
-  const results: ClassificationResult[] = [];
-  const delay = options?.delayMs || 0;
-
-  for (let i = 0; i < blogs.length; i++) {
-    const result = await classifyVideo(blogs[i], options);
-    results.push(result);
-
-    // Add delay between requests if specified
-    if (delay > 0 && i < blogs.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-  }
-
-  return results;
-}
-
-// ============================================================================
 // EXPORT
 // ============================================================================
 
 export default {
   classifyVideo,
-  classifyBlogsBatch,
 };

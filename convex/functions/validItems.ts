@@ -3,6 +3,7 @@
 import { paginationOptsValidator } from "convex/server";
 import { mutation, query } from "../_generated/server";
 import { v } from "convex/values";
+import { Id } from "../_generated/dataModel";
 
 export const getFeedItems = query({
   args: { paginationOpts: paginationOptsValidator },
@@ -59,7 +60,7 @@ export const bulkInsertValidItems = mutation({
       throw new Error("Maximum 100 items allowed per batch.");
     }
 
-    const insertedIds = [];
+    const insertedIds: Id<"validItems">[] = [];
 
     for (const item of args.items) {
       const id = await ctx.db.insert("validItems", {
@@ -94,5 +95,24 @@ export const incrementClickCount = mutation({
     });
 
     return { success: true, newCount: currentCount + 1 };
+  },
+});
+
+export const getValidItemsByAuthor = query({
+  args: {
+    authorName: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+
+  handler: async (ctx, { authorName, paginationOpts }) => {
+    const items = await ctx.db
+      .query("validItems")
+      .withIndex("by_authorName_pubDate", (q) =>
+        q.eq("authorName", authorName)
+      )
+      .order("desc")
+      .paginate(paginationOpts);
+
+    return items;
   },
 });
