@@ -85,6 +85,7 @@ import type * as helper_enrichMasterCompanies from "../helper/enrichMasterCompan
 import type * as helper_feedParser from "../helper/feedParser.js";
 import type * as helper_masterCompanies from "../helper/masterCompanies.js";
 import type * as helper_post from "../helper/post.js";
+import type * as helper_validItems_companyValidItems from "../helper/validItems/companyValidItems.js";
 import type * as helper_validItems_populateFeedItems from "../helper/validItems/populateFeedItems.js";
 import type * as helper_videoPreFilter from "../helper/videoPreFilter.js";
 import type * as posts from "../posts.js";
@@ -173,6 +174,7 @@ declare const fullApi: ApiFromModules<{
   "helper/feedParser": typeof helper_feedParser;
   "helper/masterCompanies": typeof helper_masterCompanies;
   "helper/post": typeof helper_post;
+  "helper/validItems/companyValidItems": typeof helper_validItems_companyValidItems;
   "helper/validItems/populateFeedItems": typeof helper_validItems_populateFeedItems;
   "helper/videoPreFilter": typeof helper_videoPreFilter;
   posts: typeof posts;

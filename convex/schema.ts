@@ -236,13 +236,6 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_username", ["username"]),
 
-  blogWebsites: defineTable({
-    url: v.string(),
-    name: v.string(),
-    description: v.optional(v.string()),
-    followersCount: v.number(),
-  }).index("by_url", ["url"]),
-
   companyPosts: defineTable({
     postId: v.id("posts"),
     companyName: v.string(),
@@ -257,6 +250,33 @@ export default defineSchema({
     .index("by_company", ["companyName"])
     .index("by_bse", ["bseCode"])
     .index("by_nse", ["nseCode"]),
+
+  companyValidItems: defineTable({
+    itemsId: v.id("validItems"),
+    sourceType: v.union(
+      v.literal("post"),
+      v.literal("video"),
+      v.literal("tweet"),
+    ),
+    companyName: v.string(),
+    pubDate: v.string(),
+    bseCode: v.optional(v.string()),
+    nseCode: v.optional(v.string()),
+    marketCap: v.optional(v.number()),
+  })
+    .index("by_itemsId", ["itemsId"])
+    .index("by_sourceType_itemsId", ["sourceType", "itemsId"])
+    .index("by_company_pubDate", ["companyName", "pubDate"])
+    .index("by_company_itemsId", ["companyName", "itemsId"])
+    .index("by_company_sourceType_pubDate", [
+      "companyName",
+      "sourceType",
+      "pubDate",
+    ])
+    .index("by_company", ["companyName"])
+    .index("by_bse", ["bseCode"])
+    .index("by_nse", ["nseCode"]),
+
   usersLink: defineTable({
     url: v.string(),
     email: v.optional(v.string()),

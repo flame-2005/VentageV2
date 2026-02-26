@@ -2,7 +2,6 @@
 
 import { useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import ArticleCard from "@/components/ArticleCard/ArticleCard";
 import CircularLoader from "@/components/circularLoader";
 import { useParams } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -10,6 +9,9 @@ import { useUser } from "@/context/userContext";
 import { useToast } from "@/context/toastContext";
 import { GA_EVENT, trackEvent } from "@/lib/analytics/ga";
 import { capitalize } from "@/helper/text";
+import ValidItemCard from "@/components/ItemCard/ValidItemCard";
+
+type Tab = "all" | "posts" | "videos";
 
 export default function CompanyPage() {
     const params = useParams();
@@ -20,18 +22,33 @@ export default function CompanyPage() {
             return params.companyName as string;
         }
     })();
-    
+
     const { addToast } = useToast();
     const { user } = useUser();
+    const [activeTab, setActiveTab] = useState<Tab>("all");
+
 
     // -----------------------------
     // Paginated Query
     // -----------------------------
-    const { results: posts, status, loadMore } = usePaginatedQuery(
-        api.functions.substackBlogs.getPostsByCompany,
+    const allQuery = usePaginatedQuery(
+        api.functions.validItems.getValidItemsByCompany,
         { companyName: company },
         { initialNumItems: 20 }
     );
+
+    const postsQuery = usePaginatedQuery(
+        api.functions.validItems.getValidPostsByCompany,
+        { companyName: company },
+        { initialNumItems: 20 }
+    );
+
+    const videosQuery = usePaginatedQuery(
+        api.functions.validItems.getValidVideosByCompany,
+        { companyName: company },
+        { initialNumItems: 20 }
+    );
+
 
     // -----------------------------
     // Mutations
@@ -50,11 +67,27 @@ export default function CompanyPage() {
     );
 
     const [loading, setLoading] = useState(false);
-    const loadMoreRef = useRef<HTMLDivElement>(null);
-
     const isTracking = !!user?.companiesFollowing?.includes(company);
+
+    // -----------------------------
+    // Dynamic Switch Based On Tab
+    // -----------------------------
+
+    const currentQuery =
+        activeTab === "all"
+            ? allQuery
+            : activeTab === "posts"
+                ? postsQuery
+                : videosQuery;
+
+    const { results: posts, status, loadMore } = currentQuery;
+
     const canLoadMore = status === "CanLoadMore";
     const isLoadingMore = status === "LoadingMore";
+
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
+
 
     // -----------------------------
     // Infinite Scroll
@@ -78,7 +111,7 @@ export default function CompanyPage() {
 
     const handleToggleTracking = async () => {
         trackEvent(GA_EVENT.TRACK_COMPANY_CLICKED, { company: company });
-        
+
         if (!user?._id) {
             addToast('error', 'Please login to track', "");
             return;
@@ -153,7 +186,24 @@ export default function CompanyPage() {
                             ? "Untrack"
                             : "Track"}
                 </button>
+                
             </div>
+                            <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
+                    {(["all", "posts", "videos"] as Tab[]).map((tab) => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-4 py-2 text-sm font-medium capitalize transition border-b-2 -mb-px
+                ${activeTab === tab
+                                    ? "border-indigo-600 text-blue-600"
+                                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+                                }
+            `}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                </div>
 
             {/* Empty state */}
             {posts.length === 0 && status !== "CanLoadMore" && (
@@ -163,11 +213,11 @@ export default function CompanyPage() {
             )}
 
             {/* Posts */}
-            <div className="lg:space-y-6 space-y-7">
+            {posts && posts.length > 0 && posts !== null && (<div className="lg:space-y-6 space-y-7">
                 {posts.map((post) => (
-                    <ArticleCard key={post._id} post={post} />
+                    <ValidItemCard key={post!._id} post={post} />
                 ))}
-            </div>
+            </div>)}
 
             {/* Infinite Scroll Trigger */}
             {(canLoadMore || isLoadingMore) && posts && posts.length > 0 && (
