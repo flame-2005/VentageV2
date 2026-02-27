@@ -174,6 +174,12 @@ export default defineSchema({
     source: v.string(),
     isDeleted: v.optional(v.boolean()), // for future safety
   })
+    .index("by_authorName_sourceType_pubDate", [
+      "authorName",
+      "sourceType",
+      "pubDate",
+    ])
+    .index("by_sourceType_pubDate", ["sourceType", "pubDate"])
     .index("by_createdAt", ["createdAt"])
     .index("by_pubDate", ["pubDate"])
     .index("by_itemId", ["itemId"])

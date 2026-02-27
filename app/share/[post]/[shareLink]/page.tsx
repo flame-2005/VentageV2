@@ -2,10 +2,9 @@
 import { api } from "@/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
 import { Doc, Id } from "@/convex/_generated/dataModel";
-import { isPost } from "@/helper/text";
 import SharePageClient from "@/components/loadingDots";
 
-let post: (Doc<"posts"> | Doc<"videos">) | null = null;
+let post: (Doc<"validItems">) | null = null;
 
 export async function generateMetadata({
   params
@@ -19,8 +18,8 @@ export async function generateMetadata({
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   try {
-    post = await fetchQuery(api.functions.substackBlogs.getPostById, {
-      id: shareLink as (Id<"posts"> | Id<"videos">),
+    post = await fetchQuery(api.functions.validItems.getValidItemById, {
+      id: shareLink as Id<"validItems">,
     });
   } catch (e) {
     console.error("Metadata fetch failed:", e);
@@ -35,13 +34,7 @@ export async function generateMetadata({
     };
   }
 
-  let imageUrl
-
-  if (isPost(post)) {
-    imageUrl = post.image || post.imageUrl; // ✅ works
-  } else {
-    imageUrl = post.thumbnail!; // ✅ works
-  }
+  const imageUrl = post.thumbnail
 
   return {
     title: post.title ?? "Shared Post",

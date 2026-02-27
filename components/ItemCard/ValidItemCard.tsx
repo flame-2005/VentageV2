@@ -11,6 +11,7 @@ import { api } from '@/convex/_generated/api'
 import { useUser } from '@/context/userContext'
 import { formatYouTubeDuration } from '@/helper/text'
 import { GA_EVENT, trackEvent } from '@/lib/analytics/ga'
+import { ItemBugReporter } from './ItemBugReporter'
 
 type validItemCard = {
     post: Doc<'validItems'>,
@@ -318,14 +319,14 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
                 </div>
             </motion.article>
 
-            {/* <ArticleBugReporter
+            <ItemBugReporter
                 firstCompany={firstCompany}
                 showReportModal={showReportModal}
                 setShowReportModal={setShowReportModal}
                 post={post}
                 reportEmail={reportEmail}
                 setReportEmail={setReportEmail}
-            />  */}
+            /> 
         </>
     )
 }

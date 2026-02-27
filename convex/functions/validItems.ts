@@ -17,6 +17,34 @@ export const getFeedItems = query({
   },
 });
 
+export const getFeedByType = query({
+  args: {
+    paginationOpts: paginationOptsValidator,
+    sourceType: v.optional(
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet")),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { sourceType } = args;
+
+    if (sourceType !== undefined) {
+      return await ctx.db
+        .query("validItems")
+        .withIndex("by_sourceType_pubDate", (q) =>
+          q.eq("sourceType", sourceType),
+        )
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+
+    return await ctx.db
+      .query("validItems")
+      .withIndex("by_pubDate")
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
 export const bulkInsertValidItems = mutation({
   args: {
     items: v.array(
@@ -147,16 +175,30 @@ export const getValidItemsByAuthor = query({
   args: {
     authorName: v.string(),
     paginationOpts: paginationOptsValidator,
+    sourceType: v.optional(
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet")),
+    ),
   },
 
-  handler: async (ctx, { authorName, paginationOpts }) => {
-    const items = await ctx.db
+  handler: async (ctx, args) => {
+    const { authorName, paginationOpts, sourceType } = args;
+
+    if (sourceType !== undefined) {
+      return await ctx.db
+        .query("validItems")
+        .withIndex("by_authorName_sourceType_pubDate", (q) =>
+          q.eq("authorName", authorName).eq("sourceType", sourceType),
+        )
+        .order("desc")
+        .paginate(paginationOpts);
+    }
+
+    // All (no sourceType filter)
+    return await ctx.db
       .query("validItems")
       .withIndex("by_authorName_pubDate", (q) => q.eq("authorName", authorName))
       .order("desc")
       .paginate(paginationOpts);
-
-    return items;
   },
 });
 
@@ -214,8 +256,8 @@ export const getValidPostsByCompany = query({
     );
 
     const filteredPosts = posts.filter(
-  (post): post is Doc<"validItems"> => post !== null
-);
+      (post): post is Doc<"validItems"> => post !== null,
+    );
 
     return {
       ...companyPostPage,
@@ -246,12 +288,21 @@ export const getValidVideosByCompany = query({
       videoIds.map((videoId) => ctx.db.get(videoId)),
     );
     const filteredVideos = videos.filter(
-  (video): video is Doc<"validItems"> => video !== null
-);
+      (video): video is Doc<"validItems"> => video !== null,
+    );
 
     return {
       ...companyVideoPage,
       page: filteredVideos,
     };
+  },
+});
+
+export const getValidItemById = query({
+  args: {
+    id: v.id("validItems"),
+  },
+  handler: async ({ db }, { id }) => {
+    return await db.get(id);
   },
 });

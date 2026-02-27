@@ -1,5 +1,6 @@
 import { mutation } from "../../_generated/server";
 import { v } from "convex/values";
+import { parseISODurationToSeconds } from "../videoPreFilter";
 
 export const backfillFeedItemsFromPosts = mutation({
   args: {
@@ -78,6 +79,8 @@ export const backfillFeedItemsFromVideos = mutation({
       // Apply your exact filtering logic
       // ----------------------------
 
+      const durationSeconds = parseISODurationToSeconds(video.duration);
+
       const validClassification =
         video.classification === "Company_analysis" ||
         video.classification === "Sector_analysis" ||
@@ -93,7 +96,7 @@ export const backfillFeedItemsFromVideos = mutation({
         video.channel_name !== "" &&
         video.channel_name !== "Money Purse";
 
-      if (validClassification && hasValidCode && validAuthor) {
+      if (validClassification && hasValidCode && validAuthor && durationSeconds !== undefined && durationSeconds > 300) {
         // Avoid duplicates
         const existing = await ctx.db
           .query("validItems")
@@ -113,6 +116,7 @@ export const backfillFeedItemsFromVideos = mutation({
             imageUrl: video.imageUrl,
             companyName: video.companyName!,
             bseCode: video.bseCode,
+            duration: video.duration,
             nseCode: video.nseCode,
             companyDetails: video.companyDetails!,
             createdAt: video.createdAt,
@@ -133,5 +137,20 @@ export const backfillFeedItemsFromVideos = mutation({
       continueCursor: result.continueCursor,
       isDone: result.isDone,
     };
+  },
+});
+
+export const deleteAllVideos = mutation({
+  handler: async (ctx) => {
+    const videos = await ctx.db
+      .query("validItems")
+      .withIndex("by_sourceType_pubDate", (q) => q.eq("sourceType", "video"))
+      .collect();
+
+    for (const video of videos) {
+      await ctx.db.delete(video._id);
+    }
+
+    return { deleted: videos.length };
   },
 });

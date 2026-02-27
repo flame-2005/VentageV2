@@ -9,9 +9,10 @@ import ValidItemCard from "@/components/ItemCard/ValidItemCard";
 
 type ValidItemsProps = {
     initialItems: Doc<"validItems">[];
+    sourceType?: "post" | "video" | "tweet";
 }
 
-export default function ValidItems({ initialItems }: ValidItemsProps) {
+export default function ValidItems({ initialItems, sourceType }: ValidItemsProps) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
 
     const {
@@ -19,8 +20,10 @@ export default function ValidItems({ initialItems }: ValidItemsProps) {
         status,
         loadMore,
     } = usePaginatedQuery(
-        api.functions.validItems.getFeedItems,
-        { paginationOpts: {} },
+        api.functions.validItems.getFeedByType,
+        {
+            sourceType,
+        },
         { initialNumItems: 20 }
     );
 
