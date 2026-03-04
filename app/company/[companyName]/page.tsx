@@ -13,6 +13,12 @@ import ValidItemCard from "@/components/ItemCard/ValidItemCard";
 
 type Tab = "all" | "posts" | "videos";
 
+const TAB_SOURCE_TYPE: Record<Tab, "post" | "video" | "tweet" | undefined> = {
+    all: undefined,
+    posts: "post",
+    videos: "video",
+};
+
 export default function CompanyPage() {
     const params = useParams();
     const company = (() => {
@@ -27,67 +33,34 @@ export default function CompanyPage() {
     const { user } = useUser();
     const [activeTab, setActiveTab] = useState<Tab>("all");
 
-
     // -----------------------------
-    // Paginated Query
+    // Single Paginated Query
     // -----------------------------
-    const allQuery = usePaginatedQuery(
+    const { results: posts, status, loadMore } = usePaginatedQuery(
         api.functions.validItems.getValidItemsByCompany,
-        { companyName: company },
+        {
+            companyName: company,
+            sourceType: TAB_SOURCE_TYPE[activeTab],
+            userId: user?._id,
+        },
         { initialNumItems: 20 }
     );
-
-    const postsQuery = usePaginatedQuery(
-        api.functions.validItems.getValidPostsByCompany,
-        { companyName: company },
-        { initialNumItems: 20 }
-    );
-
-    const videosQuery = usePaginatedQuery(
-        api.functions.validItems.getValidVideosByCompany,
-        { companyName: company },
-        { initialNumItems: 20 }
-    );
-
 
     // -----------------------------
     // Mutations
     // -----------------------------
-    const track = useMutation(
-        api.functions.tracking.addTracking.trackTarget
-    );
-    const followCompany = useMutation(
-        api.functions.users.followCompany
-    );
-    const untrack = useMutation(
-        api.functions.tracking.addTracking.untrackTarget
-    );
-    const unfollowCompany = useMutation(
-        api.functions.users.unfollowCompany
-    );
+    const track = useMutation(api.functions.tracking.addTracking.trackTarget);
+    const followCompany = useMutation(api.functions.users.followCompany);
+    const untrack = useMutation(api.functions.tracking.addTracking.untrackTarget);
+    const unfollowCompany = useMutation(api.functions.users.unfollowCompany);
 
     const [loading, setLoading] = useState(false);
     const isTracking = !!user?.companiesFollowing?.includes(company);
-
-    // -----------------------------
-    // Dynamic Switch Based On Tab
-    // -----------------------------
-
-    const currentQuery =
-        activeTab === "all"
-            ? allQuery
-            : activeTab === "posts"
-                ? postsQuery
-                : videosQuery;
-
-    const { results: posts, status, loadMore } = currentQuery;
 
     const canLoadMore = status === "CanLoadMore";
     const isLoadingMore = status === "LoadingMore";
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
-
-
 
     // -----------------------------
     // Infinite Scroll
@@ -113,7 +86,7 @@ export default function CompanyPage() {
         trackEvent(GA_EVENT.TRACK_COMPANY_CLICKED, { company: company });
 
         if (!user?._id) {
-            addToast('error', 'Please login to track', "");
+            addToast("error", "Please login to track", "");
             return;
         }
 
@@ -121,32 +94,18 @@ export default function CompanyPage() {
         try {
             if (isTracking) {
                 await Promise.all([
-                    untrack({
-                        userId: user._id,
-                        targetType: "company",
-                        targetId: company,
-                    }),
-                    unfollowCompany({
-                        companyName: company,
-                        userId: user._id
-                    })
+                    untrack({ userId: user._id, targetType: "company", targetId: company }),
+                    unfollowCompany({ companyName: company, userId: user._id }),
                 ]);
             } else {
                 await Promise.all([
-                    track({
-                        userId: user._id,
-                        targetType: "company",
-                        targetId: company,
-                    }),
-                    followCompany({
-                        companyName: company,
-                        userId: user._id
-                    })
+                    track({ userId: user._id, targetType: "company", targetId: company }),
+                    followCompany({ companyName: company, userId: user._id }),
                 ]);
             }
         } catch (error) {
-            console.error('Toggle tracking error:', error);
-            addToast('error', 'Failed to update tracking status', '');
+            console.error("Toggle tracking error:", error);
+            addToast("error", "Failed to update tracking status", "");
         } finally {
             setLoading(false);
         }
@@ -180,51 +139,45 @@ export default function CompanyPage() {
                         }
                     `}
                 >
-                    {loading
-                        ? "Please wait..."
-                        : isTracking
-                            ? "Untrack"
-                            : "Track"}
+                    {loading ? "Please wait..." : isTracking ? "Untrack" : "Track"}
                 </button>
-                
             </div>
-                            <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
-                    {(["all", "posts", "videos"] as Tab[]).map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 text-sm font-medium capitalize transition border-b-2 -mb-px
-                ${activeTab === tab
-                                    ? "border-indigo-600 text-blue-600"
-                                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                                }
-            `}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </div>
+
+            {/* Tabs */}
+            <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
+                {(["all", "posts", "videos"] as Tab[]).map((tab) => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-4 py-2 text-sm font-medium capitalize transition border-b-2 -mb-px
+                            ${activeTab === tab
+                                ? "border-indigo-600 text-blue-600"
+                                : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
+                            }
+                        `}
+                    >
+                        {tab}
+                    </button>
+                ))}
+            </div>
 
             {/* Empty state */}
             {posts.length === 0 && status !== "CanLoadMore" && (
-                <p className="text-slate-500">
-                    No posts found for this company.
-                </p>
+                <p className="text-slate-500">No posts found for this company.</p>
             )}
 
             {/* Posts */}
-            {posts && posts.length > 0 && posts !== null && (<div className="lg:space-y-6 space-y-7">
-                {posts.map((post) => (
-                    <ValidItemCard key={post!._id} post={post} />
-                ))}
-            </div>)}
+            {posts.length > 0 && (
+                <div className="lg:space-y-6 space-y-7">
+                    {posts.map((post) => (
+                        <ValidItemCard key={post!._id} post={post} />
+                    ))}
+                </div>
+            )}
 
             {/* Infinite Scroll Trigger */}
-            {(canLoadMore || isLoadingMore) && posts && posts.length > 0 && (
-                <div
-                    ref={loadMoreRef}
-                    className="flex justify-center items-center py-8"
-                >
+            {(canLoadMore || isLoadingMore) && posts.length > 0 && (
+                <div ref={loadMoreRef} className="flex justify-center items-center py-8">
                     {isLoadingMore && (
                         <div className="flex items-center gap-3 text-blue-500">
                             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -234,8 +187,8 @@ export default function CompanyPage() {
                 </div>
             )}
 
-            {/* End of results message */}
-            {status === "Exhausted" && posts && posts.length > 0 && (
+            {/* End of results */}
+            {status === "Exhausted" && posts.length > 0 && (
                 <div className="text-center py-8">
                     <p className="text-slate-500 font-medium">
                         You&apos;ve reached the end! No more articles to load.

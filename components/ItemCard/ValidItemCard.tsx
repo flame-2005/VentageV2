@@ -1,6 +1,7 @@
 import { Doc, Id } from '@/convex/_generated/dataModel'
 import { Calendar, Heart, MousePointerClick, Share2, User, Building2, Flag, X, AlertCircle, Play } from 'lucide-react'
 import Link from 'next/link'
+import { Bookmark } from "lucide-react"
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Dropdown from '../Dropdown/page'
@@ -13,8 +14,12 @@ import { formatYouTubeDuration } from '@/helper/text'
 import { GA_EVENT, trackEvent } from '@/lib/analytics/ga'
 import { ItemBugReporter } from './ItemBugReporter'
 
+type FeedItem = Doc<'validItems'> & {
+    isBookmarked: boolean
+}
+
 type validItemCard = {
-    post: Doc<'validItems'>,
+    post: FeedItem,
     index?: number
 }
 
@@ -28,6 +33,7 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
     const [imageError, setImageError] = useState(false)
     const [showReportModal, setShowReportModal] = useState(false)
     const [reportEmail, setReportEmail] = useState(user?.email || '')
+    const [isBookmarked, setIsBookmarked] = useState(post.isBookmarked || false)
 
     const companyNames = post.companyName && post.companyName !== 'null' && post.companyName !== undefined
         ? post.companyName.split(',').map(name => name.trim()).filter(Boolean)
@@ -46,6 +52,7 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
     const { addToast } = useToast()
     const firstCompany = fullCapsCompanies[0]
     const hasMultipleCompanies = fullCapsCompanies.length > 1
+    const toggleBookmarkMutation = useMutation(api.functions.validItems.toggleBookmark)
 
     const router = useRouter()
 
@@ -83,6 +90,34 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
             validItemId: post._id,
             userId: user?._id || undefined,
         })
+    }
+
+    const handleBookmark = async () => {
+        if (!user) {
+            addToast("error", "Login Required", "Please log in to bookmark posts.")
+            return
+        }
+
+        try {
+            setIsBookmarked(!isBookmarked) // optimistic update
+
+            await toggleBookmarkMutation({
+                itemId: post._id,
+                userId: user._id,
+                itemPubDate: post.pubDate,
+            })
+
+            addToast(
+                "success",
+                isBookmarked ? "Removed" : "Bookmarked",
+                isBookmarked
+                    ? "Removed from your bookmarks."
+                    : "Saved to your bookmarks."
+            )
+        } catch (error) {
+            console.error(error)
+            setIsBookmarked(isBookmarked) // revert on error
+        }
     }
 
     // Get tag configuration
@@ -283,6 +318,13 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
                                 <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
                                 <span className="text-[10px] sm:text-xs font-bold">{likeCount}</span>
                             </button>
+                            <button
+                                onClick={handleBookmark}
+                                className={`flex items-center gap-1 transition-colors cursor-pointer ${isBookmarked ? "text-blue-600" : "hover:text-blue-600"
+                                    }`}
+                            >
+                                <Bookmark className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`} />
+                            </button>
 
                             <button
                                 onClick={async () => {
@@ -326,7 +368,7 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
                 post={post}
                 reportEmail={reportEmail}
                 setReportEmail={setReportEmail}
-            /> 
+            />
         </>
     )
 }

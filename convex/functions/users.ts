@@ -625,3 +625,22 @@ export const likeValidItem = mutation({
     }
   },
 });
+
+export const getUserBookmarks = query({
+  args: {
+    userId: v.string(),
+  },
+
+  handler: async (ctx, { userId }) => {
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const items = await Promise.all(
+      bookmarks.map((b) => ctx.db.get(b.itemId))
+    );
+
+    return items.filter(Boolean);
+  },
+});

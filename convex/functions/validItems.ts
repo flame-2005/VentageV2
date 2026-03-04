@@ -7,13 +7,48 @@ import { Doc, Id } from "../_generated/dataModel";
 import { isValidAuthor } from "../helper/post";
 
 export const getFeedItems = query({
-  args: { paginationOpts: paginationOptsValidator },
+  args: {
+    paginationOpts: paginationOptsValidator,
+    userId: v.optional(v.id("users")),
+  },
+
   handler: async (ctx, args) => {
-    return await ctx.db
+    // 1️⃣ Get paginated items
+    const feed = await ctx.db
       .query("validItems")
       .withIndex("by_pubDate")
       .order("desc")
       .paginate(args.paginationOpts);
+
+    // If no user → return directly
+    if (!args.userId) {
+      return {
+        ...feed,
+        page: feed.page.map((item) => ({
+          ...item,
+          isBookmarked: false,
+        })),
+      };
+    }
+
+    // 2️⃣ Get all bookmarks for user
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId!))
+      .collect();
+
+    const bookmarkedIds = new Set(
+      bookmarks.map((b) => b.itemId.toString())
+    );
+
+    // 3️⃣ Merge bookmark state into feed
+    return {
+      ...feed,
+      page: feed.page.map((item) => ({
+        ...item,
+        isBookmarked: bookmarkedIds.has(item._id.toString()),
+      })),
+    };
   },
 });
 
@@ -21,27 +56,62 @@ export const getFeedByType = query({
   args: {
     paginationOpts: paginationOptsValidator,
     sourceType: v.optional(
-      v.union(v.literal("post"), v.literal("video"), v.literal("tweet")),
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
     ),
+    userId: v.optional(v.id("users")),
   },
-  handler: async (ctx, args) => {
-    const { sourceType } = args;
 
-    if (sourceType !== undefined) {
-      return await ctx.db
-        .query("validItems")
-        .withIndex("by_sourceType_pubDate", (q) =>
-          q.eq("sourceType", sourceType),
-        )
-        .order("desc")
-        .paginate(args.paginationOpts);
+  handler: async (ctx, args) => {
+    const { sourceType, userId } = args;
+
+    // 1️⃣ Get paginated feed
+    const feed = sourceType !== undefined
+      ? await ctx.db
+          .query("validItems")
+          .withIndex("by_sourceType_pubDate", (q) =>
+            q.eq("sourceType", sourceType)
+          )
+          .order("desc")
+          .paginate(args.paginationOpts)
+      : await ctx.db
+          .query("validItems")
+          .withIndex("by_pubDate")
+          .order("desc")
+          .paginate(args.paginationOpts);
+
+    // 2️⃣ If no user → return directly
+    if (!userId) {
+      return {
+        ...feed,
+        page: feed.page.map((item) => ({
+          ...item,
+          isBookmarked: false,
+        })),
+      };
     }
 
-    return await ctx.db
-      .query("validItems")
-      .withIndex("by_pubDate")
-      .order("desc")
-      .paginate(args.paginationOpts);
+    // 3️⃣ Fetch bookmarks ONLY for items in this page (enterprise optimization)
+    const pageIds = feed.page.map((item) => item._id);
+
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const bookmarkedSet = new Set(
+      bookmarks
+        .filter((b) => pageIds.includes(b.itemId))
+        .map((b) => b.itemId.toString())
+    );
+
+    // 4️⃣ Merge bookmark state
+    return {
+      ...feed,
+      page: feed.page.map((item) => ({
+        ...item,
+        isBookmarked: bookmarkedSet.has(item._id.toString()),
+      })),
+    };
   },
 });
 
@@ -176,29 +246,65 @@ export const getValidItemsByAuthor = query({
     authorName: v.string(),
     paginationOpts: paginationOptsValidator,
     sourceType: v.optional(
-      v.union(v.literal("post"), v.literal("video"), v.literal("tweet")),
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
     ),
+    userId: v.optional(v.id("users")), // ✅ Added
   },
 
   handler: async (ctx, args) => {
-    const { authorName, paginationOpts, sourceType } = args;
+    const { authorName, paginationOpts, sourceType, userId } = args;
 
-    if (sourceType !== undefined) {
-      return await ctx.db
-        .query("validItems")
-        .withIndex("by_authorName_sourceType_pubDate", (q) =>
-          q.eq("authorName", authorName).eq("sourceType", sourceType),
-        )
-        .order("desc")
-        .paginate(paginationOpts);
+    // 1️⃣ Get paginated items
+    const feed =
+      sourceType !== undefined
+        ? await ctx.db
+            .query("validItems")
+            .withIndex("by_authorName_sourceType_pubDate", (q) =>
+              q.eq("authorName", authorName).eq("sourceType", sourceType)
+            )
+            .order("desc")
+            .paginate(paginationOpts)
+        : await ctx.db
+            .query("validItems")
+            .withIndex("by_authorName_pubDate", (q) =>
+              q.eq("authorName", authorName)
+            )
+            .order("desc")
+            .paginate(paginationOpts);
+
+    // 2️⃣ If no user → return directly
+    if (!userId) {
+      return {
+        ...feed,
+        page: feed.page.map((item) => ({
+          ...item,
+          isBookmarked: false,
+        })),
+      };
     }
 
-    // All (no sourceType filter)
-    return await ctx.db
-      .query("validItems")
-      .withIndex("by_authorName_pubDate", (q) => q.eq("authorName", authorName))
-      .order("desc")
-      .paginate(paginationOpts);
+    // 3️⃣ Only check bookmarks for current page items (efficient)
+    const pageIds = feed.page.map((item) => item._id);
+
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const bookmarkedSet = new Set(
+      bookmarks
+        .filter((b) => pageIds.includes(b.itemId))
+        .map((b) => b.itemId.toString())
+    );
+
+    // 4️⃣ Merge bookmark state
+    return {
+      ...feed,
+      page: feed.page.map((item) => ({
+        ...item,
+        isBookmarked: bookmarkedSet.has(item._id.toString()),
+      })),
+    };
   },
 });
 
@@ -206,31 +312,75 @@ export const getValidItemsByCompany = query({
   args: {
     companyName: v.string(),
     paginationOpts: paginationOptsValidator,
+    sourceType: v.optional(
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+    ),
+    userId: v.optional(v.id("users")),
   },
-  handler: async (ctx, { companyName, paginationOpts }) => {
-    // Step 1: Get paginated companyPosts (sorted by pubDate via index)
-    const companyPostPage = await ctx.db
-      .query("companyValidItems")
-      .withIndex("by_company_pubDate", (q) => q.eq("companyName", companyName))
-      .order("desc")
-      .paginate(paginationOpts);
 
-    // Step 2: Get unique postIds from this page
-    const postIds = [...new Set(companyPostPage.page.map((cp) => cp.itemsId))];
+  handler: async (ctx, args) => {
+    const { companyName, paginationOpts, sourceType, userId } = args;
 
-    // Step 3: Fetch all posts for these IDs
+    // 1️⃣ Use correct index based on sourceType
+    const companyPostPage =
+      sourceType !== undefined
+        ? await ctx.db
+            .query("companyValidItems")
+            .withIndex("by_company_sourceType_pubDate", (q) =>
+              q.eq("companyName", companyName).eq("sourceType", sourceType)
+            )
+            .order("desc")
+            .paginate(paginationOpts)
+        : await ctx.db
+            .query("companyValidItems")
+            .withIndex("by_company_pubDate", (q) =>
+              q.eq("companyName", companyName)
+            )
+            .order("desc")
+            .paginate(paginationOpts);
+
+    // 2️⃣ Extract post IDs
+    const postIds = companyPostPage.page.map((cp) => cp.itemsId);
+
+    // 3️⃣ Fetch actual posts
     const posts = await Promise.all(
-      postIds.map((postId) => ctx.db.get(postId)),
+      postIds.map((postId) => ctx.db.get(postId))
     );
 
-    const filteredPosts = posts.filter(
-      (post): post is Doc<"validItems"> => post !== null,
+    const validPosts = posts.filter(
+      (post): post is Doc<"validItems"> => post !== null
     );
 
-    // Step 5: Return paginated result
+    // 4️⃣ If no user → return directly
+    if (!userId) {
+      return {
+        ...companyPostPage,
+        page: validPosts.map((item) => ({
+          ...item,
+          isBookmarked: false,
+        })),
+      };
+    }
+
+    // 5️⃣ Fetch bookmarks ONLY for this page
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const bookmarkedSet = new Set(
+      bookmarks
+        .filter((b) => postIds.includes(b.itemId))
+        .map((b) => b.itemId.toString())
+    );
+
+    // 6️⃣ Merge bookmark state
     return {
       ...companyPostPage,
-      page: filteredPosts,
+      page: validPosts.map((item) => ({
+        ...item,
+        isBookmarked: bookmarkedSet.has(item._id.toString()),
+      })),
     };
   },
 });
@@ -304,5 +454,74 @@ export const getValidItemById = query({
   },
   handler: async ({ db }, { id }) => {
     return await db.get(id);
+  },
+});
+
+export const toggleBookmark = mutation({
+  args: {
+    itemId: v.id("validItems"),
+    userId: v.string(),
+    itemPubDate: v.string(),
+  },
+
+  handler: async (ctx, { itemId, userId, itemPubDate }) => {
+    const existing = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user_item", (q) =>
+        q.eq("userId", userId).eq("itemId", itemId)
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.delete(existing._id);
+      return { status: "removed" };
+    }
+
+    await ctx.db.insert("bookmarks", {
+      userId,
+      itemId,
+      createdAt: Date.now(),
+      itemPubDate: itemPubDate,
+    });
+
+    return { status: "added" };
+  },
+});
+
+export const getUserBookmarks = query({
+  args: {
+    userId: v.id("users"),
+    paginationOpts: paginationOptsValidator,
+  },
+
+  handler: async (ctx, args) => {
+    const { userId, paginationOpts } = args;
+
+    // 1️⃣ Paginate bookmarks (newest first)
+    const bookmarkPage = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user_pubDate", (q) => q.eq("userId", userId))
+      .order("desc")
+      .paginate(paginationOpts);
+
+    // 2️⃣ Get validItems for current page
+    const postIds = bookmarkPage.page.map((b) => b.itemId);
+
+    const posts = await Promise.all(
+      postIds.map((id) => ctx.db.get(id))
+    );
+
+    const validPosts = posts.filter(
+      (post): post is Doc<"validItems"> => post !== null
+    );
+
+    // 3️⃣ Attach isBookmarked = true (since this IS bookmark page)
+    return {
+      ...bookmarkPage,
+      page: validPosts.map((item) => ({
+        ...item,
+        isBookmarked: true,
+      })),
+    };
   },
 });

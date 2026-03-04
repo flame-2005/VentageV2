@@ -192,6 +192,18 @@ export default defineSchema({
       filterFields: ["classification"],
     }),
 
+  bookmarks: defineTable({
+    userId: v.string(),
+    itemId: v.id("validItems"),
+    createdAt: v.number(),
+    itemPubDate: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_item", ["itemId"])
+    .index("by_user_createdAt", ["userId", "createdAt"])
+    .index("by_user_pubDate", ["userId", "itemPubDate"])
+    .index("by_user_item", ["userId", "itemId"]),
+
   master_company_list: defineTable({
     bse_code: v.optional(v.string()),
     nse_code: v.string(),

@@ -20,16 +20,20 @@ const SOURCE_TYPE_MAP: Record<Tab, "post" | "video" | undefined> = {
 
 // Single paginated query — re-runs only when activeTab changes
 function useAuthorContent(author: string, activeTab: Tab) {
+
+    const { user } = useUser();
     const sourceType = SOURCE_TYPE_MAP[activeTab];
     return usePaginatedQuery(
         api.functions.validItems.getValidItemsByAuthor,
-        sourceType ? { sourceType, authorName: author } : { authorName: author },
+        sourceType ? { sourceType, authorName: author, userId: user?._id } : { authorName: author, userId: user?._id },
         { initialNumItems: 20 }
     );
 }
 
 export default function AuthorPage() {
     const params = useParams();
+
+    const { user } = useUser();
     const author = useMemo(() => {
         try {
             return decodeURIComponent(params.author as string);
@@ -37,8 +41,6 @@ export default function AuthorPage() {
             return params.author as string;
         }
     }, [params.author]);
-
-    const { user } = useUser();
     const { addToast } = useToast();
 
     const [activeTab, setActiveTab] = useState<Tab>("posts");
@@ -54,6 +56,30 @@ export default function AuthorPage() {
     const isFollowing = !!user?.authorsFollowing?.includes(author);
     const canLoadMore = status === "CanLoadMore";
     const isLoadingMore = status === "LoadingMore";
+
+    const getDateLabel = (pubDate: string) => {
+        const postDate = new Date(pubDate);
+        if (Number.isNaN(postDate.getTime())) return "";
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const postDay = new Date(
+            postDate.getFullYear(),
+            postDate.getMonth(),
+            postDate.getDate()
+        );
+
+        if (postDay.getTime() === today.getTime()) return "Today";
+        if (postDay.getTime() === yesterday.getTime()) return "Yesterday";
+
+        return postDate.toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
+    };
 
     // Infinite scroll
     const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -109,11 +135,10 @@ export default function AuthorPage() {
                 <button
                     onClick={handleToggleFollow}
                     disabled={loading}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${
-                        isFollowing
+                    className={`px-4 py-2 rounded-lg font-medium transition ${isFollowing
                             ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
                             : "bg-indigo-600 text-white hover:bg-indigo-700"
-                    }`}
+                        }`}
                 >
                     {loading ? "Please wait..." : isFollowing ? "Untrack" : "Track"}
                 </button>
@@ -125,11 +150,10 @@ export default function AuthorPage() {
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 text-sm font-medium capitalize transition border-b-2 -mb-px ${
-                            activeTab === tab
+                        className={`px-4 py-2 text-sm font-medium capitalize transition border-b-2 -mb-px ${activeTab === tab
                                 ? "border-indigo-600 text-blue-600"
                                 : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-                        }`}
+                            }`}
                     >
                         {tab}
                     </button>
@@ -143,9 +167,22 @@ export default function AuthorPage() {
 
             {/* Content */}
             <div className="lg:space-y-6 space-y-7">
-                {results.map((item) => (
-                    <ValidItemCard key={item._id} post={item} />
-                ))}
+                {results.map((item, index) => {
+                    const currentLabel = getDateLabel(item.pubDate);
+                    const prevLabel = index > 0 ? getDateLabel(results[index - 1].pubDate) : "";
+                    const showDateLabel = currentLabel && currentLabel !== prevLabel;
+
+                    return (
+                        <div key={item._id}>
+                            {showDateLabel && (
+                                <p className="text-xs font-semibold text-slate-500 mb-2 text-left">
+                                    {currentLabel}
+                                </p>
+                            )}
+                            <ValidItemCard post={item} />
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Infinite Scroll Trigger */}

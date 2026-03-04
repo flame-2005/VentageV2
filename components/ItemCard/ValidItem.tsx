@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import CircularLoader from "@/components/circularLoader";
 import { Doc } from "@/convex/_generated/dataModel";
 import ValidItemCard from "@/components/ItemCard/ValidItemCard";
+import { useUser } from "@/context/userContext";
 
 type ValidItemsProps = {
     initialItems: Doc<"validItems">[];
@@ -14,6 +15,7 @@ type ValidItemsProps = {
 
 export default function ValidItems({ initialItems, sourceType }: ValidItemsProps) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
+    const { user } = useUser();
 
     const {
         results: feedItems,
@@ -23,6 +25,7 @@ export default function ValidItems({ initialItems, sourceType }: ValidItemsProps
         api.functions.validItems.getFeedByType,
         {
             sourceType,
+            userId: user?._id ?? undefined,
         },
         { initialNumItems: 20 }
     );
@@ -32,6 +35,30 @@ export default function ValidItems({ initialItems, sourceType }: ValidItemsProps
     const isLoading = status === "LoadingFirstPage";
     const isLoadingMore = status === "LoadingMore";
     const canLoadMore = status === "CanLoadMore";
+
+    const getDateLabel = (pubDate: string) => {
+        const postDate = new Date(pubDate);
+        if (Number.isNaN(postDate.getTime())) return "";
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const postDay = new Date(
+            postDate.getFullYear(),
+            postDate.getMonth(),
+            postDate.getDate()
+        );
+
+        if (postDay.getTime() === today.getTime()) return "Today";
+        if (postDay.getTime() === yesterday.getTime()) return "Yesterday";
+
+        return postDate.toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
+    };
 
     // 🔥 Infinite Scroll
     useEffect(() => {
@@ -63,10 +90,22 @@ export default function ValidItems({ initialItems, sourceType }: ValidItemsProps
                     <div className="px-4">
                         <div className="space-y-6">
                             {validItems && validItems.length > 0 ? (
-                                validItems.map((item: Doc<"validItems">) => {
+                                validItems.map((item, index) => {
+                                    const currentLabel = getDateLabel(item.pubDate);
+                                    const prevLabel =
+                                        index > 0 ? getDateLabel(validItems[index - 1].pubDate) : "";
+                                    const showDateLabel = currentLabel && currentLabel !== prevLabel;
 
-                                    return <ValidItemCard key={item._id} post={item} />
-
+                                    return (
+                                        <div key={item._id}>
+                                            {showDateLabel && (
+                                                <p className="text-xs font-semibold text-slate-500 mb-2 text-left">
+                                                    {currentLabel}
+                                                </p>
+                                            )}
+                                            <ValidItemCard post={item} />
+                                        </div>
+                                    );
                                 })
                             ) : (
                                 <div className="text-center py-16">
