@@ -644,3 +644,122 @@ export const getUserBookmarks = query({
     return items.filter(Boolean);
   },
 });
+
+// Track per-user author click events for analytics dashboard.
+// Note: this expects a `userAuthorClicks` table + indexes in schema.
+export const trackAuthorClick = mutation({
+  args: {
+    userId: v.id("users"),
+    authorName: v.string(),
+    sourceType: v.optional(
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+    ),
+    itemId: v.optional(v.id("validItems")),
+    clickedAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const authorName = args.authorName.trim();
+    if (!authorName) {
+      throw new Error("authorName is required");
+    }
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const eventTime = args.clickedAt ?? Date.now();
+    const clicksTable = ctx.db ;
+
+    // Small debounce to avoid accidental double-capture from repeated handlers.
+    const lastClick = await clicksTable
+      .query("userAuthorClicks")
+      .withIndex("by_user_clickedAt", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .first();
+
+    if (
+      lastClick &&
+      lastClick.authorName === authorName &&
+      lastClick.sourceType === args.sourceType &&
+      lastClick.itemId === args.itemId &&
+      eventTime - lastClick.clickedAt < 1500
+    ) {
+      return { success: true, deduped: true };
+    }
+
+    await clicksTable.insert("userAuthorClicks", {
+      userId: args.userId,
+      authorName,
+      sourceType: args.sourceType ?? "post",
+      itemId: args.itemId,
+      clickedAt: eventTime,
+    });
+
+    return { success: true, deduped: false };
+  },
+});
+
+export const getUserTopAuthors = query({
+  args: {
+    userId: v.id("users"),
+    fromTs: v.optional(v.number()),
+    toTs: v.optional(v.number()),
+    sourceType: v.optional(
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+    ),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const clicksTable = ctx.db ;
+    const allClicks = await clicksTable
+      .query("userAuthorClicks")
+      .withIndex("by_user_clickedAt", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const filteredClicks = allClicks.filter((click) => {
+      if (args.fromTs !== undefined && click.clickedAt < args.fromTs) {
+        return false;
+      }
+      if (args.toTs !== undefined && click.clickedAt > args.toTs) {
+        return false;
+      }
+      if (args.sourceType !== undefined && click.sourceType !== args.sourceType) {
+        return false;
+      }
+      return true;
+    });
+
+    const totalClicks = filteredClicks.length;
+    const counts = new Map<string, { authorName: string; count: number }>();
+
+    for (const click of filteredClicks) {
+      const authorName = (click.authorName ?? "").trim();
+      if (!authorName) continue;
+
+      const key = authorName.toLowerCase();
+      const existing = counts.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        counts.set(key, { authorName, count: 1 });
+      }
+    }
+
+    const topAuthors = Array.from(counts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, Math.max(1, args.limit ?? 10))
+      .map((entry) => ({
+        authorName: entry.authorName,
+        clicks: entry.count,
+        percentage: totalClicks > 0 ? Number(((entry.count / totalClicks) * 100).toFixed(2)) : 0,
+      }));
+
+    return {
+      totalClicks,
+      uniqueAuthors: counts.size,
+      topAuthor: topAuthors[0] ?? null,
+      topAuthors,
+    };
+  },
+});

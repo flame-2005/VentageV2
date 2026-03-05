@@ -41,6 +41,7 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
 
     const isFullCaps = (name: string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim())
     const incrementClickCount = useMutation(api.functions.validItems.incrementClickCount)
+    const trackAuthorClick = useMutation((api as any).functions.users.trackAuthorClick)
 
     const fullCapsCompanies = (() => {
         const filtered = companyNames.filter(isFullCaps)
@@ -59,6 +60,20 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
     const handleVideoClick = async () => {
         trackEvent(GA_EVENT.ARTICLE_CARD_CLICK, { postId: post._id })
         setClickedCount(clickedCount + 1)
+
+        if (user) {
+            try {
+                await trackAuthorClick({
+                    userId: user._id,
+                    authorName: post.authorName,
+                    sourceType: post.sourceType,
+                    itemId: post._id,
+                })
+            } catch (error) {
+                console.error("Failed to record user author click:", error)
+            }
+        }
+
         try {
             await incrementClickCount({ validItemId: post._id })
         } catch (error) {

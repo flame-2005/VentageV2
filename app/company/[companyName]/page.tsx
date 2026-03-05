@@ -60,6 +60,30 @@ export default function CompanyPage() {
     const canLoadMore = status === "CanLoadMore";
     const isLoadingMore = status === "LoadingMore";
 
+    const getDateLabel = (pubDate: string) => {
+        const postDate = new Date(pubDate);
+        if (Number.isNaN(postDate.getTime())) return "";
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const postDay = new Date(
+            postDate.getFullYear(),
+            postDate.getMonth(),
+            postDate.getDate()
+        );
+
+        if (postDay.getTime() === today.getTime()) return "Today";
+        if (postDay.getTime() === yesterday.getTime()) return "Yesterday";
+
+        return postDate.toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
+    };
+
     const loadMoreRef = useRef<HTMLDivElement>(null);
 
     // -----------------------------
@@ -169,9 +193,26 @@ export default function CompanyPage() {
             {/* Posts */}
             {posts.length > 0 && (
                 <div className="lg:space-y-6 space-y-7">
-                    {posts.map((post) => (
-                        <ValidItemCard key={post!._id} post={post} />
-                    ))}
+                    {posts.map((post, index) => {
+                        if (!post) return null;
+                        const currentLabel = getDateLabel(post.pubDate);
+                        const prevLabel =
+                            index > 0 && posts[index - 1]
+                                ? getDateLabel(posts[index - 1].pubDate)
+                                : "";
+                        const showDateLabel = currentLabel && currentLabel !== prevLabel;
+
+                        return (
+                            <div key={post._id}>
+                                {showDateLabel && (
+                                    <p className="text-xs font-semibold text-slate-500 mb-2 text-left">
+                                        {currentLabel}
+                                    </p>
+                                )}
+                                <ValidItemCard post={post} />
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 

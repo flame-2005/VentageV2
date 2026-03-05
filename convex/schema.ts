@@ -204,6 +204,20 @@ export default defineSchema({
     .index("by_user_pubDate", ["userId", "itemPubDate"])
     .index("by_user_item", ["userId", "itemId"]),
 
+  userAuthorClicks: defineTable({
+    userId: v.id("users"),
+    authorName: v.string(),
+    sourceType: v.union(
+      v.literal("post"),
+      v.literal("video"),
+      v.literal("tweet"),
+    ),
+    itemId: v.optional(v.id("validItems")),
+    clickedAt: v.number(),
+  })
+    .index("by_user_clickedAt", ["userId", "clickedAt"])
+    .index("by_user_author_clickedAt", ["userId", "authorName", "clickedAt"]),
+
   master_company_list: defineTable({
     bse_code: v.optional(v.string()),
     nse_code: v.string(),
