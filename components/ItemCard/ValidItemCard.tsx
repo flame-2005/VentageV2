@@ -41,7 +41,7 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
 
     const isFullCaps = (name: string) => /^[A-Z0-9&().,\-\/\s]+$/.test(name.trim())
     const incrementClickCount = useMutation(api.functions.validItems.incrementClickCount)
-    const trackAuthorClick = useMutation((api as any).functions.users.trackAuthorClick)
+    const trackAuthorClick = useMutation((api).functions.users.trackAuthorClick)
 
     const fullCapsCompanies = (() => {
         const filtered = companyNames.filter(isFullCaps)
