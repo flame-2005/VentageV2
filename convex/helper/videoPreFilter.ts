@@ -14,10 +14,11 @@ interface FilterResult {
   process: boolean;
   stage: "hard_filter" | "llm_filter";
   reason: string;
+  confidence?: number; // only for LLM filter
 }
 
 const client = new OpenAI({
-  apiKey:process.env.OPENAI_API_KEY || "",
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // ─────────────────────────────────────────────
@@ -104,8 +105,6 @@ Identify if the content provides enough analytical depth to be classified into:
 1. Company Analysis/Update (Thesis, DRHP, or Earnings)
 2. Sector Analysis (Industry structure/dynamics)
 3. Management Interview (C-suite executive talk)
-4. Macro Analysis (Policy/Economy impact)
-5. General Investment Guide (Professional-grade strategy)
 
 ### THE "BREADCRUMB" RULE (Process: true)
 Since you only see the Title/Description, look for these "High-Signal" breadcrumbs:
@@ -115,6 +114,9 @@ Since you only see the Title/Description, look for these "High-Signal" breadcrum
 - PEER BENCHMARKING: Comparison between two companies (e.g., X vs Y).
 - If  title indicate that it is an interview, then it is automatically a high-probability decision-grade, even if description is light on details. Interviews with senior leaders (e.g., Kalpana Morparia) are especially valuable for insights on Governance/Banking.
 - If title indicate a details thesis on a company or a sector, then it is automatically a high-probability decision-grade, even if description is light on details. Business model discussions (e.g., "Restaurant Scaling") are just as valuable as raw data.
+- NAMED ENTITY QUALIFIER: A company name alone is NOT a breadcrumb unless it appears alongside 
+  financial context — revenue, margins, market share, valuation, earnings, or strategic positioning. 
+  A company named in a workforce, cultural, or technology adoption story does not qualify.
 - INSTITUTIONAL FORMAT SIGNALS:
   Titles containing:
   "Fireside Chat"
@@ -133,13 +135,35 @@ These are automatically high-probability decision-grade.
 - RETAIL CLICKBAIT: "100x Multibagger," "Stock Market Crash tomorrow," "Target price 500."
 - AMATEUR GOSSIP: General news headlines without a "Why" or "Impact" analysis.
 - CELEBRITY FOCUS: Interviews about a person's "Success Story" that don't mention business strategy or sector data.
+- MACRO/POLICY COMMENTARY: Videos about RBI policy, budget analysis, GDP data, or economic indicators 
+  without direct linkage to a specific company's financials or sector impact.
+- GENERIC STRATEGY GUIDES: "How to build a portfolio", "Asset allocation strategies", 
+  "Long-term vs short-term investing" — even if professionally presented.
+- WORKFORCE/TECH ADOPTION COMMENTARY: Videos about employee sentiment, hiring trends, 
+  developer experience, or tool adoption (e.g., "engineers don't want AI contracts", 
+  "developers resist automation") are NOT decision-grade even if large companies are named. 
+  The test: are the named companies being ANALYZED financially, or merely REFERENCED as examples 
+  of a broader social/tech trend? If the latter, reject with high confidence (90+).
 
 ### SPECIAL OVERRIDES (DO NOT REJECT)
 - STRATEGIC ROUNDUPS: Do not reject "Weekly Roundups" or "Friday Podcasts" if the description mentions specific strategic topics (e.g., Adani's Nuclear unit or PhonePe's IPO).
 - VETERAN TITANS: Do not reject interviews with senior leaders (e.g., Kalpana Morparia) even if the description sounds personal; their insights on Governance/Banking are high-value.
 - QUALITATIVE STRATEGY: Business model discussions (e.g., "Restaurant Scaling") are just as valuable as raw data.
 
-Respond ONLY in JSON: {"process": boolean, "reason": "concise explanation"}
+### CONFIDENCE SCORE GUIDELINES
+Assign a confidence score (0–100) reflecting certainty that this video is NOISE (not decision-grade):
+
+- 95–100: Definitive noise — explicit lifestyle, clickbait, or zero financial signal. No debate possible.
+- 80–94: Strong noise signal — title/description has clear non-analytical intent with minor ambiguity.
+- 60–79: Leaning noise — some financial terms present but context is shallow or generic.
+- 40–59: Genuinely ambiguous — real analytical signals exist alongside noise.
+- 20–39: Leaning decision-grade — named entities, business concepts, or strategic framing present.
+- 5–19: Strong decision-grade — multiple breadcrumbs, institutional format, or C-suite interview signals.
+- 0–4: Definitive decision-grade — explicit earnings call, concall, DRHP, analyst meet, or named senior executive interview.
+
+So: process: true should almost always pair with confidence < 40, and process: false should almost always pair with confidence > 60.
+
+Respond ONLY in JSON: {"process": boolean, "confidence": number, "reason": "concise explanation"}
 `.trim();
 
 async function applyLLMFilter(video: VideoInput): Promise<FilterResult> {
@@ -168,6 +192,8 @@ async function applyLLMFilter(video: VideoInput): Promise<FilterResult> {
       process: parsed.process === true,
       stage: "llm_filter",
       reason: parsed.reason ?? "No reason provided",
+      confidence:
+        typeof parsed.confidence === "number" ? parsed.confidence : undefined,
     };
   } catch {
     // If parsing fails, default to disqualify (safe fallback)
@@ -201,6 +227,7 @@ export function parseISODurationToSeconds(
 
 export async function shouldProcessVideo(
   video: VideoInput & { duration?: string },
+  pubDate: string,
 ): Promise<FilterResult> {
   const durationSeconds = parseISODurationToSeconds(video.duration);
 
@@ -209,6 +236,21 @@ export async function shouldProcessVideo(
       process: false,
       stage: "hard_filter",
       reason: `Video too short (${Math.floor(durationSeconds / 60)}m ${durationSeconds % 60}s) — minimum duration is 5 minutes`,
+      confidence: 100, // hard filter, so 100% confidence
+    };
+  }
+
+  // reject all videos whchi are olde than 3 years, as they are unlikely to be relevant for current tagging
+  const publishedDate = new Date(pubDate);
+  const threeYearsAgo = new Date();
+  threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+
+  if (publishedDate < threeYearsAgo) {
+    return {
+      process: false,
+      stage: "hard_filter",
+      reason: `Video is older than 3 years (${pubDate}) — only considering videos from the last 3 years`,
+      confidence: 100, // hard filter, so 100% confidence
     };
   }
 
@@ -218,6 +260,7 @@ export async function shouldProcessVideo(
       process: false,
       stage: "hard_filter",
       reason: hardRejectReason,
+      confidence: 100, // hard filter, so 100% confidence
     };
   }
 

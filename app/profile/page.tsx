@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { useUser } from "@/context/userContext";
 import { api } from "@/convex/_generated/api";
 import { BarChart3, Calendar, Mail, TrendingUp, UserRound } from "lucide-react";
+import CircularLoader from "@/components/circularLoader";
 
 type RangeKey = "7d" | "30d" | "90d" | "all";
 
@@ -38,12 +39,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen px-4 sm:px-6 py-6">
-        <div className="max-w-4xl mx-auto space-y-4">
-          <div className="h-36 rounded-2xl bg-slate-100 animate-pulse" />
-          <div className="h-72 rounded-2xl bg-slate-100 animate-pulse" />
-        </div>
-      </div>
+      <CircularLoader/>
     );
   }
 
@@ -60,10 +56,11 @@ export default function ProfilePage() {
   const displayName = user.fullName || user.username || "User";
   const topAuthors = analytics?.topAuthors ?? [];
   const maxClicks = topAuthors[0]?.clicks ?? 1;
+  const totalClicks = analytics?.totalClicks ?? 0;
 
   return (
     <div className="min-h-screen px-4 sm:px-6 py-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto px-4 space-y-6">
         <section className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
             <div className="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -135,7 +132,7 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-3">
               {topAuthors.map((item, idx) => {
-                const width = Math.max(8, (item.clicks / maxClicks) * 100);
+                const width = Math.max(8, (item.clicks / totalClicks) * 100);
                 return (
                   <div key={`${item.authorName}-${idx}`} className="rounded-xl border border-slate-200 p-3">
                     <div className="flex items-center justify-between gap-2 mb-2">

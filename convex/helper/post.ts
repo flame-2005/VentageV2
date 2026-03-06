@@ -357,6 +357,46 @@ export function calculateIsValidAnalysis({
 
   return hasValidClassification && hasValidCompanyInfo && hasValidAuthor;
 }
+export function calculateIsValidPost({
+  companyDetails,
+  classification,
+  author,
+}: calculateIsValidAnalysisParams): boolean {
+  const validClassifications = [
+    "Company_analysis",
+    "Sector_analysis",
+    "Management_interview",
+  ];
+
+  const excludedAuthors = [
+    "Eduinvesting Team",
+    "Lalitha Diwakarla",
+    "Viceroy Research",
+  ];
+
+  // Condition 1: Classification check
+  const hasValidClassification = validClassifications.includes(
+    classification!
+  );
+
+  // Condition 2: Has valid BSE/NSE code or companyDetails
+
+  const hasCompanyDetails =
+    companyDetails !== undefined &&
+    companyDetails !== null &&
+    companyDetails.length > 0;
+
+  const isValidPost =  !hasCompanyDetails;
+
+  // Condition 3: Author check
+  const hasValidAuthor =
+    author !== undefined &&
+    author !== null &&
+    author.trim() !== "" &&
+    !excludedAuthors.includes(author);
+
+  return hasValidClassification && isValidPost && hasValidAuthor;
+}
 
 export function getValidImageUrl(url?: string) {
   if (!url) return undefined;

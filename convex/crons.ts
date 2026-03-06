@@ -5,26 +5,39 @@ const crons = cronJobs();
 
 crons.interval(
   "Fetch latest blog feeds",
-  { hours: 24 },  
-  api.functions.newPosts.checkNewPosts.fetchAllBlogsAction
+  { hours: 24 },
+  api.functions.newPosts.checkNewPosts.fetchAllBlogsAction,
 );
 
 crons.interval(
   "track youtube channels",
   { hours: 24 },
-  api.functions.newVideos.processVideos.triggerAllChannelTracking
+  api.functions.newVideos.processVideos.triggerAllChannelTracking,
 );
 
 crons.weekly(
   "refresh-master-company-details-weekly",
   {
     // Sunday at 03:00 UTC (adjust if needed)
-    dayOfWeek:"sunday",
+    dayOfWeek: "sunday",
     hourUTC: 3,
     minuteUTC: 0,
   },
-  api.functions.masterCompanies.refreshMasterCompanyDetails
+  api.functions.masterCompanies.refreshMasterCompanyDetails,
 );
 
+crons.weekly(
+  "refresh-post-company-details-weekly",
+  {
+    dayOfWeek: "sunday",
+    hourUTC: 6,
+    minuteUTC: 0,
+  },
+  api.functions.newPosts.updatePost.recheckLastMonthPosts,
+  {
+    limit: 100,
+    parallelBatchSize: 10,
+  },
+);
 
 export default crons;

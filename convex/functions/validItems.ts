@@ -220,6 +220,148 @@ export const bulkInsertValidItems = mutation({
   },
 });
 
+export const insertValidItemBySourceId = mutation({
+  args: {
+    postId: v.optional(v.id("posts")),
+    videoId: v.optional(v.id("videos")),
+  },
+  handler: async (ctx, args) => {
+    const hasPostId = !!args.postId;
+    const hasVideoId = !!args.videoId;
+
+    if ((hasPostId && hasVideoId) || (!hasPostId && !hasVideoId)) {
+      throw new Error("Pass exactly one of postId or videoId.");
+    }
+
+    if (args.postId) {
+      const post = await ctx.db.get(args.postId);
+      if (!post) throw new Error("Post not found");
+
+      const existing = await ctx.db
+        .query("validItems")
+        .withIndex("by_itemId", (q) => q.eq("itemId", post._id))
+        .first();
+
+      if (existing) {
+        return { success: true, alreadyExists: true, itemId: existing._id };
+      }
+
+      const itemId = await ctx.db.insert("validItems", {
+        sourceType: "post",
+        itemId: post._id,
+        sourceId: post.blogId,
+        title: post.title,
+        summary: post.summary ?? "",
+        link: post.link,
+        authorName: post.author ?? "Unknown",
+        pubDate: post.pubDate,
+        imageUrl: post.imageUrl,
+        companyName: post.companyName ?? "",
+        bseCode: post.bseCode,
+        nseCode: post.nseCode,
+        companyDetails: post.companyDetails ?? [],
+        createdAt: post.createdAt,
+        clickedCount: post.clickedCount,
+        usersLiked: post.usersLiked,
+        shareCount: post.shareCount,
+        usersShared: post.usersShared,
+        thumbnail: post.image,
+        classification: post.classification ?? "",
+        tags: post.tags ?? [],
+        source: post.source ?? "unknown",
+        lastCheckedAt: Date.now(),
+      });
+
+      const companyNames = (post.companyDetails ?? [])
+        .map((c) => c.company_name.trim())
+        .filter(Boolean);
+
+      for (const companyName of companyNames) {
+        const relationExists = await ctx.db
+          .query("companyValidItems")
+          .withIndex("by_company_itemsId", (q) =>
+            q.eq("companyName", companyName).eq("itemsId", itemId),
+          )
+          .unique();
+
+        if (!relationExists) {
+          await ctx.db.insert("companyValidItems", {
+            itemsId: itemId,
+            sourceType: "post",
+            companyName,
+            pubDate: post.pubDate,
+          });
+        }
+      }
+
+      return { success: true, alreadyExists: false, itemId };
+    }
+
+    const video = await ctx.db.get(args.videoId!);
+    if (!video) throw new Error("Video not found");
+
+    const existing = await ctx.db
+      .query("validItems")
+      .withIndex("by_itemId", (q) => q.eq("itemId", video._id))
+      .first();
+
+    if (existing) {
+      return { success: true, alreadyExists: true, itemId: existing._id };
+    }
+
+    const itemId = await ctx.db.insert("validItems", {
+      sourceType: "video",
+      itemId: video._id,
+      sourceId: video.channelId,
+      title: video.title,
+      summary: video.summary ?? "",
+      link: video.link,
+      authorName: video.channel_name ?? "Unknown",
+      pubDate: video.pubDate,
+      imageUrl: video.imageUrl,
+      companyName: video.companyName ?? "",
+      bseCode: video.bseCode,
+      nseCode: video.nseCode,
+      companyDetails: video.companyDetails ?? [],
+      createdAt: video.createdAt,
+      clickedCount: video.clickedCount,
+      usersLiked: video.usersLiked,
+      shareCount: video.shareCount,
+      usersShared: video.usersShared,
+      thumbnail: video.thumbnail,
+      duration: video.duration,
+      classification: video.classification ?? "",
+      tags: video.tags ?? [],
+      source: video.source ?? "unknown",
+      lastCheckedAt: Date.now(),
+    });
+
+    const companyNames = (video.companyDetails ?? [])
+      .map((c) => c.company_name.trim())
+      .filter(Boolean);
+
+    for (const companyName of companyNames) {
+      const relationExists = await ctx.db
+        .query("companyValidItems")
+        .withIndex("by_company_itemsId", (q) =>
+          q.eq("companyName", companyName).eq("itemsId", itemId),
+        )
+        .unique();
+
+      if (!relationExists) {
+        await ctx.db.insert("companyValidItems", {
+          itemsId: itemId,
+          sourceType: "video",
+          companyName,
+          pubDate: video.pubDate,
+        });
+      }
+    }
+
+    return { success: true, alreadyExists: false, itemId };
+  },
+});
+
 export const incrementClickCount = mutation({
   args: {
     validItemId: v.id("validItems"),

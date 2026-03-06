@@ -4,7 +4,7 @@ import { useUser } from '@/context/userContext';
 import { api } from '@/convex/_generated/api';
 import { signInWithGoogle } from '@/lib/users';
 import { useQuery } from 'convex/react';
-import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home, ArrowRight, Video, Newspaper, BookMarked } from 'lucide-react';
+import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home, ArrowRight, Video, Newspaper, BookMarked, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
@@ -219,6 +219,15 @@ const Sidebar: React.FC<SidebarInterface> = ({
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out
+                </button>
+                <button
+                  onClick={() => {router.push("/profile")
+                    setShowDropdown(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <User className="w-4 h-4" />
+                  Profile
                 </button>
               </div>
             )}

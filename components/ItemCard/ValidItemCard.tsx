@@ -14,7 +14,7 @@ import { formatYouTubeDuration } from '@/helper/text'
 import { GA_EVENT, trackEvent } from '@/lib/analytics/ga'
 import { ItemBugReporter } from './ItemBugReporter'
 
-type FeedItem = Doc<'validItems'> & {
+export type FeedItem = Doc<'validItems'> & {
     isBookmarked: boolean
 }
 

@@ -56,6 +56,8 @@ import type * as functions_newPosts_platforms_blogstopPosts from "../functions/n
 import type * as functions_newPosts_platforms_mediumPosts from "../functions/newPosts/platforms/mediumPosts.js";
 import type * as functions_newPosts_platforms_substackPost from "../functions/newPosts/platforms/substackPost.js";
 import type * as functions_newPosts_platforms_wordpressPosts from "../functions/newPosts/platforms/wordpressPosts.js";
+import type * as functions_newPosts_updatePost from "../functions/newPosts/updatePost.js";
+import type * as functions_newPosts_updatePostDb from "../functions/newPosts/updatePostDb.js";
 import type * as functions_newVideos_extractTranscript from "../functions/newVideos/extractTranscript.js";
 import type * as functions_newVideos_getLatestVideos from "../functions/newVideos/getLatestVideos.js";
 import type * as functions_newVideos_index from "../functions/newVideos/index.js";
@@ -145,6 +147,8 @@ declare const fullApi: ApiFromModules<{
   "functions/newPosts/platforms/mediumPosts": typeof functions_newPosts_platforms_mediumPosts;
   "functions/newPosts/platforms/substackPost": typeof functions_newPosts_platforms_substackPost;
   "functions/newPosts/platforms/wordpressPosts": typeof functions_newPosts_platforms_wordpressPosts;
+  "functions/newPosts/updatePost": typeof functions_newPosts_updatePost;
+  "functions/newPosts/updatePostDb": typeof functions_newPosts_updatePostDb;
   "functions/newVideos/extractTranscript": typeof functions_newVideos_extractTranscript;
   "functions/newVideos/getLatestVideos": typeof functions_newVideos_getLatestVideos;
   "functions/newVideos/index": typeof functions_newVideos_index;

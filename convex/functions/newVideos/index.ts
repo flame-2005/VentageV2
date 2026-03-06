@@ -227,9 +227,9 @@ async function runYouTubeChannelTrackingWithNewAlgorithm(
     for (let i = 0; i < videos.length; i++) {
       const video = videos[i];
 
-      const isValidVideo = await shouldProcessVideo(video);
+      const isValidVideo = await shouldProcessVideo(video, video.publishedAt);
 
-      if (!isValidVideo.process) {
+      if (!isValidVideo.process && isValidVideo.confidence && isValidVideo.confidence >= 80) {
         console.log(
           `❌ Skipping video (pre-filter): ${video.title} | Reason: ${isValidVideo.reason}`,
         );

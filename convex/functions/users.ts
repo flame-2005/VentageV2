@@ -763,3 +763,33 @@ export const getUserTopAuthors = query({
     };
   },
 });
+
+export const getUserReadItemClicks = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const clicksTable = ctx.db;
+    const allClicks = await clicksTable
+      .query("userAuthorClicks")
+      .withIndex("by_user_clickedAt", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const latestByItem = new Map<string, { itemId: string; clickedAt: number }>();
+
+    for (const click of allClicks) {
+      if (!click.itemId) continue;
+
+      const key = click.itemId.toString();
+      const existing = latestByItem.get(key);
+      if (!existing || click.clickedAt > existing.clickedAt) {
+        latestByItem.set(key, {
+          itemId: click.itemId,
+          clickedAt: click.clickedAt,
+        });
+      }
+    }
+
+    return Array.from(latestByItem.values()).sort((a, b) => b.clickedAt - a.clickedAt);
+  },
+});
