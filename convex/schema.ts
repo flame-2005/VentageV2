@@ -45,8 +45,8 @@ export default defineSchema({
           bse_code: v.optional(v.string()),
           nse_code: v.optional(v.string()),
           market_cap: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
     tags: v.optional(v.array(v.string())),
     classification: v.optional(v.string()),
@@ -101,8 +101,8 @@ export default defineSchema({
           bse_code: v.optional(v.string()),
           nse_code: v.optional(v.string()),
           market_cap: v.optional(v.number()),
-        })
-      )
+        }),
+      ),
     ),
     tags: v.optional(v.array(v.string())),
     classification: v.optional(v.string()),
@@ -134,6 +134,89 @@ export default defineSchema({
       filterFields: ["classification", "channelId"],
     })
     .index("by_classification", ["classification"]),
+
+  validItems: defineTable({
+    sourceType: v.union(
+      v.literal("post"),
+      v.literal("video"),
+      v.literal("tweet"),
+    ),
+    itemId: v.string(),
+    sourceId: v.optional(v.string()),
+    title: v.string(),
+    link: v.string(),
+    authorName: v.string(),
+    pubDate: v.string(),
+    createdAt: v.number(),
+    summary: v.string(),
+    lastCheckedAt: v.optional(v.number()),
+    imageUrl: v.optional(v.string()),
+    thumbnail: v.optional(v.string()),
+    duration: v.optional(v.string()),
+    companyName: v.string(),
+    bseCode: v.optional(v.string()),
+    nseCode: v.optional(v.string()),
+    companyDetails: v.array(
+      v.object({
+        company_name: v.string(),
+        bse_code: v.optional(v.string()),
+        nse_code: v.optional(v.string()),
+        market_cap: v.optional(v.number()),
+      }),
+    ),
+
+    classification: v.string(),
+    tags: v.array(v.string()),
+    clickedCount: v.optional(v.number()),
+    usersLiked: v.optional(v.array(v.string())),
+    shareCount: v.optional(v.number()),
+    usersShared: v.optional(v.array(v.string())),
+    source: v.string(),
+    isDeleted: v.optional(v.boolean()), // for future safety
+  })
+    .index("by_authorName_sourceType_pubDate", [
+      "authorName",
+      "sourceType",
+      "pubDate",
+    ])
+    .index("by_sourceType_pubDate", ["sourceType", "pubDate"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_pubDate", ["pubDate"])
+    .index("by_itemId", ["itemId"])
+    .index("by_sourceType_createdAt", ["sourceType", "createdAt"])
+    .index("by_classification_createdAt", ["classification", "createdAt"])
+    .index("by_company_createdAt", ["companyName", "pubDate"])
+    .index("by_authorName_pubDate", ["authorName", "pubDate"])
+    .searchIndex("search_title_summary", {
+      searchField: "title",
+      filterFields: ["classification"],
+    }),
+
+  bookmarks: defineTable({
+    userId: v.string(),
+    itemId: v.id("validItems"),
+    createdAt: v.number(),
+    itemPubDate: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_item", ["itemId"])
+    .index("by_user_createdAt", ["userId", "createdAt"])
+    .index("by_user_pubDate", ["userId", "itemPubDate"])
+    .index("by_user_item", ["userId", "itemId"]),
+
+  userAuthorClicks: defineTable({
+    userId: v.id("users"),
+    authorName: v.string(),
+    sourceType: v.union(
+      v.literal("post"),
+      v.literal("video"),
+      v.literal("tweet"),
+    ),
+    itemId: v.optional(v.id("validItems")),
+    clickedAt: v.number(),
+  })
+    .index("by_user_clickedAt", ["userId", "clickedAt"])
+    .index("by_user_author_clickedAt", ["userId", "authorName", "clickedAt"]),
 
   master_company_list: defineTable({
     bse_code: v.optional(v.string()),
@@ -173,20 +256,17 @@ export default defineSchema({
     authorsFollowing: v.optional(v.array(v.string())),
     blogWebsitesFollowing: v.array(v.string()), // Array of blog URLs or IDs
     likedPosts: v.optional(v.array(v.id("posts"))),
+    likedVideos: v.optional(v.array(v.id("videos"))),
+    likedValidItems: v.optional(v.array(v.id("validItems"))),
     sharedPosts: v.optional(v.array(v.id("posts"))),
+    sharedVideos: v.optional(v.array(v.id("videos"))),
+    sharedValidItems: v.optional(v.array(v.id("validItems"))),
     avatarUrl: v.optional(v.string()),
     fullName: v.optional(v.string()),
   })
     .index("by_email", ["email"])
     .index("by_userId", ["userId"])
     .index("by_username", ["username"]),
-
-  blogWebsites: defineTable({
-    url: v.string(),
-    name: v.string(),
-    description: v.optional(v.string()),
-    followersCount: v.number(),
-  }).index("by_url", ["url"]),
 
   companyPosts: defineTable({
     postId: v.id("posts"),
@@ -202,6 +282,33 @@ export default defineSchema({
     .index("by_company", ["companyName"])
     .index("by_bse", ["bseCode"])
     .index("by_nse", ["nseCode"]),
+
+  companyValidItems: defineTable({
+    itemsId: v.id("validItems"),
+    sourceType: v.union(
+      v.literal("post"),
+      v.literal("video"),
+      v.literal("tweet"),
+    ),
+    companyName: v.string(),
+    pubDate: v.string(),
+    bseCode: v.optional(v.string()),
+    nseCode: v.optional(v.string()),
+    marketCap: v.optional(v.number()),
+  })
+    .index("by_itemsId", ["itemsId"])
+    .index("by_sourceType_itemsId", ["sourceType", "itemsId"])
+    .index("by_company_pubDate", ["companyName", "pubDate"])
+    .index("by_company_itemsId", ["companyName", "itemsId"])
+    .index("by_company_sourceType_pubDate", [
+      "companyName",
+      "sourceType",
+      "pubDate",
+    ])
+    .index("by_company", ["companyName"])
+    .index("by_bse", ["bseCode"])
+    .index("by_nse", ["nseCode"]),
+
   usersLink: defineTable({
     url: v.string(),
     email: v.optional(v.string()),
@@ -211,7 +318,7 @@ export default defineSchema({
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),
-      v.literal("rejected")
+      v.literal("rejected"),
     ),
   })
     .index("by_user", ["userId"])
@@ -249,8 +356,8 @@ export default defineSchema({
       v.union(
         v.literal("open"),
         v.literal("in_progress"),
-        v.literal("resolved")
-      )
+        v.literal("resolved"),
+      ),
     ),
   })
     .index("by_email", ["email"])

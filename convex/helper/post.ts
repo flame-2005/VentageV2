@@ -165,7 +165,7 @@ export const migrateCompanyPosts = mutation({
     for (const post of page.page) {
       try {
         // Case 1: companyDetails array
-        if (post.companyDetails?.length && post.classification !== "Multiple_company_update" && post.classification !== "General_investment_guide") {
+        if (post.companyDetails?.length) {
           for (const company of post.companyDetails) {
             await ctx.db.insert("companyPosts", {
               postId: post._id,
@@ -179,7 +179,7 @@ export const migrateCompanyPosts = mutation({
           }
         }
         // Case 2: fallback single company
-        else if (post.companyName && post.classification !== "Multiple_company_update" && post.classification !== "General_investment_guide") {
+        else if (post.companyName) {
           await ctx.db.insert("companyPosts", {
             postId: post._id,
             companyName: post.companyName,
@@ -318,16 +318,14 @@ export function isValidAuthor(author: unknown): boolean {
 
 
 export function calculateIsValidAnalysis({
-  nseCode ,
-  bseCode,
   companyDetails,
   classification,
   author,
 }: calculateIsValidAnalysisParams): boolean {
   const validClassifications = [
     "Company_analysis",
-    "Multiple_company_analysis",
     "Sector_analysis",
+    "Management_interview",
   ];
 
   const excludedAuthors = [
@@ -358,6 +356,46 @@ export function calculateIsValidAnalysis({
     !excludedAuthors.includes(author);
 
   return hasValidClassification && hasValidCompanyInfo && hasValidAuthor;
+}
+export function calculateIsValidPost({
+  companyDetails,
+  classification,
+  author,
+}: calculateIsValidAnalysisParams): boolean {
+  const validClassifications = [
+    "Company_analysis",
+    "Sector_analysis",
+    "Management_interview",
+  ];
+
+  const excludedAuthors = [
+    "Eduinvesting Team",
+    "Lalitha Diwakarla",
+    "Viceroy Research",
+  ];
+
+  // Condition 1: Classification check
+  const hasValidClassification = validClassifications.includes(
+    classification!
+  );
+
+  // Condition 2: Has valid BSE/NSE code or companyDetails
+
+  const hasCompanyDetails =
+    companyDetails !== undefined &&
+    companyDetails !== null &&
+    companyDetails.length > 0;
+
+  const isValidPost =  !hasCompanyDetails;
+
+  // Condition 3: Author check
+  const hasValidAuthor =
+    author !== undefined &&
+    author !== null &&
+    author.trim() !== "" &&
+    !excludedAuthors.includes(author);
+
+  return hasValidClassification && isValidPost && hasValidAuthor;
 }
 
 export function getValidImageUrl(url?: string) {

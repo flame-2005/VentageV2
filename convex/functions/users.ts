@@ -172,7 +172,7 @@ export const unfollowCompany = mutation({
 
     await ctx.db.patch(user._id, {
       companiesFollowing: (user.companiesFollowing ?? []).filter(
-        (company) => company !== args.companyName
+        (company) => company !== args.companyName,
       ),
     });
 
@@ -196,7 +196,7 @@ export const unfollowAuthor = mutation({
 
     await ctx.db.patch(user._id, {
       authorsFollowing: (user.authorsFollowing ?? []).filter(
-        (company) => company !== args.authorName
+        (company) => company !== args.authorName,
       ),
     });
 
@@ -253,7 +253,7 @@ export const unfollowBlogWebsite = mutation({
 
     await ctx.db.patch(user._id, {
       blogWebsitesFollowing: user.blogWebsitesFollowing.filter(
-        (blog) => blog !== args.blogUrl
+        (blog) => blog !== args.blogUrl,
       ),
     });
 
@@ -463,5 +463,333 @@ export const getUserEmail = query({
     const user = await ctx.db.get(args.userId);
     if (!user?.email) return null;
     return user.email;
+  },
+});
+
+export const likevideo = mutation({
+  args: {
+    videoId: v.id("videos"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, { videoId, userId }) => {
+    // Fetch post
+    const post = await ctx.db.get(videoId);
+    if (!post) throw new Error("Video not found");
+
+    // Fetch user
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const alreadyLiked = post.usersLiked?.includes(userId) ?? false;
+
+    if (!alreadyLiked) {
+      // ----- LIKE -----
+      await ctx.db.patch(videoId, {
+        usersLiked: [...(post.usersLiked ?? []), userId],
+      });
+
+      await ctx.db.patch(userId, {
+        likedVideos: [...(user.likedVideos ?? []), videoId],
+      });
+
+      return { status: "liked" };
+    } else {
+      // ----- UNLIKE -----
+      await ctx.db.patch(videoId, {
+        usersLiked: (post.usersLiked ?? []).filter((id) => id !== userId),
+      });
+
+      await ctx.db.patch(userId, {
+        likedVideos: (user.likedVideos ?? []).filter((id) => id !== videoId),
+      });
+
+      return { status: "unliked" };
+    }
+  },
+});
+
+
+export const shareVideo = mutation({
+  args: {
+    videoId: v.id("videos"),
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, { videoId, userId }) => {
+    if (!userId) {
+      // Just increment share count if no userId provided
+      const video = await ctx.db.get(videoId);
+      if (!video) throw new Error("Video not found");
+      await ctx.db.patch(videoId, { shareCount: (video.shareCount ?? 0) + 1 });
+      return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
+    }
+    const video = await ctx.db.get(videoId);
+    if (!video) throw new Error("Video not found");
+
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    // Increase share count ALWAYS
+    await ctx.db.patch(videoId, {
+      shareCount: (video.shareCount ?? 0) + 1,
+      usersShared: video.usersShared?.includes(userId)
+        ? video.usersShared
+        : [...(video.usersShared ?? []), userId],
+    });
+
+    // Add videoId to user's sharedVideos ONCE
+    await ctx.db.patch(userId, {
+      sharedVideos: user.sharedVideos?.includes(videoId)
+        ? user.sharedVideos
+        : [...(user.sharedVideos ?? []), videoId],
+    });
+
+    return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
+  },
+});
+export const shareValidItem = mutation({
+  args: {
+    validItemId: v.id("validItems"),
+    userId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, { validItemId, userId }) => {
+    if (!userId) {
+      // Just increment share count if no userId provided
+      const video = await ctx.db.get(validItemId);
+      if (!video) throw new Error("ValidItem not found");
+      await ctx.db.patch(validItemId, { shareCount: (video.shareCount ?? 0) + 1 });
+      return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
+    }
+    const video = await ctx.db.get(validItemId);
+    if (!video) throw new Error("ValidItem not found");
+
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    // Increase share count ALWAYS
+    await ctx.db.patch(validItemId, {
+      shareCount: (video.shareCount ?? 0) + 1,
+      usersShared: video.usersShared?.includes(userId)
+        ? video.usersShared
+        : [...(video.usersShared ?? []), userId],
+    });
+
+    // Add validItemId to user's sharedValidItems ONCE
+    await ctx.db.patch(userId, {
+      sharedValidItems: user.sharedValidItems?.includes(validItemId)
+        ? user.sharedValidItems
+        : [...(user.sharedValidItems ?? []), validItemId],
+    });
+
+    return { status: "shared", newShareCount: (video.shareCount ?? 0) + 1 };
+  },
+});
+
+export const likeValidItem = mutation({
+  args: {
+    validItemId: v.id("validItems"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, { validItemId, userId }) => {
+    // Fetch post
+    const post = await ctx.db.get(validItemId);
+    if (!post) throw new Error("ValidItem not found");
+
+    // Fetch user
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+
+    const alreadyLiked = post.usersLiked?.includes(userId) ?? false;
+
+    if (!alreadyLiked) {
+      // ----- LIKE -----
+      await ctx.db.patch(validItemId, {
+        usersLiked: [...(post.usersLiked ?? []), userId],
+      });
+
+      await ctx.db.patch(userId, {
+        likedValidItems: [...(user.likedValidItems ?? []), validItemId],
+      });
+
+      return { status: "liked" };
+    } else {
+      // ----- UNLIKE -----
+      await ctx.db.patch(validItemId, {
+        usersLiked: (post.usersLiked ?? []).filter((id) => id !== userId),
+      });
+
+      await ctx.db.patch(userId, {
+        likedValidItems: (user.likedValidItems ?? []).filter((id) => id !== validItemId),
+      });
+
+      return { status: "unliked" };
+    }
+  },
+});
+
+export const getUserBookmarks = query({
+  args: {
+    userId: v.string(),
+  },
+
+  handler: async (ctx, { userId }) => {
+    const bookmarks = await ctx.db
+      .query("bookmarks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const items = await Promise.all(
+      bookmarks.map((b) => ctx.db.get(b.itemId))
+    );
+
+    return items.filter(Boolean);
+  },
+});
+
+// Track per-user author click events for analytics dashboard.
+// Note: this expects a `userAuthorClicks` table + indexes in schema.
+export const trackAuthorClick = mutation({
+  args: {
+    userId: v.id("users"),
+    authorName: v.string(),
+    sourceType: v.optional(
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+    ),
+    itemId: v.optional(v.id("validItems")),
+    clickedAt: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const authorName = args.authorName.trim();
+    if (!authorName) {
+      throw new Error("authorName is required");
+    }
+
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const eventTime = args.clickedAt ?? Date.now();
+    const clicksTable = ctx.db ;
+
+    // Small debounce to avoid accidental double-capture from repeated handlers.
+    const lastClick = await clicksTable
+      .query("userAuthorClicks")
+      .withIndex("by_user_clickedAt", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .first();
+
+    if (
+      lastClick &&
+      lastClick.authorName === authorName &&
+      lastClick.sourceType === args.sourceType &&
+      lastClick.itemId === args.itemId &&
+      eventTime - lastClick.clickedAt < 1500
+    ) {
+      return { success: true, deduped: true };
+    }
+
+    await clicksTable.insert("userAuthorClicks", {
+      userId: args.userId,
+      authorName,
+      sourceType: args.sourceType ?? "post",
+      itemId: args.itemId,
+      clickedAt: eventTime,
+    });
+
+    return { success: true, deduped: false };
+  },
+});
+
+export const getUserTopAuthors = query({
+  args: {
+    userId: v.id("users"),
+    fromTs: v.optional(v.number()),
+    toTs: v.optional(v.number()),
+    sourceType: v.optional(
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+    ),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const clicksTable = ctx.db ;
+    const allClicks = await clicksTable
+      .query("userAuthorClicks")
+      .withIndex("by_user_clickedAt", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const filteredClicks = allClicks.filter((click) => {
+      if (args.fromTs !== undefined && click.clickedAt < args.fromTs) {
+        return false;
+      }
+      if (args.toTs !== undefined && click.clickedAt > args.toTs) {
+        return false;
+      }
+      if (args.sourceType !== undefined && click.sourceType !== args.sourceType) {
+        return false;
+      }
+      return true;
+    });
+
+    const totalClicks = filteredClicks.length;
+    const counts = new Map<string, { authorName: string; count: number }>();
+
+    for (const click of filteredClicks) {
+      const authorName = (click.authorName ?? "").trim();
+      if (!authorName) continue;
+
+      const key = authorName.toLowerCase();
+      const existing = counts.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        counts.set(key, { authorName, count: 1 });
+      }
+    }
+
+    const topAuthors = Array.from(counts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, Math.max(1, args.limit ?? 10))
+      .map((entry) => ({
+        authorName: entry.authorName,
+        clicks: entry.count,
+        percentage: totalClicks > 0 ? Number(((entry.count / totalClicks) * 100).toFixed(2)) : 0,
+      }));
+
+    return {
+      totalClicks,
+      uniqueAuthors: counts.size,
+      topAuthor: topAuthors[0] ?? null,
+      topAuthors,
+    };
+  },
+});
+
+export const getUserReadItemClicks = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const clicksTable = ctx.db;
+    const allClicks = await clicksTable
+      .query("userAuthorClicks")
+      .withIndex("by_user_clickedAt", (q) => q.eq("userId", args.userId))
+      .collect();
+
+    const latestByItem = new Map<string, { itemId: string; clickedAt: number }>();
+
+    for (const click of allClicks) {
+      if (!click.itemId) continue;
+
+      const key = click.itemId.toString();
+      const existing = latestByItem.get(key);
+      if (!existing || click.clickedAt > existing.clickedAt) {
+        latestByItem.set(key, {
+          itemId: click.itemId,
+          clickedAt: click.clickedAt,
+        });
+      }
+    }
+
+    return Array.from(latestByItem.values()).sort((a, b) => b.clickedAt - a.clickedAt);
   },
 });

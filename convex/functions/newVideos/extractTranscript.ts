@@ -16,7 +16,7 @@ export async function analyzeYouTubeVideo(youtubeUrl: string) {
     const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
     // Detailed prompt for comprehensive video analysis
-const systemPrompt = `
+    const systemPrompt = `
 You are a world-class financial analyst and content writer specializing in equity research and investment analysis.
 
 Your task: Transform the YouTube video at ${youtubeUrl} into a professional, standalone blog article.
@@ -53,7 +53,22 @@ WRITING STYLE:
 - Fact-dense with specific numbers, percentages, timeframes
 - Assume sophisticated investor audience
 - Use subheadings to organize content
-- 1500-3000 words optimal length
+
+VERY IMPORTANT WORD COUNT RULES (strictly/must follow):
+- Estimate the video length from the content density you observe.
+- Short video (< 5 min): 300–600 words
+- Medium video (5–15 min): 600–1500 words  
+- Long video (15–30 min): 1500–2500 words
+- Very long video (30+ min): 2500–3000 words (hard max: 3000 words)
+- Never exceed 3000 words regardless of video length.
+- Never pad with filler — every sentence must add analytical value.
+
+IMPORTANT:
+- Remember a 1 minute of video to be tipicallly around 30 to 40 words in the transcript, but this can vary widely based on the speaker's pace.
+- If the video contains a lot of data, numbers, or complex concepts, the word count could be higher.
+- For a 20-minute video, you might expect around 600 to 800 words in the transcript, but this is a very rough estimate.
+Objective:
+Convert the video into minute-by-minute output, where each 1 minute is converted into exactly 1 concise line. Each line should capture the key topic or insight from that minute of the video.
 
 OUTPUT FORMAT (JSON):
 {
@@ -69,7 +84,6 @@ OUTPUT FORMAT (JSON):
 
 Remember: The reader should never know this came from a video. Write as if YOU conducted the research and analysis.
 `;
-
     module.exports = { systemPrompt };
 
     // For YouTube videos, you need to pass them as file data

@@ -911,8 +911,19 @@ export const bulkUpdateBlogs = mutation({
 });
 
 export const getPostById = query({
-  args: { id: v.id("posts") },
+  args: {
+    id: v.union(v.id("posts"), v.id("videos")),
+  },
   handler: async ({ db }, { id }) => {
-    return await db.get(id as Id<"posts">);
+    return await db.get(id);
+  },
+});
+
+export const getPost = query({
+  args: {
+    id: v.id("posts"),
+  },
+  handler: async ({ db }, { id }) => {
+    return await db.get(id);
   },
 });

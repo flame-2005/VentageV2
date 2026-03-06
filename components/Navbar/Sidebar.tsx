@@ -4,7 +4,7 @@ import { useUser } from '@/context/userContext';
 import { api } from '@/convex/_generated/api';
 import { signInWithGoogle } from '@/lib/users';
 import { useQuery } from 'convex/react';
-import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home, ArrowRight } from 'lucide-react';
+import { LogOut, Radar, Search, X, Zap, MessageCircleMore, Home, ArrowRight, Video, Newspaper, BookMarked, User } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react'
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
   return (
     <>
       {/* Logo */}
-      <Link href={'/home'} className="hidden lg:flex items-center gap-3 py-8">
+      <Link href={'/home'} className="hidden lg:flex items-center gap-3 py-4">
         <div className="flex items-center gap-3 mb-4 ">
           <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200">
             <Radar className="w-6 h-6 text-white" />
@@ -85,7 +85,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       <div className='border border-slate-200 rounded-2xl overflow-hidden bg-white/50 backdrop-blur-sm'>
 
         <button
-          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-4 py-3.5 w-full"
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-2 py-2 w-full"
           onClick={() => {
             trackEvent(GA_EVENT.HOME_CLICKED)
             router.push("/home")
@@ -100,13 +100,62 @@ const Sidebar: React.FC<SidebarInterface> = ({
           </div>
           <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
         </button>
-
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-4" />
+        <button
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-2 py-2 w-full"
+          onClick={() => {
+            trackEvent(GA_EVENT.HOME_CLICKED)
+            router.push("/post")
+            setIsOpen(false)
+          }}
+        >
+          <div className='flex items-center gap-3'>
+            <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors duration-200">
+              <Newspaper className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors duration-200" />
+            </div>
+            <span className="text-slate-700 group-hover:text-slate-900 transition-colors duration-200">Post</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
+        </button>
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-4" />
+        <button
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-2 py-2 w-full"
+          onClick={() => {
+            // trackEvent(GA_EVENT.HOME_CLICKED)
+            router.push("/videos")
+            setIsOpen(false)
+          }}
+        >
+          <div className='flex items-center gap-3'>
+            <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors duration-200">
+              <Video className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors duration-200" />
+            </div>
+            <span className="text-slate-700 group-hover:text-slate-900 transition-colors duration-200">Videos</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
+        </button>
         {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-4" />
-
+        <button
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-2 py-2 w-full"
+          onClick={() => {
+            // trackEvent(GA_EVENT.HOME_CLICKED)
+            router.push("/bookmarks")
+            setIsOpen(false)
+          }}
+        >
+          <div className='flex items-center gap-3'>
+            <div className="w-9 h-9 rounded-lg bg-slate-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors duration-200">
+              <BookMarked className="w-4 h-4 text-slate-600 group-hover:text-blue-600 transition-colors duration-200" />
+            </div>
+            <span className="text-slate-700 group-hover:text-slate-900 transition-colors duration-200">Bookmarks</span>
+          </div>
+          <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all duration-200" />
+        </button>
+        <div className="h-px bg-gradient-to-r from-transparent via-slate-400 to-transparent mx-4" />
         {/* Submit Sources Button */}
         <button
-          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-4 py-3.5 w-full"
+          className="group relative flex items-center justify-between text-slate-700 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer text-sm font-medium px-2 py-2 w-full"
           onClick={() => {
             trackEvent(GA_EVENT.TRACK_BLOG_CLICKED)
             router.push("/track-link")
@@ -171,13 +220,22 @@ const Sidebar: React.FC<SidebarInterface> = ({
                   <LogOut className="w-4 h-4" />
                   Sign Out
                 </button>
+                <button
+                  onClick={() => {router.push("/profile")
+                    setShowDropdown(false);
+                  }}
+                  className="w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-100 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <User className="w-4 h-4" />
+                  Profile
+                </button>
               </div>
             )}
           </div>
         ) : (
           <button
             onClick={handleSignIn}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all shadow-sm font-medium text-slate-700 w-full justify-center text-sm"
+            className="flex items-center gap-2 px-2 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-all shadow-sm font-medium text-slate-700 w-full justify-center text-sm"
           >
             <GoogleLogo />
             Sign in
@@ -186,7 +244,7 @@ const Sidebar: React.FC<SidebarInterface> = ({
       </div>
 
       {/* Version Footer */}
-      <div className="mt-6 text-xs text-slate-400 text-center flex space-x-2">
+      <div className="mt-2 text-xs text-slate-400 text-center flex space-x-2">
         <div>
           THE VANTEDGE • V1.0
         </div>

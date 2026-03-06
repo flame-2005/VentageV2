@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalAction, mutation } from "../../_generated/server";
 import { api, internal } from "../../_generated/api";
-import { Id } from "../../_generated/dataModel";
+import { Doc, Id } from "../../_generated/dataModel";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -29,10 +29,14 @@ export const createNotification = mutation({
   },
 });
 
+export function isPost(post: Doc<"posts"> | Doc<"videos">): post is Doc<"posts"> {
+  return post._id.__tableName === "posts";
+}
+
 export const sendNotificationEmail = internalAction({
   args: {
     userId: v.id("users"),
-    postId: v.id("posts"),
+    postId: v.union(v.id("posts"), v.id("videos")),
     targetType: v.union(v.literal("company"), v.literal("author")),
     targetId: v.string(),
   },
@@ -49,6 +53,16 @@ export const sendNotificationEmail = internalAction({
       id: args.postId,
     });
 
+    if (!post) return;
+
+    let author = "";
+
+    if (isPost(post)) {
+      author = post.author!; // ✅ works
+    } else {
+      author = post.channel_name!; // ✅ works
+    }
+
     // 3️⃣ Send email via Resend
     const result = await resend.emails.send({
       to: email,
@@ -57,7 +71,7 @@ export const sendNotificationEmail = internalAction({
       html: `
     <p>A new post was published.</p>
     <p><strong>${post?.title}</strong></p>
-    <p><strong>From: ${post?.author}</strong></p>
+    <p><strong>From: ${author}</strong></p>
     <p><strong>Company: ${post?.companyName}</strong></p>
     <p>${post?.summary}</p>
     <p>
@@ -89,7 +103,7 @@ export const notifyOnPostCreated = internalAction({
         {
           targetType: "company",
           targetId: companyId,
-        }
+        },
       );
 
       for (const t of trackers) {
@@ -111,7 +125,7 @@ export const notifyOnPostCreated = internalAction({
         {
           targetType: "author",
           targetId: args.authorId,
-        }
+        },
       );
 
       for (const t of trackers) {
@@ -137,7 +151,7 @@ export const notifyOnPostCreated = internalAction({
             postId: args.postId,
             targetType: "company",
             targetId: companyId,
-          }
+          },
         );
         await ctx.scheduler.runAfter(
           0,
@@ -147,7 +161,7 @@ export const notifyOnPostCreated = internalAction({
             postId: args.postId,
             targetType: "company",
             targetId: companyId,
-          }
+          },
         );
       }
 
@@ -160,7 +174,7 @@ export const notifyOnPostCreated = internalAction({
             postId: args.postId,
             targetType: "author",
             targetId: authorId,
-          }
+          },
         );
         await ctx.scheduler.runAfter(
           0,
@@ -170,7 +184,7 @@ export const notifyOnPostCreated = internalAction({
             postId: args.postId,
             targetType: "author",
             targetId: authorId,
-          }
+          },
         );
       }
     }

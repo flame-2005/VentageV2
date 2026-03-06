@@ -17,8 +17,6 @@ import type * as functions_blogs from "../functions/blogs.js";
 import type * as functions_bugs from "../functions/bugs.js";
 import type * as functions_cleanUp from "../functions/cleanUp.js";
 import type * as functions_enrichCompanies from "../functions/enrichCompanies.js";
-import type * as functions_fetch_agents_agent1 from "../functions/fetch/agents/agent1.js";
-import type * as functions_fetch_agents_agent2 from "../functions/fetch/agents/agent2.js";
 import type * as functions_fetch_getAllRssPosts from "../functions/fetch/getAllRssPosts.js";
 import type * as functions_fetch_universalRssFetcher from "../functions/fetch/universalRssFetcher.js";
 import type * as functions_masterCompanies from "../functions/masterCompanies.js";
@@ -58,17 +56,18 @@ import type * as functions_newPosts_platforms_blogstopPosts from "../functions/n
 import type * as functions_newPosts_platforms_mediumPosts from "../functions/newPosts/platforms/mediumPosts.js";
 import type * as functions_newPosts_platforms_substackPost from "../functions/newPosts/platforms/substackPost.js";
 import type * as functions_newPosts_platforms_wordpressPosts from "../functions/newPosts/platforms/wordpressPosts.js";
+import type * as functions_newPosts_updatePost from "../functions/newPosts/updatePost.js";
+import type * as functions_newPosts_updatePostDb from "../functions/newPosts/updatePostDb.js";
 import type * as functions_newVideos_extractTranscript from "../functions/newVideos/extractTranscript.js";
 import type * as functions_newVideos_getLatestVideos from "../functions/newVideos/getLatestVideos.js";
 import type * as functions_newVideos_index from "../functions/newVideos/index.js";
 import type * as functions_newVideos_processVideos from "../functions/newVideos/processVideos.js";
-import type * as functions_processBlogs_agents_classifierAgent from "../functions/processBlogs/agents/classifierAgent.js";
-import type * as functions_processBlogs_agents_companyAgent from "../functions/processBlogs/agents/companyAgent.js";
 import type * as functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent from "../functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent.js";
 import type * as functions_processBlogs_newTaggingAlgo_Agents_VectorDBMatcher from "../functions/processBlogs/newTaggingAlgo/Agents/VectorDBMatcher.js";
 import type * as functions_processBlogs_newTaggingAlgo_Agents_extractCompanies from "../functions/processBlogs/newTaggingAlgo/Agents/extractCompanies.js";
 import type * as functions_processBlogs_newTaggingAlgo_Agents_summarizeAgent from "../functions/processBlogs/newTaggingAlgo/Agents/summarizeAgent.js";
 import type * as functions_processBlogs_newTaggingAlgo_Agents_varifyCompanies from "../functions/processBlogs/newTaggingAlgo/Agents/varifyCompanies.js";
+import type * as functions_processBlogs_newTaggingAlgo_Agents_videoClassificationAgent from "../functions/processBlogs/newTaggingAlgo/Agents/videoClassificationAgent.js";
 import type * as functions_processBlogs_newTaggingAlgo_index from "../functions/processBlogs/newTaggingAlgo/index.js";
 import type * as functions_processBlogs_processBlogs from "../functions/processBlogs/processBlogs.js";
 import type * as functions_substackBlogs from "../functions/substackBlogs.js";
@@ -76,6 +75,7 @@ import type * as functions_tracking_addTracking from "../functions/tracking/addT
 import type * as functions_tracking_notification from "../functions/tracking/notification.js";
 import type * as functions_users from "../functions/users.js";
 import type * as functions_usersLink from "../functions/usersLink.js";
+import type * as functions_validItems from "../functions/validItems.js";
 import type * as functions_videos from "../functions/videos.js";
 import type * as helper_addBlogImage from "../helper/addBlogImage.js";
 import type * as helper_addBulkBlogs from "../helper/addBulkBlogs.js";
@@ -87,6 +87,9 @@ import type * as helper_enrichMasterCompanies from "../helper/enrichMasterCompan
 import type * as helper_feedParser from "../helper/feedParser.js";
 import type * as helper_masterCompanies from "../helper/masterCompanies.js";
 import type * as helper_post from "../helper/post.js";
+import type * as helper_validItems_companyValidItems from "../helper/validItems/companyValidItems.js";
+import type * as helper_validItems_populateFeedItems from "../helper/validItems/populateFeedItems.js";
+import type * as helper_videoPreFilter from "../helper/videoPreFilter.js";
 import type * as posts from "../posts.js";
 
 import type {
@@ -105,8 +108,6 @@ declare const fullApi: ApiFromModules<{
   "functions/bugs": typeof functions_bugs;
   "functions/cleanUp": typeof functions_cleanUp;
   "functions/enrichCompanies": typeof functions_enrichCompanies;
-  "functions/fetch/agents/agent1": typeof functions_fetch_agents_agent1;
-  "functions/fetch/agents/agent2": typeof functions_fetch_agents_agent2;
   "functions/fetch/getAllRssPosts": typeof functions_fetch_getAllRssPosts;
   "functions/fetch/universalRssFetcher": typeof functions_fetch_universalRssFetcher;
   "functions/masterCompanies": typeof functions_masterCompanies;
@@ -146,17 +147,18 @@ declare const fullApi: ApiFromModules<{
   "functions/newPosts/platforms/mediumPosts": typeof functions_newPosts_platforms_mediumPosts;
   "functions/newPosts/platforms/substackPost": typeof functions_newPosts_platforms_substackPost;
   "functions/newPosts/platforms/wordpressPosts": typeof functions_newPosts_platforms_wordpressPosts;
+  "functions/newPosts/updatePost": typeof functions_newPosts_updatePost;
+  "functions/newPosts/updatePostDb": typeof functions_newPosts_updatePostDb;
   "functions/newVideos/extractTranscript": typeof functions_newVideos_extractTranscript;
   "functions/newVideos/getLatestVideos": typeof functions_newVideos_getLatestVideos;
   "functions/newVideos/index": typeof functions_newVideos_index;
   "functions/newVideos/processVideos": typeof functions_newVideos_processVideos;
-  "functions/processBlogs/agents/classifierAgent": typeof functions_processBlogs_agents_classifierAgent;
-  "functions/processBlogs/agents/companyAgent": typeof functions_processBlogs_agents_companyAgent;
   "functions/processBlogs/newTaggingAlgo/Agents/ClassificationAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_ClassificationAgent;
   "functions/processBlogs/newTaggingAlgo/Agents/VectorDBMatcher": typeof functions_processBlogs_newTaggingAlgo_Agents_VectorDBMatcher;
   "functions/processBlogs/newTaggingAlgo/Agents/extractCompanies": typeof functions_processBlogs_newTaggingAlgo_Agents_extractCompanies;
   "functions/processBlogs/newTaggingAlgo/Agents/summarizeAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_summarizeAgent;
   "functions/processBlogs/newTaggingAlgo/Agents/varifyCompanies": typeof functions_processBlogs_newTaggingAlgo_Agents_varifyCompanies;
+  "functions/processBlogs/newTaggingAlgo/Agents/videoClassificationAgent": typeof functions_processBlogs_newTaggingAlgo_Agents_videoClassificationAgent;
   "functions/processBlogs/newTaggingAlgo/index": typeof functions_processBlogs_newTaggingAlgo_index;
   "functions/processBlogs/processBlogs": typeof functions_processBlogs_processBlogs;
   "functions/substackBlogs": typeof functions_substackBlogs;
@@ -164,6 +166,7 @@ declare const fullApi: ApiFromModules<{
   "functions/tracking/notification": typeof functions_tracking_notification;
   "functions/users": typeof functions_users;
   "functions/usersLink": typeof functions_usersLink;
+  "functions/validItems": typeof functions_validItems;
   "functions/videos": typeof functions_videos;
   "helper/addBlogImage": typeof helper_addBlogImage;
   "helper/addBulkBlogs": typeof helper_addBulkBlogs;
@@ -175,6 +178,9 @@ declare const fullApi: ApiFromModules<{
   "helper/feedParser": typeof helper_feedParser;
   "helper/masterCompanies": typeof helper_masterCompanies;
   "helper/post": typeof helper_post;
+  "helper/validItems/companyValidItems": typeof helper_validItems_companyValidItems;
+  "helper/validItems/populateFeedItems": typeof helper_validItems_populateFeedItems;
+  "helper/videoPreFilter": typeof helper_videoPreFilter;
   posts: typeof posts;
 }>;
 
