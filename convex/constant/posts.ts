@@ -87,4 +87,5 @@ export type calculateIsValidAnalysisParams = {
   companyDetails?: CompanyDetail[];
   classification?: string;
   author?: string;
+  blogId?: Id<"blogs"> | Id<"channels">;
 };

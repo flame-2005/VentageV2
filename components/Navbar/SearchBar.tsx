@@ -37,7 +37,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
     );
 
     const authorSuggestions = useQuery(
-        api.functions.substackBlogs.getAuthorSuggestions,
+        api.functions.validItems.getAuthorSuggestions,
         debouncedInputValue.length >= 2 ? { searchTerm: debouncedInputValue } : "skip"
     );
 

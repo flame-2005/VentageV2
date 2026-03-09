@@ -148,12 +148,12 @@ export default function ValidItems({ initialItems, sourceType }: ValidItemsProps
 
                                         {group.read.length > 0 && (
                                             <>
-                                                <div className="relative py-1 my-1">
+                                                {/* <div className="relative py-1 my-1">
                                                     <div className="h-px bg-slate-200" />
                                                     <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs font-semibold text-slate-600 uppercase tracking-wide">
                                                         Read
                                                     </span>
-                                                </div>
+                                                </div> */}
 
                                                 {group.read.map((item) => (
                                                     <div key={item._id}>

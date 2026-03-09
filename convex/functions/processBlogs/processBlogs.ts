@@ -1,7 +1,5 @@
 "use node";
 
-// convex/processPosts.ts
-
 import { action } from "../../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../../_generated/api";
@@ -180,6 +178,7 @@ export const processAndSavePosts = action({
                 companyDetails,
                 classification: agent1Response.classification,
                 author: post.author,
+                blogId: post.blogId,
               }),
               classification: agent1Response.classification,
               category: agent1Response.classification,
@@ -245,6 +244,17 @@ export const processAndSavePosts = action({
           post !== null && post?.isValidAnalysis === true,
       );
       // 🔥 Convert to validItems format
+      let insertedValidItems:
+        | {
+            insertedCount: number;
+            insertedIds: {
+              itemsId: Id<"validItems">;
+              companyNames: string[];
+              author?: string;
+            }[];
+          }
+        | undefined;
+
       if (validPosts.length > 0) {
         const validItemsPayload = validPosts.map((post) => ({
           sourceType: "post" as const,
@@ -270,19 +280,24 @@ export const processAndSavePosts = action({
 
         // 🔥 Bulk insert into validItems (max 100 safe)
         if (validItemsPayload.length > 0) {
-          await ctx.runMutation(api.functions.validItems.bulkInsertValidItems, {
-            items: validItemsPayload,
-          });
+          insertedValidItems = await ctx.runMutation(
+            api.functions.validItems.bulkInsertValidItems,
+            {
+              items: validItemsPayload,
+            },
+          );
         }
       }
-      for (const p of insertedPosts) {
+
+      // Notify only for canonical validItems rows.
+      for (const item of insertedValidItems?.insertedIds ?? []) {
         await ctx.scheduler.runAfter(
           0,
           internal.functions.tracking.notification.notifyOnPostCreated,
           {
-            postId: p.postId,
-            companyIds: p.companyNames,
-            authorId: p.author,
+            validItemId: item.itemsId,
+            companyIds: item.companyNames,
+            authorId: item.author,
           },
         );
       }

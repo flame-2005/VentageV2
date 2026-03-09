@@ -667,3 +667,71 @@ export const getUserBookmarks = query({
     };
   },
 });
+
+
+export const getAuthorSuggestions = query({
+  args: {
+    searchTerm: v.string(),
+  },
+  handler: async (ctx, { searchTerm }) => {
+    if (!searchTerm || !searchTerm.trim()) {
+      return [];
+    }
+
+    const term = searchTerm.trim();
+    const lowerTerm = term.toLowerCase();
+
+    // 1️⃣ Fuzzy author search (typo-tolerant)
+    const authorResults = await ctx.db
+      .query("validItems")
+      .withSearchIndex("search_author", (q) => q.search("authorName", term))
+      .collect();
+
+    // 2️⃣ Exact match on author index
+    const exactResults = await ctx.db
+      .query("validItems")
+      .withIndex("by_authorName_pubDate", (q) =>
+        q.eq("authorName", term),
+      )
+      .take(5);
+
+    // 3️⃣ Merge & dedupe by author name
+    const seenAuthors = new Set<string>();
+    const uniqueAuthors = [...exactResults, ...authorResults]
+      .filter((post) => {
+        if (!post.authorName) return false;
+        const authorKey = post.authorName.toLowerCase();
+        if (seenAuthors.has(authorKey)) return false;
+        seenAuthors.add(authorKey);
+        return true;
+      })
+      .map((post) => ({
+        author: post.authorName,
+        authorLower: post.authorName.toLowerCase(),
+      }));
+
+    // 4️⃣ Relevance sorting
+    const sorted = uniqueAuthors.sort((a, b) => {
+      const aLower = a.authorLower;
+      const bLower = b.authorLower;
+
+      const aExact = aLower === lowerTerm;
+      const bExact = bLower === lowerTerm;
+
+      const aStarts = aLower.startsWith(lowerTerm);
+      const bStarts = bLower.startsWith(lowerTerm);
+
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+
+      return a.author.localeCompare(b.author);
+    });
+
+    // 5️⃣ Final response
+    return sorted.slice(0, 10).map((author) => ({
+      author: author.author,
+    }));
+  },
+});
