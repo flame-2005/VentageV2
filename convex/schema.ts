@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { link } from "fs";
+import { search } from "yahoo-finance2/modules";
 
 export default defineSchema({
   blogs: defineTable({
@@ -190,6 +191,10 @@ export default defineSchema({
     .searchIndex("search_title_summary", {
       searchField: "title",
       filterFields: ["classification"],
+    })
+    .searchIndex("search_author", {
+      searchField: "authorName",
+      filterFields: ["classification"],
     }),
 
   bookmarks: defineTable({
@@ -337,7 +342,7 @@ export default defineSchema({
 
   notifications: defineTable({
     userId: v.id("users"),
-    postId: v.id("posts"),
+    validItemId: v.id("validItems"),
     targetType: v.union(v.literal("company"), v.literal("author")),
     targetId: v.string(),
     isRead: v.boolean(),
@@ -345,7 +350,7 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_isRead", ["userId", "isRead"])
-    .index("by_post", ["postId"]),
+    .index("by_validItem", ["validItemId"]),
 
   bugReports: defineTable({
     email: v.string(),

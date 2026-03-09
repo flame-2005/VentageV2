@@ -361,6 +361,7 @@ export function calculateIsValidPost({
   companyDetails,
   classification,
   author,
+  blogId,
 }: calculateIsValidAnalysisParams): boolean {
   const validClassifications = [
     "Company_analysis",
@@ -372,6 +373,11 @@ export function calculateIsValidPost({
     "Eduinvesting Team",
     "Lalitha Diwakarla",
     "Viceroy Research",
+    "prashant"
+  ];
+
+  const excludedBlogIds = [
+    "j971xf1h4x1j0bbwf4zn6r2aph7xscnj"
   ];
 
   // Condition 1: Classification check
@@ -395,7 +401,9 @@ export function calculateIsValidPost({
     author.trim() !== "" &&
     !excludedAuthors.includes(author);
 
-  return hasValidClassification && isValidPost && hasValidAuthor;
+  const hasValidBlogId = blogId !== undefined && !excludedBlogIds.includes(blogId);
+
+  return hasValidClassification && isValidPost && hasValidAuthor && hasValidBlogId;
 }
 
 export function getValidImageUrl(url?: string) {

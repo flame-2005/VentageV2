@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { internalAction, mutation } from "../../_generated/server";
 import { api, internal } from "../../_generated/api";
-import { Doc, Id } from "../../_generated/dataModel";
+import { Id } from "../../_generated/dataModel";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -16,7 +16,7 @@ type UserNotificationTargets = {
 export const createNotification = mutation({
   args: {
     userId: v.id("users"),
-    postId: v.id("posts"),
+    validItemId: v.id("validItems"),
     targetType: v.union(v.literal("company"), v.literal("author")),
     targetId: v.string(),
   },
@@ -29,55 +29,42 @@ export const createNotification = mutation({
   },
 });
 
-export function isPost(post: Doc<"posts"> | Doc<"videos">): post is Doc<"posts"> {
-  return post._id.__tableName === "posts";
-}
-
 export const sendNotificationEmail = internalAction({
   args: {
     userId: v.id("users"),
-    postId: v.union(v.id("posts"), v.id("videos")),
+    validItemId: v.id("validItems"),
     targetType: v.union(v.literal("company"), v.literal("author")),
     targetId: v.string(),
   },
   handler: async (ctx, args) => {
-    // 1️⃣ Get user email
     const email = await ctx.runQuery(api.functions.users.getUserEmail, {
       userId: args.userId,
     });
 
     if (!email) return;
 
-    // 2️⃣ Get post details (optional but recommended)
-    const post = await ctx.runQuery(api.functions.substackBlogs.getPostById, {
-      id: args.postId,
+    const validItem = await ctx.runQuery(api.functions.validItems.getValidItemById, {
+      id: args.validItemId,
     });
 
-    if (!post) return;
+    if (!validItem) return;
 
-    let author = "";
+    const author = validItem.authorName || "Unknown";
 
-    if (isPost(post)) {
-      author = post.author!; // ✅ works
-    } else {
-      author = post.channel_name!; // ✅ works
-    }
-
-    // 3️⃣ Send email via Resend
     const result = await resend.emails.send({
       to: email,
       from: "VantEdge <no-reply@thevantedge.com>",
-      subject: "New post you’re tracking",
+      subject: "New post you're tracking",
       html: `
     <p>A new post was published.</p>
-    <p><strong>${post?.title}</strong></p>
+    <p><strong>${validItem.title}</strong></p>
     <p><strong>From: ${author}</strong></p>
-    <p><strong>Company: ${post?.companyName}</strong></p>
-    <p>${post?.summary}</p>
+    <p><strong>Company: ${validItem.companyName || "N/A"}</strong></p>
+    <p>${validItem.summary || ""}</p>
     <p>
-      <a href="${post?.link}" target="_blank" rel="noopener noreferrer"
+      <a href="${validItem.link}" target="_blank" rel="noopener noreferrer"
          style="display:inline-block;margin-top:8px;color:#2563eb;">
-        Read full post →
+        Read full post ->
       </a>
     </p>
   `,
@@ -89,14 +76,13 @@ export const sendNotificationEmail = internalAction({
 
 export const notifyOnPostCreated = internalAction({
   args: {
-    postId: v.id("posts"),
+    validItemId: v.id("validItems"),
     companyIds: v.array(v.string()),
     authorId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userTargets: UserNotificationTargets = {};
 
-    // companies
     for (const companyId of args.companyIds) {
       const trackers = await ctx.runQuery(
         api.functions.tracking.addTracking.getTrackersByTarget,
@@ -118,7 +104,6 @@ export const notifyOnPostCreated = internalAction({
       }
     }
 
-    // author
     if (args.authorId) {
       const trackers = await ctx.runQuery(
         api.functions.tracking.addTracking.getTrackersByTarget,
@@ -140,15 +125,13 @@ export const notifyOnPostCreated = internalAction({
       }
     }
 
-    // fan-out
     for (const [userId, targets] of Object.entries(userTargets)) {
-      // company-triggered notifications
       for (const companyId of targets.companyIds) {
         await ctx.runMutation(
           api.functions.tracking.notification.createNotification,
           {
             userId: userId as Id<"users">,
-            postId: args.postId,
+            validItemId: args.validItemId,
             targetType: "company",
             targetId: companyId,
           },
@@ -158,20 +141,19 @@ export const notifyOnPostCreated = internalAction({
           internal.functions.tracking.notification.sendNotificationEmail,
           {
             userId: userId as Id<"users">,
-            postId: args.postId,
+            validItemId: args.validItemId,
             targetType: "company",
             targetId: companyId,
           },
         );
       }
 
-      // author-triggered notifications
       for (const authorId of targets.authorIds) {
         await ctx.runMutation(
           api.functions.tracking.notification.createNotification,
           {
             userId: userId as Id<"users">,
-            postId: args.postId,
+            validItemId: args.validItemId,
             targetType: "author",
             targetId: authorId,
           },
@@ -181,7 +163,7 @@ export const notifyOnPostCreated = internalAction({
           internal.functions.tracking.notification.sendNotificationEmail,
           {
             userId: userId as Id<"users">,
-            postId: args.postId,
+            validItemId: args.validItemId,
             targetType: "author",
             targetId: authorId,
           },

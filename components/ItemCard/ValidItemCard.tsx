@@ -313,7 +313,7 @@ const ValidItemCard = ({ post, index = 0 }: validItemCard) => {
                         {/* Author */}
                         {post.authorName && post.authorName !== 'null' && (
                             <Link
-                                href={`/author/${encodeURIComponent(post.authorName)}`}
+                                href={`/author/${encodeURIComponent(post.authorName)}?source=${post.sourceType}`}
                                 className="flex items-center gap-2 hover:text-blue-600 transition-colors"
                             >
                                 <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">

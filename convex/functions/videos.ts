@@ -146,6 +146,18 @@ export const getAllVideos50 = query({
   },
 });
 
+export const getVideosByChannelId = query({
+  args: {
+    channelId: v.id("channels"),
+  },
+  handler: async (ctx, { channelId }) => {
+    return await ctx.db
+      .query("videos")
+      .withIndex("by_blog", (q) => q.eq("channelId", channelId))
+      .collect();
+  },
+});
+
 export const getPaginatedVideos = query({
   args: {
     paginationOpts: paginationOptsValidator,
