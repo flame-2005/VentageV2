@@ -12,7 +12,7 @@ interface SearchBarProps {
     setSearchBarOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBarOpen }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef, setSearchBarOpen }) => {
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const [inputValue, setInputValue] = useState<string>()
     const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
@@ -40,6 +40,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
         api.functions.validItems.getAuthorSuggestions,
         debouncedInputValue.length >= 2 ? { searchTerm: debouncedInputValue } : "skip"
     );
+
+    console.log(authorSuggestions)
 
     // Debounce logic
     useEffect(() => {
@@ -92,7 +94,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
         ...(authorSuggestions?.map(s => ({
             type: "author" as const,
             label: s.author,
-            href: `/author/${encodeURIComponent(s.author)}`,
+            href: `/author/${encodeURIComponent(s.author)}?asource=${s.sourceType}`,
         })) || []),
     ];
 
@@ -151,7 +153,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
             router.push(`/search/search-everywhere?${encodeURIComponent(inputValue)}`);
             closeSuggestions();
             setInputValue('');
-            if(setSearchBarOpen){
+            if (setSearchBarOpen) {
                 setSearchBarOpen(false)
             }
         }
@@ -217,7 +219,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                                                         setInputValue(suggestion.companyName);
                                                         closeSuggestions();
                                                         setInputValue('');
-                                                        if(setSearchBarOpen){
+                                                        if (setSearchBarOpen) {
                                                             setSearchBarOpen(false)
                                                         }
                                                     }}
@@ -253,11 +255,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                                                         setInputValue(suggestion.author);
                                                         closeSuggestions();
                                                         setInputValue('');
-                                                        if(setSearchBarOpen){
+                                                        if (setSearchBarOpen) {
                                                             setSearchBarOpen(false)
                                                         }
                                                     }}
-                                                    href={`/author/${encodeURIComponent(suggestion.author)}`}
+                                                    href={`/author/${encodeURIComponent(suggestion.author)}?source=${suggestion.sourceType}`}
                                                     className={`w-full px-3 py-2 text-left transition-colors border-b border-slate-100 last:border-b-0 flex items-center justify-between group ${activeIndex === globalIndex
                                                         ? "bg-blue-50 text-blue-600"
                                                         : "hover:bg-blue-50"
@@ -266,9 +268,11 @@ const SearchBar: React.FC<SearchBarProps> = ({ shouldFocus, inputRef,setSearchBa
                                                     <span className="font-medium text-slate-900 group-hover:text-blue-600 text-sm">
                                                         {suggestion.author}
                                                     </span>
-                                                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600">
+                                                    {suggestion.sourceType === "post" ? (<span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600">
                                                         Author
-                                                    </span>
+                                                    </span>) : <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded group-hover:bg-blue-100 group-hover:text-blue-600">
+                                                        Channel
+                                                    </span>}
                                                 </Link>
                                             );
                                         })}
