@@ -37,9 +37,7 @@ export const getFeedItems = query({
       .withIndex("by_user", (q) => q.eq("userId", args.userId!))
       .collect();
 
-    const bookmarkedIds = new Set(
-      bookmarks.map((b) => b.itemId.toString())
-    );
+    const bookmarkedIds = new Set(bookmarks.map((b) => b.itemId.toString()));
 
     // 3️⃣ Merge bookmark state into feed
     return {
@@ -56,7 +54,7 @@ export const getFeedByType = query({
   args: {
     paginationOpts: paginationOptsValidator,
     sourceType: v.optional(
-      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet")),
     ),
     userId: v.optional(v.id("users")),
   },
@@ -65,19 +63,20 @@ export const getFeedByType = query({
     const { sourceType, userId } = args;
 
     // 1️⃣ Get paginated feed
-    const feed = sourceType !== undefined
-      ? await ctx.db
-          .query("validItems")
-          .withIndex("by_sourceType_pubDate", (q) =>
-            q.eq("sourceType", sourceType)
-          )
-          .order("desc")
-          .paginate(args.paginationOpts)
-      : await ctx.db
-          .query("validItems")
-          .withIndex("by_pubDate")
-          .order("desc")
-          .paginate(args.paginationOpts);
+    const feed =
+      sourceType !== undefined
+        ? await ctx.db
+            .query("validItems")
+            .withIndex("by_sourceType_pubDate", (q) =>
+              q.eq("sourceType", sourceType),
+            )
+            .order("desc")
+            .paginate(args.paginationOpts)
+        : await ctx.db
+            .query("validItems")
+            .withIndex("by_pubDate")
+            .order("desc")
+            .paginate(args.paginationOpts);
 
     // 2️⃣ If no user → return directly
     if (!userId) {
@@ -101,7 +100,7 @@ export const getFeedByType = query({
     const bookmarkedSet = new Set(
       bookmarks
         .filter((b) => pageIds.includes(b.itemId))
-        .map((b) => b.itemId.toString())
+        .map((b) => b.itemId.toString()),
     );
 
     // 4️⃣ Merge bookmark state
@@ -388,7 +387,7 @@ export const getValidItemsByAuthor = query({
     authorName: v.string(),
     paginationOpts: paginationOptsValidator,
     sourceType: v.optional(
-      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet")),
     ),
     userId: v.optional(v.id("users")), // ✅ Added
   },
@@ -402,14 +401,14 @@ export const getValidItemsByAuthor = query({
         ? await ctx.db
             .query("validItems")
             .withIndex("by_authorName_sourceType_pubDate", (q) =>
-              q.eq("authorName", authorName).eq("sourceType", sourceType)
+              q.eq("authorName", authorName).eq("sourceType", sourceType),
             )
             .order("desc")
             .paginate(paginationOpts)
         : await ctx.db
             .query("validItems")
             .withIndex("by_authorName_pubDate", (q) =>
-              q.eq("authorName", authorName)
+              q.eq("authorName", authorName),
             )
             .order("desc")
             .paginate(paginationOpts);
@@ -436,7 +435,7 @@ export const getValidItemsByAuthor = query({
     const bookmarkedSet = new Set(
       bookmarks
         .filter((b) => pageIds.includes(b.itemId))
-        .map((b) => b.itemId.toString())
+        .map((b) => b.itemId.toString()),
     );
 
     // 4️⃣ Merge bookmark state
@@ -455,7 +454,7 @@ export const getValidItemsByCompany = query({
     companyName: v.string(),
     paginationOpts: paginationOptsValidator,
     sourceType: v.optional(
-      v.union(v.literal("post"), v.literal("video"), v.literal("tweet"))
+      v.union(v.literal("post"), v.literal("video"), v.literal("tweet")),
     ),
     userId: v.optional(v.id("users")),
   },
@@ -469,14 +468,14 @@ export const getValidItemsByCompany = query({
         ? await ctx.db
             .query("companyValidItems")
             .withIndex("by_company_sourceType_pubDate", (q) =>
-              q.eq("companyName", companyName).eq("sourceType", sourceType)
+              q.eq("companyName", companyName).eq("sourceType", sourceType),
             )
             .order("desc")
             .paginate(paginationOpts)
         : await ctx.db
             .query("companyValidItems")
             .withIndex("by_company_pubDate", (q) =>
-              q.eq("companyName", companyName)
+              q.eq("companyName", companyName),
             )
             .order("desc")
             .paginate(paginationOpts);
@@ -486,11 +485,11 @@ export const getValidItemsByCompany = query({
 
     // 3️⃣ Fetch actual posts
     const posts = await Promise.all(
-      postIds.map((postId) => ctx.db.get(postId))
+      postIds.map((postId) => ctx.db.get(postId)),
     );
 
     const validPosts = posts.filter(
-      (post): post is Doc<"validItems"> => post !== null
+      (post): post is Doc<"validItems"> => post !== null,
     );
 
     // 4️⃣ If no user → return directly
@@ -513,7 +512,7 @@ export const getValidItemsByCompany = query({
     const bookmarkedSet = new Set(
       bookmarks
         .filter((b) => postIds.includes(b.itemId))
-        .map((b) => b.itemId.toString())
+        .map((b) => b.itemId.toString()),
     );
 
     // 6️⃣ Merge bookmark state
@@ -610,7 +609,7 @@ export const toggleBookmark = mutation({
     const existing = await ctx.db
       .query("bookmarks")
       .withIndex("by_user_item", (q) =>
-        q.eq("userId", userId).eq("itemId", itemId)
+        q.eq("userId", userId).eq("itemId", itemId),
       )
       .unique();
 
@@ -649,12 +648,10 @@ export const getUserBookmarks = query({
     // 2️⃣ Get validItems for current page
     const postIds = bookmarkPage.page.map((b) => b.itemId);
 
-    const posts = await Promise.all(
-      postIds.map((id) => ctx.db.get(id))
-    );
+    const posts = await Promise.all(postIds.map((id) => ctx.db.get(id)));
 
     const validPosts = posts.filter(
-      (post): post is Doc<"validItems"> => post !== null
+      (post): post is Doc<"validItems"> => post !== null,
     );
 
     // 3️⃣ Attach isBookmarked = true (since this IS bookmark page)
@@ -667,7 +664,6 @@ export const getUserBookmarks = query({
     };
   },
 });
-
 
 export const getAuthorSuggestions = query({
   args: {
@@ -690,23 +686,22 @@ export const getAuthorSuggestions = query({
     // 2️⃣ Exact match on author index
     const exactResults = await ctx.db
       .query("validItems")
-      .withIndex("by_authorName_pubDate", (q) =>
-        q.eq("authorName", term),
-      )
+      .withIndex("by_authorName_pubDate", (q) => q.eq("authorName", term))
       .take(5);
 
-    // 3️⃣ Merge & dedupe by author name
+    // 3️⃣ Merge & dedupe by author name + sourceType
     const seenAuthors = new Set<string>();
     const uniqueAuthors = [...exactResults, ...authorResults]
       .filter((post) => {
         if (!post.authorName) return false;
-        const authorKey = post.authorName.toLowerCase();
+        const authorKey = `${post.authorName.toLowerCase()}::${post.sourceType}`; // 👈 changed
         if (seenAuthors.has(authorKey)) return false;
         seenAuthors.add(authorKey);
         return true;
       })
       .map((post) => ({
         author: post.authorName,
+        sourceType: post.sourceType,
         authorLower: post.authorName.toLowerCase(),
       }));
 
@@ -732,6 +727,7 @@ export const getAuthorSuggestions = query({
     // 5️⃣ Final response
     return sorted.slice(0, 10).map((author) => ({
       author: author.author,
+      sourceType: author.sourceType,
     }));
   },
 });
